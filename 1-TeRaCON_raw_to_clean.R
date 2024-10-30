@@ -1,0 +1,49 @@
+# TITLE:          TeRaCON data cleaning
+# AUTHORS:        Kara Dobson
+# COLLABORATORS:  Kai Zhu, Peter Reich
+# DATA INPUT:     Raw data imported as csv file
+# DATA OUTPUT:    Cleaned TeRaCON experiment data
+# PROJECT:        EcoAcc
+# DATE:           Oct 2024
+
+path_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/TeRaCON"
+path_home = "/home/kcdobson"
+setwd(path_data)
+
+# Load packages
+library(tidyverse)
+
+# Read in data
+teracon_data <- read.csv("teracon harvest file for Kara Dobson_241021.csv")
+
+# Selecting columns to keep
+colnames(teracon_data)
+teracon_data_sub <- teracon_data[,c(1:9,11,109:125)] # for % cover
+teracon_data_sub_eco <- teracon_data[,c(1:9,11,55,68:69,75:76,77:84)] # for ecosystem response
+
+# Removing first test row
+teracon_data_sub <- teracon_data_sub[2:1153,]
+teracon_data_sub_eco <- teracon_data_sub_eco[2:1153,]
+
+# Wide to long for just percent cover values
+teracon_data_long <- teracon_data_sub %>%
+  pivot_longer(
+    cols = -c(Sampling.., year, Season, Ring, Plot, CO2.Treatment, Nitrogen.Treatment, C.and.N.treatment, Water.Treatment, Temp.Treatment),
+    names_to = "Species", values_to = "Percent_cover")
+
+# Fixing species names
+transform_species_name <- function(name) {
+  # Remove the prefix
+  name <- sub("^X\\.\\.cover\\.", "", name)
+  # Replace periods with spaces
+  name <- gsub("\\.", " ", name)
+  return(name)
+}
+
+# Apply the transformation to the Species column
+teracon_data_long$Species <- sapply(teracon_data_long$Species, transform_species_name)
+
+# Upload data
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+write.csv(teracon_data_long,paste(path_out,'teracon_clean.csv'))
+write.csv(teracon_data_sub_eco,paste(path_out,'teracon_ecosystem_dat_clean.csv'))
