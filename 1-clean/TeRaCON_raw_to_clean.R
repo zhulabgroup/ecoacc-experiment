@@ -19,7 +19,7 @@ teracon_data <- read.csv("teracon harvest file for Kara Dobson_241021.csv")
 # Selecting columns to keep
 colnames(teracon_data)
 teracon_data_sub <- teracon_data[,c(1:9,11,27,109:125)] # for % cover
-teracon_data_sub_eco <- teracon_data[,c(1:9,11,27,55,68:69,75:76,77:84)] # for ecosystem response
+teracon_data_sub_eco <- teracon_data[,c(1:9,11,27,55,68:69,76,78,80,82,84)] # for ecosystem response
 
 # Removing first test row
 teracon_data_sub <- teracon_data_sub[2:1153,]
@@ -49,6 +49,33 @@ teracon_data_long <- teracon_data_long %>%
 teracon_data_sub_eco <- teracon_data_sub_eco %>%
   rename(mean_temp_summer = Mean.Amb.May.June.July.Temp..F.) %>%
   mutate(mean_C_temp_summer = (mean_temp_summer-32)*5/9)
+
+# Harmonizing column names - these should match across all experiments
+teracon_data_long <- teracon_data_long %>%
+  rename(plot = Plot) %>%
+  rename(species = Species) %>%
+  rename(percent_cover = Percent_cover) %>%
+  rename(temp_treatment = Temp.Treatment) %>%
+  rename(water_treatment = Water.Treatment) %>%
+  rename(n_treatment = Nitrogen.Treatment) %>%
+  rename(cn_treatment = C.and.N.treatment) %>%
+  rename(co2_treatment = CO2.Treatment)
+teracon_data_sub_eco <- teracon_data_sub_eco %>%
+  rename(plot = Plot) %>%
+  rename(temp_treatment = Temp.Treatment) %>%
+  rename(water_treatment = Water.Treatment) %>%
+  rename(n_treatment = Nitrogen.Treatment) %>%
+  rename(cn_treatment = C.and.N.treatment) %>%
+  rename(co2_treatment = CO2.Treatment) %>%
+  rename(ab_biomass = AbovegroundTotal.Biomass..g.m.2.) %>%
+  rename(bl_biomass = Total.root.biomass.0.20..g.m.2.) %>%
+  rename(total_biomass = Total.Biomass) %>%
+  rename(total_n = Whole.Plot.Total.N..g.m.2.) %>%
+  rename(bl_n = Belowground.N..total....g.m.2.) %>%
+  rename(bl_c = Belowground.Carbon...) %>%
+  rename(ab_n = Aboveground.N..total....g.m.2.) %>%
+  rename(ab_c = Aboveground.Carbon...)
+  
 
 # Upload data
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
