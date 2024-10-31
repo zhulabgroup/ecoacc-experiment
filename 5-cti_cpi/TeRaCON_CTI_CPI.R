@@ -37,8 +37,11 @@ CTI <- full_abun_data %>%
   filter(Season == "August") %>%
   group_by(year,plot,scaled_temp,temp_treatment) %>%
   reframe(CTI = sum(percent_cover * temp_niche) / sum(percent_cover),
-          CTI_var = sum(percent_cover * temp_niche^2) / sum(percent_cover) - CTI^2,
-          CTI_sd = sqrt(CTI_var))
+          CTI_var = sum(percent_cover * (temp_niche - CTI)^2) / sum(percent_cover),
+          CTI_sd = sqrt(CTI_var),
+          CTI_skew = sum(percent_cover * (temp_niche - CTI)^3) / (sum(percent_cover) * CTI_sd^3),
+          CTI_kurt = sum(percent_cover * (temp_niche - CTI)^4) / (sum(percent_cover) * CTI_sd^4) - 3)
+  
 CPI <- full_abun_data %>%
   filter(Season == "August") %>%
   group_by(year,plot,water_treatment) %>%
@@ -47,32 +50,16 @@ CPI <- full_abun_data %>%
           CPI_sd = sqrt(CPI_var))
 
 # Plot CTI
-ggplot(CTI, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
-  #geom_jitter(alpha = 0.2,
-  #            position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
-  geom_smooth() +
-  stat_summary(fun = median,
-               fun.min = median,
-               fun.max = median,
-               geom = "line",
-               #width = 0.4,
-               #position = position_dodge(width = 0.7),
-               aes(color = temp_treatment, group = temp_treatment)) +
-  #geom_line(aes(x = year, y = scaled_temp), color="blue") +
-  theme_minimal() +
-  scale_color_manual(values = c("HTamb" = "blue", "HTelv" = "red"))
-
-# Plot CTI std dev
 ggplot(CTI, aes(x = year, y = CTI_sd, color = temp_treatment, group=temp_treatment)) +
-  #geom_jitter(alpha = 0.2,
-  #            position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
-  geom_smooth()
-  stat_summary(fun = median,
-               fun.min = median,
-               fun.max = median,
-               geom = "line",
-               #width = 0.4,
-               #position = position_dodge(width = 0.7),
+  geom_jitter(alpha = 0.2,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  #geom_smooth() +
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "crossbar",
+               width = 0.4,
+               position = position_dodge(width = 0.7),
                aes(color = temp_treatment, group = temp_treatment)) +
   #geom_line(aes(x = year, y = scaled_temp), color="blue") +
   theme_minimal() +
@@ -82,9 +69,9 @@ ggplot(CTI, aes(x = year, y = CTI_sd, color = temp_treatment, group=temp_treatme
 ggplot(CPI, aes(x = year, y = CPI, color = water_treatment)) +
   geom_jitter(alpha = 0.2,
               position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
-  stat_summary(fun = median,
-               fun.min = median,
-               fun.max = median,
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
                geom = "crossbar",
                width = 0.4,
                position = position_dodge(width = 0.7),
@@ -96,9 +83,9 @@ ggplot(CPI, aes(x = year, y = CPI, color = water_treatment)) +
 ggplot(CPI, aes(x = year, y = CPI_sd, color = water_treatment)) +
   geom_jitter(alpha = 0.2,
               position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
-  stat_summary(fun = median,
-               fun.min = median,
-               fun.max = median,
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
                geom = "crossbar",
                width = 0.4,
                position = position_dodge(width = 0.7),
@@ -115,4 +102,9 @@ cti_mod <- lmerTest::lmer(CTI_sd ~ temp_treatment*as.factor(year) + (1|plot), da
 anova(cti_mod)  
 contrast.cti <- contrast(emmeans(cti_mod, ~temp_treatment*year), "pairwise", simple = "each", combine = F, adjust = "mvt")
 contrast.cti
-
+emm <- emmeans(cti_mod, ~ temp_treatment * year)
+summary(emm)  # Summary of the EMMs
+pairs(emm)    # Pairwise comparisons
+pairs(emm, by = "year")
+interaction.plot(x.factor = CTI$year, trace.factor = CTI$temp_treatment, response = CTI$CTI_sd,
+                 main="Interaction Plot", xlab="Year", ylab="CTI", trace.label="Temperature")
