@@ -22,7 +22,7 @@ teracon_data <- read.csv(" teracon_clean.csv")
 
 ### stopped updating here ###
 # Making a list of the species in our experimental data set for GBIF occurrences
-species_list <- unique(teracon_data$Species)
+species_list <- unique(teracon_data$species)
 species_list1 <- species_list[1:10]
 species_list2 <- species_list[11:16]
 
