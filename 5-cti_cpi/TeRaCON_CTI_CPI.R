@@ -35,22 +35,41 @@ full_abun_data <- full_abun_data %>%
 # Calculating CTI and CPI
 CTI <- full_abun_data %>%
   filter(Season == "August") %>%
-  group_by(year,plot,scaled_temp,temp_treatment) %>%
+  group_by(year,plot,mean_C_temp_summer,temp_treatment) %>%
   reframe(CTI = sum(percent_cover * temp_niche) / sum(percent_cover),
           CTI_var = sum(percent_cover * (temp_niche - CTI)^2) / sum(percent_cover),
           CTI_sd = sqrt(CTI_var),
           CTI_skew = sum(percent_cover * (temp_niche - CTI)^3) / (sum(percent_cover) * CTI_sd^3),
-          CTI_kurt = sum(percent_cover * (temp_niche - CTI)^4) / (sum(percent_cover) * CTI_sd^4) - 3)
+          CTI_kurt = sum(percent_cover * (temp_niche - CTI)^4) / (sum(percent_cover) * CTI_sd^4) - 3,
+          mean_C_temp_warmed = mean_C_temp_summer+2.5,
+          disequilib = mean_C_temp_summer - CTI) %>%
+  distinct()
+
+# Calculate disequilibrium using ambient temps for amb, and warmed temps for elv?
+# Need to figure out where elv temp data is; for now, this is a rough proxy of +2.5 above amb
+CTI$disequilib <- NA
+
+for (i in 1:nrow(CTI)) {
+  if (CTI$temp_treatment[i] == "HTelv") {
+    CTI$disequilib[i] <- CTI$mean_C_temp_warmed[i] - CTI$CTI[i]
+  } else if (CTI$temp_treatment[i] == "HTamb") {
+    CTI$disequilib[i] <- CTI$mean_C_temp_summer[i] - CTI$CTI[i]
+  }
+}
+
   
 CPI <- full_abun_data %>%
   filter(Season == "August") %>%
   group_by(year,plot,water_treatment) %>%
   reframe(CPI = sum(percent_cover * precip_niche) / sum(percent_cover),
-          CPI_var = sum(percent_cover * precip_niche^2) / sum(percent_cover) - CPI^2,
-          CPI_sd = sqrt(CPI_var))
+          CPI_var = sum(percent_cover * (precip_niche - CPI)^2) / sum(percent_cover),
+          CPI_sd = sqrt(CPI_var),
+          CPI_skew = sum(percent_cover * (precip_niche - CPI)^3) / (sum(percent_cover) * CPI_sd^3),
+          CPI_kurt = sum(percent_cover * (precip_niche - CPI)^4) / (sum(percent_cover) * CPI_sd^4) - 3)
+
 
 # Plot CTI
-ggplot(CTI, aes(x = year, y = CTI_sd, color = temp_treatment, group=temp_treatment)) +
+ggplot(CTI, aes(x = year, y = disequilib, color = temp_treatment, group=temp_treatment)) +
   geom_jitter(alpha = 0.2,
               position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
   #geom_smooth() +
@@ -66,20 +85,6 @@ ggplot(CTI, aes(x = year, y = CTI_sd, color = temp_treatment, group=temp_treatme
   scale_color_manual(values = c("HTamb" = "blue", "HTelv" = "red"))
 
 # Plot CPI
-ggplot(CPI, aes(x = year, y = CPI, color = water_treatment)) +
-  geom_jitter(alpha = 0.2,
-              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
-  stat_summary(fun = mean,
-               fun.min = mean,
-               fun.max = mean,
-               geom = "crossbar",
-               width = 0.4,
-               position = position_dodge(width = 0.7),
-               aes(color = water_treatment, group = water_treatment)) +
-  theme_minimal() +
-  scale_color_manual(values = c("H2Oamb" = "blue", "H2Oneg" = "red"))
-
-# Plot CPI std dev
 ggplot(CPI, aes(x = year, y = CPI_sd, color = water_treatment)) +
   geom_jitter(alpha = 0.2,
               position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
@@ -90,21 +95,14 @@ ggplot(CPI, aes(x = year, y = CPI_sd, color = water_treatment)) +
                width = 0.4,
                position = position_dodge(width = 0.7),
                aes(color = water_treatment, group = water_treatment)) +
-  #geom_line(aes(x = year, y = scaled_temp), color="blue") +
   theme_minimal() +
   scale_color_manual(values = c("H2Oamb" = "blue", "H2Oneg" = "red"))
-
 
 
 # Models
 ### note to self: do emmeans next to see all pairwise comparisons
 cti_mod <- lmerTest::lmer(CTI_sd ~ temp_treatment*as.factor(year) + (1|plot), data=CTI)
 anova(cti_mod)  
-contrast.cti <- contrast(emmeans(cti_mod, ~temp_treatment*year), "pairwise", simple = "each", combine = F, adjust = "mvt")
-contrast.cti
 emm <- emmeans(cti_mod, ~ temp_treatment * year)
-summary(emm)  # Summary of the EMMs
-pairs(emm)    # Pairwise comparisons
+summary(emm)
 pairs(emm, by = "year")
-interaction.plot(x.factor = CTI$year, trace.factor = CTI$temp_treatment, response = CTI$CTI_sd,
-                 main="Interaction Plot", xlab="Year", ylab="CTI", trace.label="Temperature")

@@ -27,9 +27,9 @@ eco_grouped <- eco_teracon %>%
 ggplot(eco_grouped, aes(x = year, y = mean_ab_bio, color = temp_treatment)) +
   geom_jitter(alpha = 0.2,
               position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
-  stat_summary(fun = median,
-               fun.min = median,
-               fun.max = median,
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
                geom = "line",
                #width = 0.4,
                #position = position_dodge(width = 0.7),
