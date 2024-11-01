@@ -16,26 +16,35 @@ setwd(path_data)
 
 # Load in data
 eco_teracon <- read.csv(" teracon_ecosystem_dat_clean.csv")
-# Filter data to August (harvest) and group
+# Filter data to August (harvest) and calculate the mean ecosystem response vars for each year + treatment
+# Then, calculating 'sensitivity' as warmed-ambient each year for that var
 eco_grouped <- eco_teracon %>%
   filter(Season == "August") %>%
-  group_by(year,plot,mean_C_temp_summer,temp_treatment) %>%
-  summarise(mean_ab_bio = mean(ab_biomass),
-            scaled_temp = mean_C_temp_summer*10)
+  group_by(year,temp_treatment) %>%
+  reframe(mean_ab_bio = mean(ab_biomass),
+          mean_bl_bio = mean(bl_biomass),
+          mean_total_bio = mean(total_biomass),
+          mean_total_n = mean(total_n),
+          mean_bl_c = mean(bl_c),
+          mean_bl_n = mean(bl_n),
+          mean_ab_c = mean(ab_c),
+          mean_ab_n = mean(ab_n)) %>%
+  pivot_longer(cols = c(mean_ab_bio, mean_bl_bio, mean_total_bio,
+                        mean_total_n, mean_bl_c, mean_bl_n,
+                        mean_ab_c,mean_ab_n), names_to = "variable", values_to = "value") %>%
+  pivot_wider(names_from = temp_treatment, values_from = value) %>%
+  mutate(sensitivity = HTelv - HTamb) %>%
+  select(year, variable, sensitivity)
 
-# Plot
-ggplot(eco_grouped, aes(x = year, y = mean_ab_bio, color = temp_treatment)) +
-  geom_jitter(alpha = 0.2,
-              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
-  stat_summary(fun = mean,
-               fun.min = mean,
-               fun.max = mean,
-               geom = "line",
-               #width = 0.4,
-               #position = position_dodge(width = 0.7),
-               aes(color = temp_treatment, group = temp_treatment)) +
-  #geom_line(aes(x = year, y = scaled_temp), color="blue") +
-  theme_minimal() +
-  scale_color_manual(values = c("HTamb" = "blue", "HTelv" = "red"))
-               
-               
+
+# Function to plot changes in function over time (warmed - ambient) for a given ecosystem response var
+sens_plot <- function(df, response_var) {
+  
+  df <- df %>%
+    filter(variable == response_var)
+  
+  ggplot(df, aes(x = year, y = sensitivity)) +
+    geom_smooth() +
+    theme_bw()
+}
+sens_plot(eco_grouped,"mean_bl_n")
