@@ -24,3 +24,7 @@ spp_list <- unique(jrgce$species)
 # Filter the gbif data to those species
 gbif_jrgce_filtered <- gbif_jrgce %>%
   filter(species %in% spp_list)
+
+# Upload data
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+write.csv(gbif_jrgce_filtered,paste(path_out,'CHELSA_GBIF_jrgce.csv'),row.names=F)
