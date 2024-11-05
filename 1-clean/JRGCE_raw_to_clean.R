@@ -1,19 +1,20 @@
 # TITLE:          JRGCE data cleaning
 # AUTHORS:        Kara Dobson
 # COLLABORATORS:  Kai Zhu, Peter Reich
-# DATA INPUT:     Raw data imported as csv file
-# DATA OUTPUT:    Cleaned TeRaCON experiment data
+# DATA INPUT:     Semi-cleaned data imported as csv file from grassland proj
+# DATA OUTPUT:    Cleaned JRGCE experiment data
 # PROJECT:        EcoAcc
-# DATE:           Oct 2024
+# DATE:           Nov 2024
 
+# Load packages
+library(tidyverse)
+
+# Set path to turbo to get data
 path_abun_data = "/nfs/turbo/seas-zhukai/proj-grassland-cfp/intermediate/observation-experiment/final-community/"
 path_bio_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/JRGCE/JRGCE Harvest1 AGB/"
 path_meta_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/JRGCE/"
 path_home = "/home/kcdobson"
 setwd(path_abun_data)
-
-# Load packages
-library(tidyverse)
 
 # Read in data
 jrgce_abun_data <- read.csv("jrgce.csv")
@@ -59,7 +60,7 @@ jrgce_bio_data <- jrgce_bio_data %>%
   left_join(jrgce_meta_data %>% select(id, plot, quad, treatmentsummary),
             by = c("id", "plot", "quad"))
 
-# Fixing column names
+# Fixing column nmes
 colnames(jrgce_bio_data)[which(names(jrgce_bio_data) == "mass_gm2")] <- "ab_biomass"
 colnames(jrgce_bio_data)[which(names(jrgce_bio_data) == "treatmentsummary")] <- "treatment"
 colnames(jrgce_abun_data)[which(names(jrgce_abun_data) == "abund")] <- "percent_cover"
@@ -69,6 +70,6 @@ colnames(jrgce_abun_data)[which(names(jrgce_abun_data) == "treat")] <- "treatmen
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
 write.csv(jrgce_abun_data,paste(path_out,'jrgce_clean.csv'))
 write.csv(jrgce_bio_data,paste(path_out,'jrgce_ecosystem_dat_clean.csv'))
-
+s
 
 

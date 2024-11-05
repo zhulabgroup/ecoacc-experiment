@@ -6,12 +6,13 @@
 # PROJECT:        EcoAcc
 # DATE:           Oct 2024
 
+# Load packages
+library(tidyverse)
+
+# Set path to turbo to get data
 path_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/TeRaCON"
 path_home = "/home/kcdobson"
 setwd(path_data)
-
-# Load packages
-library(tidyverse)
 
 # Read in data
 teracon_data <- read.csv("teracon harvest file for Kara Dobson_241021.csv")
