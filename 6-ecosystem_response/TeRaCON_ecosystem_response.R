@@ -45,6 +45,14 @@ sens_plot <- function(df, response_var) {
   
   ggplot(df, aes(x = year, y = sensitivity)) +
     geom_smooth() +
+    scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
     theme_bw()
 }
-sens_plot(eco_grouped,"mean_bl_n")
+sens_plot(eco_grouped,"mean_ab_bio")
+
+
+# Models
+eco_grouped_mod <- eco_grouped %>%
+  filter(variable == "mean_bl_n")
+eco_mod <- lm(sensitivity ~ year, data = eco_grouped_mod)
+summary(eco_mod)
