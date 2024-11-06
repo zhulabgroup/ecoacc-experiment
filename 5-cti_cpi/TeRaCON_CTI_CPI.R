@@ -94,6 +94,7 @@ ggplot(CTI, aes(x = year, y = CTI_sd, color = temp_treatment, group=temp_treatme
 # Plot CTI sensitivity
 ggplot(CTI_sens, aes(x = year, y = sensitivity)) +
   geom_smooth() +
+  labs(x = "Year", y = "CTI (Warmed - Ambient)") +
   scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
   theme_bw()
 

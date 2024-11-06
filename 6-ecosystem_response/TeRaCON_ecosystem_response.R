@@ -2,7 +2,7 @@
 # AUTHORS:        Kara Dobson
 # COLLABORATORS:  Kai Zhu, Peter Reich
 # DATA INPUT:     Teracon data containing ecosystem responses
-# DATA OUTPUT:    
+# DATA OUTPUT:    Plots of changes in ecosystem responses over time
 # PROJECT:        EcoAcc
 # DATE:           Oct 2024
 
@@ -45,6 +45,7 @@ sens_plot <- function(df, response_var) {
   
   ggplot(df, aes(x = year, y = sensitivity)) +
     geom_smooth() +
+    labs(x = "Year", y = "Biomass (Warmed - Ambient)") +
     scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
     theme_bw()
 }
