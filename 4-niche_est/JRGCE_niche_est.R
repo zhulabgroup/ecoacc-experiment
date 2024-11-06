@@ -23,8 +23,7 @@ niche_est <- chelsa_data %>%
   group_by(species) %>%
   mutate(temp_niche = median(tmp)) %>%
   mutate(precip_niche = median(ppt)) %>%
-  dplyr::select(-c(key, vpd, tmp, ppt)) %>%
-  distinct()
+  dplyr::select(-c(key, vpd))
 
 # Function to plot all species occurrences w/ median niche estimate
 plot_species_with_centroids <- function(data, species_name) {
@@ -32,7 +31,7 @@ plot_species_with_centroids <- function(data, species_name) {
   species_data <- data %>%
     filter(species == species_name)
   
-  ggplot(species_data, aes(x = mean_annual_temp, y = mean_annual_precip)) +
+  ggplot(species_data, aes(x = tmp, y = ppt)) +
     geom_point() +
     geom_point(aes(x = temp_niche, y = precip_niche),  colour = "yellow", size = 4) + 
     theme_classic() +
@@ -40,8 +39,8 @@ plot_species_with_centroids <- function(data, species_name) {
          x = "Mean Annual Temperature",
          y = "Mean Annual Precipitation")
 }
-plot_species_with_centroids(niche_est, "Asclepias tuberosa")
+plot_species_with_centroids(niche_est, "Danthonia californica")
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
-write.csv(niche_est,paste(path_out,'niche_estimate_teracon.csv'),row.names=F)
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+write.csv(niche_est,paste(path_out,'niche_estimate_jrgce.csv'),row.names=F)
