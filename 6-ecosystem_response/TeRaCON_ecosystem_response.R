@@ -57,3 +57,8 @@ eco_grouped_mod <- eco_grouped %>%
   filter(variable == "mean_bl_n")
 eco_mod <- lm(sensitivity ~ year, data = eco_grouped_mod)
 summary(eco_mod)
+
+
+# Upload data
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+write.csv(eco_grouped,paste(path_out,'eco_response_teracon.csv'))

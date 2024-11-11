@@ -45,8 +45,8 @@ CTI <- full_abun_data %>%
           disequilib = mean_C_temp_summer - CTI) %>%
   distinct()
 CTI_sens <- CTI %>%
-  dplyr::select(year,plot,temp_treatment,CTI) %>%
-  group_by(year, temp_treatment) %>%
+  dplyr::select(year,plot,mean_C_temp_summer,temp_treatment,CTI) %>%
+  group_by(year, mean_C_temp_summer,temp_treatment) %>%
   summarize(mean_cti = mean(CTI)) %>%
   pivot_wider(names_from = temp_treatment, values_from = mean_cti) %>%
   mutate(sensitivity = HTelv - HTamb)
@@ -67,7 +67,7 @@ for (i in 1:nrow(CTI)) {
   
 CPI <- full_abun_data %>%
   filter(Season == "August") %>%
-  group_by(year,plot,water_treatment) %>%
+  group_by(year,plot,mean_C_temp_summer,water_treatment) %>%
   reframe(CPI = sum(percent_cover * precip_niche) / sum(percent_cover),
           CPI_var = sum(percent_cover * (precip_niche - CPI)^2) / sum(percent_cover),
           CPI_sd = sqrt(CPI_var),
@@ -119,3 +119,10 @@ anova(cti_mod)
 emm <- emmeans(cti_mod, ~ temp_treatment * year)
 summary(emm)
 pairs(emm, by = "year")
+
+
+# Upload data
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+write.csv(CTI,paste(path_out,'CTI_teracon.csv'))
+write.csv(CTI_sens,paste(path_out,'CTI_sens_teracon.csv'))
+

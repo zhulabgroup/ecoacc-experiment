@@ -35,7 +35,7 @@ full_abun_data <- full_abun_data %>%
 
 # Calculating CTI and CPI
 CTI <- full_abun_data %>%
-  group_by(year,plot,temp_treatment) %>%
+  group_by(year,plot,mean_C_temp_summer,temp_treatment) %>%
   reframe(CTI = sum(percent_cover * temp_niche) / sum(percent_cover),
           CTI_var = sum(percent_cover * (temp_niche - CTI)^2) / sum(percent_cover),
           CTI_sd = sqrt(CTI_var),
@@ -43,8 +43,8 @@ CTI <- full_abun_data %>%
           CTI_kurt = sum(percent_cover * (temp_niche - CTI)^4) / (sum(percent_cover) * CTI_sd^4) - 3) %>%
   distinct()
 CTI_sens <- CTI %>%
-  dplyr::select(year,plot,temp_treatment,CTI) %>%
-  group_by(year, temp_treatment) %>%
+  dplyr::select(year,plot,mean_C_temp_summer,temp_treatment,CTI) %>%
+  group_by(year, mean_C_temp_summer,temp_treatment) %>%
   summarize(mean_cti = mean(CTI)) %>%
   pivot_wider(names_from = temp_treatment, values_from = mean_cti) %>%
   mutate(sensitivity = warmed - ambient)
@@ -101,3 +101,10 @@ anova(cti_mod)
 emm <- emmeans(cti_mod, ~ temp_treatment * year)
 summary(emm)
 pairs(emm, by = "year")
+
+
+# Upload data
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+write.csv(CTI,paste(path_out,'CTI_jrgce.csv'))
+write.csv(CTI_sens,paste(path_out,'CTI_sens_jrgce.csv'))
+

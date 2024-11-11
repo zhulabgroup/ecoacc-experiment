@@ -43,3 +43,9 @@ sens_plot <- function(df, response_var) {
 }
 sens_plot(eco_grouped,"mean_ab_bio")
 
+
+
+# Upload data
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+write.csv(eco_grouped,paste(path_out,'eco_response_jrgce.csv'))
+
