@@ -47,9 +47,21 @@ npp_jrgce_plot <- ggplot(NPP_jrgce, aes(x = year, y = sensitivity)) +
   scale_x_continuous(breaks = seq(1998, 2014, by = 2)) +
   theme_bw()
 
+# Ambient temp change figures
+temp_tera_plot <- ggplot(CTI_sens_teracon, aes(x = year, y = mean_C_temp_summer)) +
+  geom_smooth() +
+  labs(x = "Year", y = "Ambient temperature (°C)") +
+  scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  theme_bw()
+temp_jrgce_plot <- ggplot(CTI_sens_jrgce, aes(x = year, y = mean_C_temp_summer)) +
+  geom_smooth() +
+  labs(x = "Year", y = "Ambient temperature (°C)") +
+  scale_x_continuous(breaks = seq(1998, 2014, by = 2)) +
+  theme_bw()
+
 # Combine figures into one multi-panel plot
-ggarrange(CTI_tera_plot,npp_tera_plot,
-          CTI_jrgce_plot,npp_jrgce_plot,
-          ncol = 2, nrow=2, common.legend = T, legend = "right")
+ggarrange(CTI_tera_plot,npp_tera_plot,temp_tera_plot,
+          CTI_jrgce_plot,npp_jrgce_plot,temp_jrgce_plot,
+          ncol = 3, nrow=2, common.legend = T, legend = "right")
 
 
