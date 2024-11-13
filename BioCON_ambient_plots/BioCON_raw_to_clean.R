@@ -20,14 +20,15 @@ biocon <- read.csv("BioCON Master Harvest_240820_for PR.csv")
 
 # Selecting columns to keep
 colnames(biocon)
-biocon_sub <- biocon[,c(2,9,11:15,17,33,116:131)] # for % cover
+biocon_sub <- biocon[,c(2,9,11:15,17,33,38:39,41,116:131)] # for % cover
 
 # Removing first test row
 biocon_sub <- biocon_sub[2:19293,]
 
 # Wide to long for just percent cover values
 biocon_long <- biocon_sub %>%
-  pivot_longer(cols = -c(year,Plot,Season,CO2.Treatment,Nitrogen.Treatment,C.and.N.treatment, Water.Treatment,Temp.Treatment,Mean.Amb.May.June.July.Temp..F.),
+  pivot_longer(cols = -c(year,Plot,Season,CO2.Treatment,Nitrogen.Treatment,C.and.N.treatment,
+                         Water.Treatment,Temp.Treatment,Mean.Amb.May.June.July.Temp..F.,CountOfSpecies,CountOfGroup,Experiment),
                names_to = "Species", values_to = "Percent_cover")
 
 # Fixing species names
@@ -57,9 +58,17 @@ biocon_long <- biocon_long %>%
   rename(cn_treatment = C.and.N.treatment) %>%
   rename(co2_treatment = CO2.Treatment)
 
-# Selecting plots with no temperature treatment and removing NA percent cover rows
+# Selecting plots >1 species planted, >1 species group, and is part of the main experiment
 biocon_amb <- biocon_long %>%
-  filter(temp_treatment == "") %>%
+  filter(CountOfSpecies > 1) %>%
+  filter(CountOfGroup > 1) %>%
+  filter(Experiment == "M") %>%
+  filter(co2_treatment == "Camb" &
+           n_treatment == "Namb") %>%
+  filter(water_treatment == "H2Oamb" |
+           water_treatment == "") %>%
+  filter(temp_treatment == "HTamb" |
+           temp_treatment == "") %>%
   filter(!(is.na(percent_cover)))
 
 

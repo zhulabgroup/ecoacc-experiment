@@ -36,18 +36,11 @@ CTI <- full_abun_data %>%
   group_by(year,plot) %>%
   reframe(CTI = sum(percent_cover * temp_niche) / sum(percent_cover)) %>%
   distinct()
-# Some plots only have 1 species; removing plots w/ the same CTI value every year
-plots_to_remove <- CTI %>% 
-  filter(!(CTI == "NaN")) %>%
-  group_by(plot) %>%
-  filter(n_distinct(CTI) == 1) %>%
-  distinct(plot)
-CTI_filtered <- CTI %>%
-  filter(!plot %in% plots_to_remove$plot)
 
 # Plot CTI
-ggplot(CTI_filtered, aes(x = year, y = CTI)) +
-  geom_jitter(alpha = 0.1) +  # Add jittered points
+ggplot(CTI, aes(x = year, y = CTI)) +
+  geom_jitter(alpha = 0.2) +  # Add jittered points
+  geom_line(data = biocon[!is.na(biocon$mean_C_temp_summer),], aes(x = year,y = (mean_C_temp_summer/2))) +
   stat_summary(fun = mean,
                fun.min = mean,
                fun.max = mean,
@@ -55,3 +48,11 @@ ggplot(CTI_filtered, aes(x = year, y = CTI)) +
                width = 0.4,
                color="red") +
   theme_minimal()
+
+
+# Models
+mod1 <- lm(CTI ~ as.factor(year), data = CTI)
+anova(mod1)
+summary(mod1)
+emm <- emmeans(mod1, ~ year)
+pairs(emm, adjust = "tukey")
