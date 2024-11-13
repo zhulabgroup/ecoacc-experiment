@@ -32,7 +32,7 @@ full_abun_data <- full_abun_data %>%
   filter(!is.na(temp_niche)) %>%
   filter(!is.na(precip_niche))
 
-# Calculating CTI and CPI
+# Calculating CTI
 CTI <- full_abun_data %>%
   filter(Season == "August") %>%
   group_by(year,plot,mean_C_temp_summer,temp_treatment) %>%
@@ -44,18 +44,10 @@ CTI <- full_abun_data %>%
           mean_C_temp_warmed = mean_C_temp_summer+2.5,
           disequilib = mean_C_temp_summer - CTI) %>%
   distinct()
-CTI_sens <- CTI %>%
-  dplyr::select(year,plot,mean_C_temp_summer,temp_treatment,CTI) %>%
-  group_by(year, mean_C_temp_summer,temp_treatment) %>%
-  summarize(mean_cti = mean(CTI)) %>%
-  pivot_wider(names_from = temp_treatment, values_from = mean_cti) %>%
-  mutate(sensitivity = HTelv - HTamb)
-
 # Note: code below overwrites disequilib formula from above; use this to test separate temps for amb and warm
 # Calculate disequilibrium using ambient temps for amb, and warmed temps for elv?
 # Need to figure out where elv temp data is; for now, this is a rough proxy of +2.5 above amb
 CTI$disequilib <- NA
-
 for (i in 1:nrow(CTI)) {
   if (CTI$temp_treatment[i] == "HTelv") {
     CTI$disequilib[i] <- CTI$mean_C_temp_warmed[i] - CTI$CTI[i]
@@ -64,7 +56,15 @@ for (i in 1:nrow(CTI)) {
   }
 }
 
-  
+# Calculating CTI sensitivity (warmed - ambient)
+CTI_sens <- CTI %>%
+  dplyr::select(year,plot,mean_C_temp_summer,temp_treatment,CTI) %>%
+  group_by(year, mean_C_temp_summer,temp_treatment) %>%
+  summarize(mean_cti = mean(CTI)) %>%
+  pivot_wider(names_from = temp_treatment, values_from = mean_cti) %>%
+  mutate(sensitivity = HTelv - HTamb)
+
+# Calculating CPI
 CPI <- full_abun_data %>%
   filter(Season == "August") %>%
   group_by(year,plot,mean_C_temp_summer,water_treatment) %>%
@@ -74,9 +74,19 @@ CPI <- full_abun_data %>%
           CPI_skew = sum(percent_cover * (precip_niche - CPI)^3) / (sum(percent_cover) * CPI_sd^3),
           CPI_kurt = sum(percent_cover * (precip_niche - CPI)^4) / (sum(percent_cover) * CPI_sd^4) - 3)
 
+# CTI and CPI combined
+CTI_CPI <- full_abun_data %>%
+  filter(Season == "August") %>%
+  group_by(year,temp_treatment) %>%
+  reframe(CPI = sum(percent_cover * precip_niche) / sum(percent_cover),
+          CTI = sum(percent_cover * temp_niche) / sum(percent_cover)) %>%
+  pivot_wider(names_from = temp_treatment,
+              values_from = c(CTI, CPI),
+              names_sep = "_")
+
 
 # Plot CTI
-ggplot(CTI, aes(x = year, y = CTI_sd, color = temp_treatment, group=temp_treatment)) +
+ggplot(CTI, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
   geom_jitter(alpha = 0.2,
               position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
   #geom_smooth() +
@@ -112,6 +122,18 @@ ggplot(CPI, aes(x = year, y = CPI, color = water_treatment)) +
   theme_minimal() +
   scale_color_manual(values = c("H2Oamb" = "blue", "H2Oneg" = "red"))
 
+# Arrow figure
+ggplot(CTI_CPI) +
+  geom_segment(aes(x = CTI_HTamb, y = CPI_HTamb, 
+                   xend = CTI_HTelv, yend = CPI_HTelv,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_HTamb, y = CPI_HTamb), color = "black") +
+  geom_point(aes(x = CTI_HTelv, y = CPI_HTelv), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "CTI and CPI: Ambient to Elevated") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal()
+
 
 # Models
 cti_mod <- lmerTest::lmer(CTI_sd ~ temp_treatment*as.factor(year) + (1|plot), data=CTI)
@@ -125,4 +147,5 @@ pairs(emm, by = "year")
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
 write.csv(CTI,paste(path_out,'CTI_teracon.csv'))
 write.csv(CTI_sens,paste(path_out,'CTI_sens_teracon.csv'))
+write.csv(CTI_CPI,paste(path_out,'CTI_CPI_teracon.csv'))
 
