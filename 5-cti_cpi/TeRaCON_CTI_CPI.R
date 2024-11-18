@@ -13,14 +13,13 @@ library(emmeans)
 
 # Set path to turbo to get data
 path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
-path_home = "/home/kcdobson"
 setwd(path_data)
 
 # Load in data
-niche_est <- read.csv(" niche_estimate_teracon.csv")
-niche_est <- niche_est %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
+niche_est <- read.csv(" niche_estimate_6month_teracon_limited.csv")
+#niche_est <- niche_est %>%
+#  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
+#  distinct()
 teracon <- read.csv(" teracon_clean.csv")
 teracon <- teracon %>%
   mutate(scaled_temp = mean_C_temp_summer/5)
@@ -47,14 +46,14 @@ CTI <- full_abun_data %>%
 # Note: code below overwrites disequilib formula from above; use this to test separate temps for amb and warm
 # Calculate disequilibrium using ambient temps for amb, and warmed temps for elv?
 # Need to figure out where elv temp data is; for now, this is a rough proxy of +2.5 above amb
-CTI$disequilib <- NA
-for (i in 1:nrow(CTI)) {
-  if (CTI$temp_treatment[i] == "HTelv") {
-    CTI$disequilib[i] <- CTI$mean_C_temp_warmed[i] - CTI$CTI[i]
-  } else if (CTI$temp_treatment[i] == "HTamb") {
-    CTI$disequilib[i] <- CTI$mean_C_temp_summer[i] - CTI$CTI[i]
-  }
-}
+#CTI$disequilib <- NA
+#for (i in 1:nrow(CTI)) {
+#  if (CTI$temp_treatment[i] == "HTelv") {
+#    CTI$disequilib[i] <- CTI$mean_C_temp_warmed[i] - CTI$CTI[i]
+#  } else if (CTI$temp_treatment[i] == "HTamb") {
+#    CTI$disequilib[i] <- CTI$mean_C_temp_summer[i] - CTI$CTI[i]
+#  }
+#}
 
 # Calculating CTI sensitivity (warmed - ambient)
 CTI_sens <- CTI %>%
@@ -148,4 +147,10 @@ path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
 write.csv(CTI,paste(path_out,'CTI_teracon.csv'))
 write.csv(CTI_sens,paste(path_out,'CTI_sens_teracon.csv'))
 write.csv(CTI_CPI,paste(path_out,'CTI_CPI_teracon.csv'))
+#write.csv(CTI,paste(path_out,'CTI_teracon_limited.csv'))
+#write.csv(CTI_sens,paste(path_out,'CTI_sens_teracon_limited.csv'))
+#write.csv(CTI_CPI,paste(path_out,'CTI_CPI_teracon_limited.csv'))
+#write.csv(CTI,paste(path_out,'CTI_6month_teracon_limited.csv'))
+#write.csv(CTI_sens,paste(path_out,'CTI_sens_6month_teracon_limited.csv'))
+#write.csv(CTI_CPI,paste(path_out,'CTI_CPI_6month_teracon_limited.csv'))
 
