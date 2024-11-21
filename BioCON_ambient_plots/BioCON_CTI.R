@@ -103,10 +103,10 @@ spp_type_CTI_long <- spp_type_CTI %>%
 
 # Plot with all 3 plot types
 ggplot(spp_type_CTI_long, aes(x = year, y = CTI, color = type)) +
-  geom_line(size = 1, alpha = 1) +
+  geom_line(size = 1) +
   geom_line(data = biocon[!is.na(biocon$mean_C_temp_summer),], 
             aes(x = year, y = mean_C_temp_summer/2, color = "Temperature / 2"), 
-            size = 1, alpha = 1) +
+            size = 1) +
   labs(x = "Year",
        y = "CTI",
        color = "Type") +  # Add a title to the legend
