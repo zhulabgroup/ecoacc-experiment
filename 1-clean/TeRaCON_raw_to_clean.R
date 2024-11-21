@@ -11,7 +11,6 @@ library(tidyverse)
 
 # Set path to turbo to get data
 path_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/TeRaCON"
-path_home = "/home/kcdobson"
 setwd(path_data)
 
 # Read in data
@@ -20,7 +19,7 @@ teracon_data <- read.csv("teracon harvest file for Kara Dobson_241021.csv")
 # Selecting columns to keep
 colnames(teracon_data)
 teracon_data_sub <- teracon_data[,c(1:9,11,27,109:125)] # for % cover
-teracon_data_sub_eco <- teracon_data[,c(1:9,11,27,55,68:69,76,78,80,82,84)] # for ecosystem response
+teracon_data_sub_eco <- teracon_data[,c(1:9,11,27,55,68:69,74,76,78,80,82,84)] # for ecosystem response
 
 # Removing first test row
 teracon_data_sub <- teracon_data_sub[2:1153,]
@@ -71,11 +70,13 @@ teracon_data_sub_eco <- teracon_data_sub_eco %>%
   rename(ab_biomass = AbovegroundTotal.Biomass..g.m.2.) %>%
   rename(bl_biomass = Total.root.biomass.0.20..g.m.2.) %>%
   rename(total_biomass = Total.Biomass) %>%
+  rename(root_ingrowth = Annual.Total.Root.Ingrowth..g.m.2.) %>%
   rename(total_n = Whole.Plot.Total.N..g.m.2.) %>%
   rename(bl_n = Belowground.N..total....g.m.2.) %>%
   rename(bl_c = Belowground.Carbon...) %>%
   rename(ab_n = Aboveground.N..total....g.m.2.) %>%
-  rename(ab_c = Aboveground.Carbon...)
+  rename(ab_c = Aboveground.Carbon...) %>%
+  mutate(biomass_plus_root = ab_biomass+root_ingrowth)
   
 
 # Upload data

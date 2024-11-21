@@ -77,7 +77,7 @@ gbif_data_limits <- GBIF_species %>%
   filter(decimalLongitude >= -95 & decimalLongitude <= -70)
 
 # Checking distribution of occurrences for each species
-#gbif_data_limits <- read.csv(" GBIF_teracon_limited.csv") # reading in data if I just want to make the map
+gbif_data_limits <- read.csv(" GBIF_teracon_limited.csv") # reading in data if I just want to make the map
 world <- map_data("world")
 distb_occ <- function(data,spp){
   
