@@ -104,7 +104,7 @@ distb_occ <- function(data,spp){
           axis.text.x = element_text(size=14),
           axis.text.y = element_text(size=14))
 }
-distb_occ(gbif_data_limits,"Sorghastrum nutans")
+distb_occ(gbif_data_limits,"Bouteloua gracilis")
 
 
 # Upload data

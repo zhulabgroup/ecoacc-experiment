@@ -16,7 +16,7 @@ path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data)
 
 # Load in data
-niche_est <- read.csv(" niche_estimate_6month_teracon_limited.csv")
+niche_est <- read.csv(" niche_estimate_teracon_limited.csv")
 #niche_est <- niche_est %>%
 #  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
 #  distinct()
