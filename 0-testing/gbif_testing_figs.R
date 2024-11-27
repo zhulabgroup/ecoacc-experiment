@@ -11,51 +11,31 @@ library(tidyverse)
 library(ggpubr)
 
 # Set path to turbo to get data
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/data_for_testing/"
+setwd(path_data)
+# Load in data
+CTI_tera_uscan <- read.csv(" CTI_teracon_uscan.csv")
+CTI_tera_1000 <- read.csv(" CTI_teracon_1000.csv")
+CTI_tera_500 <- read.csv(" CTI_teracon_500.csv")
+
+CTI_sens_tera_uscan <- read.csv(" CTI_sens_teracon_uscan.csv")
+CTI_sens_tera_1000 <- read.csv(" CTI_sens_teracon_1000.csv")
+CTI_sens_tera_500 <- read.csv(" CTI_sens_teracon_500.csv")
+
+CTI_CPI_tera_uscan <- read.csv(" CTI_CPI_teracon_uscan.csv")
+CTI_CPI_tera_1000 <- read.csv(" CTI_CPI_teracon_1000.csv")
+CTI_CPI_tera_500 <- read.csv(" CTI_CPI_teracon_500.csv")
+# Set path to turbo to get data
 path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data)
 # Load in data
-# Data using global spp occurrences from GBIF + year-round MAT:
-CTI_sens_teracon <- read.csv(" CTI_sens_teracon.csv")
-CTI_teracon <- read.csv(" CTI_teracon.csv")
-NPP_teracon <- read.csv(" eco_response_teracon.csv")
-NPP_overall_teracon <- read.csv(" eco_response_overall_teracon.csv")
-CTI_CPI_teracon <- read.csv(" CTI_CPI_teracon.csv")
-# Data using ecoregion 8 spp occurrences from GBIF + year-round MAT:
-CTI_sens_teracon_lim <- read.csv(" CTI_sens_teracon_limited.csv")
-CTI_teracon_lim <- read.csv(" CTI_teracon_limited.csv")
-CTI_CPI_teracon_lim <- read.csv(" CTI_CPI_teracon_limited.csv")
-# Data using ecoregion 8 spp occurrences from GBIF + 6-month temps (March-Aug):
-CTI_sens_teracon_6month <- read.csv(" CTI_sens_6month_teracon_limited.csv")
-CTI_teracon_6month <- read.csv(" CTI_6month_teracon_limited.csv")
-CTI_CPI_teracon_6month <- read.csv(" CTI_CPI_6month_teracon_limited.csv")
-# Data w/o big bluestem:
-CTI_sens_teracon_noblue <- read.csv(" CTI_sens_teracon_nobluestem.csv")
-CTI_teracon_noblue <- read.csv(" CTI_teracon_nobluestem.csv")
-CTI_CPI_teracon_noblue <- read.csv(" CTI_CPI_teracon_nobluestem.csv")
-
-# Set path to data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
-setwd(path_data)
-# Load in data
-CTI_sens_jrgce <- read.csv(" CTI_sens_jrgce.csv")
-CTI_jrgce <- read.csv(" CTI_jrgce.csv")
-NPP_jrgce <- read.csv(" eco_response_jrgce.csv")
-NPP_overall_jrgce <- read.csv(" eco_response_overall_jrgce.csv")
-CTI_CPI_jrgce <- read.csv(" CTI_CPI_jrgce.csv")
-
-# Set path to data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
-setwd(path_data)
-# Load in data
-CTI_sens_phace <- read.csv(" CTI_sens_phace_limited.csv")
-CTI_phace <- read.csv(" CTI_phace_limited.csv")
-NPP_phace <- read.csv(" eco_response_phace.csv")
-NPP_overall_phace <- read.csv(" eco_response_overall_phace.csv")
-CTI_CPI_phace <- read.csv(" CTI_CPI_phace_limited.csv")
+CTI_CPI_tera_eco8 <- read.csv(" CTI_CPI_teracon_limited.csv")
+CTI_tera_eco8 <- read.csv(" CTI_teracon_limited.csv")
+CTI_sens_tera_eco8 <- read.csv(" CTI_sens_teracon_limited.csv")
 
 
-##### Fig: teracon --> comparing global GBIF occurrence data w/ ecoregion 8 GBIF occurrence data
-CTI_global_tera <- ggplot(CTI_teracon, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+##### Fig: teracon --> comparing different scales of GBIF data on CTI change over time
+CTI_uscan_tera <- ggplot(CTI_tera_uscan, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
   geom_jitter(alpha = 0.1,
               position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
   stat_summary(fun = mean,
@@ -65,10 +45,11 @@ CTI_global_tera <- ggplot(CTI_teracon, aes(x = year, y = CTI, color = temp_treat
                # width = 0.4,
                position = position_dodge(width = 0.7),
                aes(color = temp_treatment, group = temp_treatment)) +
-  labs(title="All GBIF occurrences") +
+  labs(title="US/Canada GBIF occurrences") +
   theme_minimal() +
   scale_color_manual(values = c("HTamb" = "blue", "HTelv" = "red"))
-CTI_eco8_tera <- ggplot(CTI_teracon_lim, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+
+CTI_eco8_tera <- ggplot(CTI_tera_eco8, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
   geom_jitter(alpha = 0.1,
               position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
   stat_summary(fun = mean,
@@ -78,46 +59,125 @@ CTI_eco8_tera <- ggplot(CTI_teracon_lim, aes(x = year, y = CTI, color = temp_tre
                # width = 0.4,
                position = position_dodge(width = 0.7),
                aes(color = temp_treatment, group = temp_treatment)) +
-  labs(title="Ecoregion 8 occurrences") +
+  labs(title="US/Canada GBIF occurrences") +
   theme_minimal() +
   scale_color_manual(values = c("HTamb" = "blue", "HTelv" = "red"))
 
-arrow_global <- ggplot(CTI_CPI_teracon) +
+CTI_1000_tera <- ggplot(CTI_tera_1000, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="1000km buffer occurrences") +
+  theme_minimal() +
+  scale_color_manual(values = c("HTamb" = "blue", "HTelv" = "red"))
+
+CTI_500_tera <- ggplot(CTI_tera_500, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="500km buffer occurrences") +
+  theme_minimal() +
+  scale_color_manual(values = c("HTamb" = "blue", "HTelv" = "red"))
+
+# Combine figures into one multi-panel plot
+ggarrange(CTI_uscan_tera,CTI_eco8_tera,CTI_1000_tera,CTI_500_tera,
+          ncol = 4)
+
+
+
+
+#### Fig: teracon --> arrow comparisons for different gbif scales
+arrow_uscan <- ggplot(CTI_CPI_tera_uscan) +
   geom_segment(aes(x = CTI_HTamb, y = CPI_HTamb, 
                    xend = CTI_HTelv, yend = CPI_HTelv,
                    color = year),
                arrow = arrow(length = unit(0.1, "inches"))) +
   geom_point(aes(x = CTI_HTamb, y = CPI_HTamb), color = "black") +
   geom_point(aes(x = CTI_HTelv, y = CPI_HTelv), color = "red") +
-  labs(x = "CTI", y = "CPI", title = "All GBIF occurrences") +
-  scale_color_viridis_c(option = "magma") +
-  theme_minimal()
-arrow_eco8 <- ggplot(CTI_CPI_teracon_lim) +
-  geom_segment(aes(x = CTI_HTamb, y = CPI_HTamb, 
-                   xend = CTI_HTelv, yend = CPI_HTelv,
-                   color = year),
-               arrow = arrow(length = unit(0.1, "inches"))) +
-  geom_point(aes(x = CTI_HTamb, y = CPI_HTamb), color = "black") +
-  geom_point(aes(x = CTI_HTelv, y = CPI_HTelv), color = "red") +
-  labs(x = "CTI", y = "CPI", title = "Ecoregion 8 occurrences") +
+  labs(x = "CTI", y = "CPI", title = "US/Canada GBIF occurrences") +
   scale_color_viridis_c(option = "magma") +
   theme_minimal()
 
-CTI_global_smooth <- ggplot(CTI_sens_teracon, aes(x = year, y = sensitivity)) +
+arrow_eco8 <- ggplot(CTI_CPI_tera_eco8) +
+  geom_segment(aes(x = CTI_HTamb, y = CPI_HTamb, 
+                   xend = CTI_HTelv, yend = CPI_HTelv,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_HTamb, y = CPI_HTamb), color = "black") +
+  geom_point(aes(x = CTI_HTelv, y = CPI_HTelv), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "Ecoregion 8 GBIF occurrences") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal()
+
+arrow_1000 <- ggplot(CTI_CPI_tera_1000) +
+  geom_segment(aes(x = CTI_HTamb, y = CPI_HTamb, 
+                   xend = CTI_HTelv, yend = CPI_HTelv,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_HTamb, y = CPI_HTamb), color = "black") +
+  geom_point(aes(x = CTI_HTelv, y = CPI_HTelv), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "1000km buffer occurrences") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal()
+
+arrow_500 <- ggplot(CTI_CPI_tera_500) +
+  geom_segment(aes(x = CTI_HTamb, y = CPI_HTamb, 
+                   xend = CTI_HTelv, yend = CPI_HTelv,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_HTamb, y = CPI_HTamb), color = "black") +
+  geom_point(aes(x = CTI_HTelv, y = CPI_HTelv), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "500km buffer occurrences") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal()
+
+# Combine figures into one multi-panel plot
+ggarrange(arrow_uscan,arrow_eco8,arrow_1000,arrow_500,
+          ncol = 4)
+
+
+
+### Fig: teracon --> comparing sensitivity btwn different gbif scales
+CTI_uscan_smooth <- ggplot(CTI_sens_tera_uscan, aes(x = year, y = sensitivity)) +
   geom_smooth() +
-  labs(x = "Year", y = "CTI (Warmed - Ambient)",title = "All GBIF occurrences") +
+  labs(x = "Year", y = "CTI (Warmed - Ambient)",title = "US/Canada occurrences") +
   scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
   theme_bw()
-CTI_eco8_smooth <- ggplot(CTI_sens_teracon_lim, aes(x = year, y = sensitivity)) +
+
+CTI_eco8_smooth <- ggplot(CTI_sens_tera_eco8, aes(x = year, y = sensitivity)) +
   geom_smooth() +
   labs(x = "Year", y = "CTI (Warmed - Ambient)",title = "Ecoregion 8 occurrences") +
   scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
   theme_bw()
 
+CTI_1000_smooth <- ggplot(CTI_sens_tera_1000, aes(x = year, y = sensitivity)) +
+  geom_smooth() +
+  labs(x = "Year", y = "CTI (Warmed - Ambient)",title = "1000km buffer occurrences") +
+  scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  theme_bw()
+
+CTI_500_smooth <- ggplot(CTI_sens_tera_500, aes(x = year, y = sensitivity)) +
+  geom_smooth() +
+  labs(x = "Year", y = "CTI (Warmed - Ambient)",title = "500km buffer occurrences") +
+  scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  theme_bw()
+
 # Combine figures into one multi-panel plot
-ggarrange(CTI_global_tera, arrow_global, CTI_global_smooth,
-          CTI_eco8_tera, arrow_eco8, CTI_eco8_smooth,
-          ncol = 3, nrow=2)
+ggarrange(CTI_uscan_smooth,CTI_eco8_smooth,CTI_1000_smooth,CTI_500_smooth,
+          ncol = 4)
+
 
 
 
