@@ -25,6 +25,7 @@ CTI_sens_tera_500 <- read.csv(" CTI_sens_teracon_500.csv")
 CTI_CPI_tera_uscan <- read.csv(" CTI_CPI_teracon_uscan.csv")
 CTI_CPI_tera_1000 <- read.csv(" CTI_CPI_teracon_1000.csv")
 CTI_CPI_tera_500 <- read.csv(" CTI_CPI_teracon_500.csv")
+
 # Set path to turbo to get data
 path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data)
