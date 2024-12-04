@@ -247,6 +247,43 @@ ggarrange(CTI_teracon_plot,CTI_jrgce_plot,CTI_phace_plot,
 
 
 
+##### Fig: CTI as a function of temperature over time
+# Using if...else to determine the value based on temp_treatment
+CTI_teracon$ambient_temp <- NA
+CTI_teracon <- CTI_teracon %>%
+  mutate(ambient_temp = case_when(temp_treatment == "HTelv" ~ mean_C_temp_warmed,
+                                  temp_treatment == "HTamb" ~ mean_C_temp_summer))
+
+CTI_teracon_plot <- ggplot(CTI_teracon, aes(x = mean_C_temp_summer, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1) +
+              #position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               #width = 0.4,
+               #position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="TeRaCON") +
+  theme_minimal() +
+  scale_color_manual(values = c("HTamb" = "blue", "HTelv" = "red"))
+
+CTI_jrgce_plot <- ggplot(CTI_jrgce, aes(x = mean_C_temp_summer, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1) +
+              #position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               #width = 0.4,
+               #position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="TeRaCON") +
+  theme_minimal() +
+  scale_color_manual(values = c("ambient" = "blue", "warmed" = "red"))
+
+
+
 
 ##### Fig: Individual species abundances changes as a function of CTI
 # Calculate mean spp abundance per year and treatment

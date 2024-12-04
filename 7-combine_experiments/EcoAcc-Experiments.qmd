@@ -4,6 +4,8 @@ author: "Kara Dobson"
 date: 2024-11-21
 format: html
 editor: visual
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Ecological Acclimation: Warming Experiments
