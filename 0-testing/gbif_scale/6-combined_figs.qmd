@@ -1,0 +1,445 @@
+---
+title: "Testing GBIF scale and pairwise climate variable comparisons"
+author: "Kara Dobson"
+date: 2024-12-03
+format: html
+editor: visual
+---
+
+## GBIF occurrence data: various scales
+
+Testing the effect of decreasing scale of GBIF occurrence data on CTI/CPI calculations. The four tested scales are 1. All of US/Canada, 2. The EPA ecoregion for the experiment, 3. 1000km buffer around the experiment, and 4. 500km buffer around the experiment.
+
+```{r, echo=F, message=F, warning=F}
+# Load packages
+library(tidyverse)
+library(ggpubr)
+
+# Set path to turbo to get data
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/data_for_testing/"
+setwd(path_data)
+# Load in data
+CTI_phace_uscan <- read.csv(" CTI_phace_uscan.csv")
+CTI_phace_1000 <- read.csv(" CTI_phace_1000.csv")
+CTI_phace_500 <- read.csv(" CTI_phace_500.csv")
+
+CTI_sens_phace_uscan <- read.csv(" CTI_sens_phace_uscan.csv")
+CTI_sens_phace_1000 <- read.csv(" CTI_sens_phace_1000.csv")
+CTI_sens_phace_500 <- read.csv(" CTI_sens_phace_500.csv")
+
+CTI_CPI_phace_uscan <- read.csv(" CTI_CPI_phace_uscan.csv")
+CTI_CPI_phace_1000 <- read.csv(" CTI_CPI_phace_1000.csv")
+CTI_CPI_phace_500 <- read.csv(" CTI_CPI_phace_500.csv")
+
+# Set path to turbo to get data
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
+setwd(path_data)
+# Load in data
+CTI_CPI_phace_eco9 <- read.csv(" CTI_CPI_phace_limited.csv")
+CTI_phace_eco9 <- read.csv(" CTI_phace_limited.csv")
+CTI_sens_phace_eco9 <- read.csv(" CTI_sens_phace_limited.csv")
+
+# Set path to turbo to get data
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/data_for_testing/"
+setwd(path_data)
+# Load in data
+CTI_tera_uscan <- read.csv(" CTI_teracon_uscan.csv")
+CTI_tera_1000 <- read.csv(" CTI_teracon_1000.csv")
+CTI_tera_500 <- read.csv(" CTI_teracon_500.csv")
+
+CTI_sens_tera_uscan <- read.csv(" CTI_sens_teracon_uscan.csv")
+CTI_sens_tera_1000 <- read.csv(" CTI_sens_teracon_1000.csv")
+CTI_sens_tera_500 <- read.csv(" CTI_sens_teracon_500.csv")
+
+CTI_CPI_tera_uscan <- read.csv(" CTI_CPI_teracon_uscan.csv")
+CTI_CPI_tera_1000 <- read.csv(" CTI_CPI_teracon_1000.csv")
+CTI_CPI_tera_500 <- read.csv(" CTI_CPI_teracon_500.csv")
+
+# Set path to turbo to get data
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+setwd(path_data)
+# Load in data
+CTI_CPI_tera_eco8 <- read.csv(" CTI_CPI_teracon_limited.csv")
+CTI_tera_eco8 <- read.csv(" CTI_teracon_limited.csv")
+CTI_sens_tera_eco8 <- read.csv(" CTI_sens_teracon_limited.csv")
+
+# Set path to turbo to get data
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/data_for_testing/"
+setwd(path_data)
+# Load in data
+CTI_jrgce_uscan <- read.csv(" CTI_jrgce_uscan.csv")
+CTI_jrgce_1000 <- read.csv(" CTI_jrgce_1000.csv")
+CTI_jrgce_500 <- read.csv(" CTI_jrgce_500.csv")
+
+CTI_sens_jrgce_uscan <- read.csv(" CTI_sens_jrgce_uscan.csv")
+CTI_sens_jrgce_1000 <- read.csv(" CTI_sens_jrgce_1000.csv")
+CTI_sens_jrgce_500 <- read.csv(" CTI_sens_jrgce_500.csv")
+
+CTI_CPI_jrgce_uscan <- read.csv(" CTI_CPI_jrgce_uscan.csv")
+CTI_CPI_jrgce_1000 <- read.csv(" CTI_CPI_jrgce_1000.csv")
+CTI_CPI_jrgce_500 <- read.csv(" CTI_CPI_jrgce_500.csv")
+
+# Set path to turbo to get data
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+setwd(path_data)
+# Load in data
+CTI_CPI_jrgce_cfp <- read.csv(" CTI_CPI_jrgce.csv")
+CTI_jrgce_cfp <- read.csv(" CTI_jrgce.csv")
+CTI_sens_jrgce_cfp <- read.csv(" CTI_sens_jrgce.csv")
+```
+
+```{r, echo=F, message=F, warning=F}
+##### Fig: phace --> comparing different scales of GBIF data on CTI change over time
+CTI_uscan_phace <- ggplot(CTI_phace_uscan, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="US/Canada",y = "PHACE\nCTI") +
+  theme_minimal() +
+  theme(text = element_text(size=15)) +
+  scale_color_manual(values = c("ambient" = "blue", "warmed" = "red"))
+
+CTI_eco9_phace <- ggplot(CTI_phace_eco9, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="Ecoregion 9") +
+  theme_minimal() +
+  theme(text = element_text(size=15)) +
+  scale_color_manual(values = c("ambient" = "blue", "warmed" = "red"))
+
+CTI_1000_phace <- ggplot(CTI_phace_1000, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="1000km buffer") +
+  theme_minimal() +
+  theme(text = element_text(size=15)) +
+  scale_color_manual(values = c("ambient" = "blue", "warmed" = "red"))
+
+CTI_500_phace <- ggplot(CTI_phace_500, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="500km buffer") +
+  theme_minimal() +
+  theme(text = element_text(size=15)) +
+  scale_color_manual(values = c("ambient" = "blue", "warmed" = "red"))
+
+##### Fig: teracon --> comparing different scales of GBIF data on CTI change over time
+CTI_uscan_tera <- ggplot(CTI_tera_uscan, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="US/Canada",y = "TeRaCON\nCTI") +
+  theme_minimal() +
+  theme(text = element_text(size=15)) +
+  scale_color_manual(labels = c("ambient","warmed"),
+                     values = c("blue", "red"))
+
+CTI_eco8_tera <- ggplot(CTI_tera_eco8, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="Ecoregion 8") +
+  theme_minimal() +
+  theme(text = element_text(size=15)) +
+  scale_color_manual(labels = c("ambient","warmed"),
+                     values = c("blue", "red"))
+
+CTI_1000_tera <- ggplot(CTI_tera_1000, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="1000km buffer") +
+  theme_minimal() +
+  theme(text = element_text(size=15)) +
+  scale_color_manual(labels = c("ambient","warmed"),
+                     values = c("blue", "red"))
+
+CTI_500_tera <- ggplot(CTI_tera_500, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="500km buffer") +
+  theme_minimal() +
+  theme(text = element_text(size=15)) +
+  scale_color_manual(labels = c("ambient","warmed"),
+                     values = c("blue", "red"))
+
+# JRGCE
+CTI_uscan_jrgce <- ggplot(CTI_jrgce_uscan, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="US/Canada",y = "JRGCE\nCTI") +
+  theme_minimal() +
+  theme(text = element_text(size=15)) +
+  scale_color_manual(values = c("ambient" = "blue", "warmed" = "red"))
+
+CTI_cfp_jrgce <- ggplot(CTI_jrgce_cfp, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="CFP") +
+  theme_minimal() +
+  theme(text = element_text(size=15)) +
+  scale_color_manual(values = c("ambient" = "blue", "warmed" = "red"))
+
+CTI_1000_jrgce <- ggplot(CTI_jrgce_1000, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="1000km buffer") +
+  theme_minimal() +
+  theme(text = element_text(size=15)) +
+  scale_color_manual(values = c("ambient" = "blue", "warmed" = "red"))
+
+CTI_500_jrgce <- ggplot(CTI_jrgce_500, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  labs(title="500km buffer") +
+  theme_minimal() +
+  theme(text = element_text(size=15)) +
+  scale_color_manual(values = c("ambient" = "blue", "warmed" = "red"))
+```
+
+#### CTI change over time between warmed and ambient treatments
+
+```{r, message=F, warning=F, fig.width = 14, fig.height = 9}
+ggarrange(CTI_uscan_tera,CTI_eco8_tera,CTI_1000_tera,CTI_500_tera,
+          CTI_uscan_phace,CTI_eco9_phace,CTI_1000_phace,CTI_500_phace,
+          CTI_uscan_jrgce,CTI_cfp_jrgce,CTI_1000_jrgce,CTI_500_jrgce,
+          nrow=3, ncol = 4, common.legend = T, legend = "bottom")
+```
+
+```{r, echo=F, message=F, warning=F}
+#### Fig: phace --> arrow comparisons for different gbif scales
+arrow_uscan_phace <- ggplot(CTI_CPI_phace_uscan) +
+  geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
+                   xend = CTI_warmed, yend = CPI_warmed,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_ambient, y = CPI_ambient), color = "black") +
+  geom_point(aes(x = CTI_warmed, y = CPI_warmed), color = "red") +
+  labs(x = "CTI", y = "PHACE\nCPI", title = "US/Canada") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal() +
+  theme(text = element_text(size=17))
+
+arrow_eco9_phace <- ggplot(CTI_CPI_phace_eco9) +
+  geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
+                   xend = CTI_warmed, yend = CPI_warmed,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_ambient, y = CPI_ambient), color = "black") +
+  geom_point(aes(x = CTI_warmed, y = CPI_warmed), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "Ecoregion 9") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal() +
+  theme(text = element_text(size=17))
+
+arrow_1000_phace <- ggplot(CTI_CPI_phace_1000) +
+  geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
+                   xend = CTI_warmed, yend = CPI_warmed,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_ambient, y = CPI_ambient), color = "black") +
+  geom_point(aes(x = CTI_warmed, y = CPI_warmed), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "1000km buffer") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal() +
+  theme(text = element_text(size=17))
+
+arrow_500_phace <- ggplot(CTI_CPI_phace_500) +
+  geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
+                   xend = CTI_warmed, yend = CPI_warmed,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_ambient, y = CPI_ambient), color = "black") +
+  geom_point(aes(x = CTI_warmed, y = CPI_warmed), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "500km buffer") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal() +
+  theme(text = element_text(size=17))
+
+#### Fig: teracon --> arrow comparisons for different gbif scales
+arrow_uscan_tera <- ggplot(CTI_CPI_tera_uscan) +
+  geom_segment(aes(x = CTI_HTamb, y = CPI_HTamb, 
+                   xend = CTI_HTelv, yend = CPI_HTelv,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_HTamb, y = CPI_HTamb), color = "black") +
+  geom_point(aes(x = CTI_HTelv, y = CPI_HTelv), color = "red") +
+  labs(x = "CTI", y = "TeRaCON\nCPI", title = "US/Canada") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal() +
+  theme(text = element_text(size=17))
+
+arrow_eco8_tera <- ggplot(CTI_CPI_tera_eco8) +
+  geom_segment(aes(x = CTI_HTamb, y = CPI_HTamb, 
+                   xend = CTI_HTelv, yend = CPI_HTelv,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_HTamb, y = CPI_HTamb), color = "black") +
+  geom_point(aes(x = CTI_HTelv, y = CPI_HTelv), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "Ecoregion 8") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal() +
+  theme(text = element_text(size=17))
+
+arrow_1000_tera <- ggplot(CTI_CPI_tera_1000) +
+  geom_segment(aes(x = CTI_HTamb, y = CPI_HTamb, 
+                   xend = CTI_HTelv, yend = CPI_HTelv,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_HTamb, y = CPI_HTamb), color = "black") +
+  geom_point(aes(x = CTI_HTelv, y = CPI_HTelv), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "1000km buffer") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal() +
+  theme(text = element_text(size=17))
+
+arrow_500_tera <- ggplot(CTI_CPI_tera_500) +
+  geom_segment(aes(x = CTI_HTamb, y = CPI_HTamb, 
+                   xend = CTI_HTelv, yend = CPI_HTelv,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_HTamb, y = CPI_HTamb), color = "black") +
+  geom_point(aes(x = CTI_HTelv, y = CPI_HTelv), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "500km buffer") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal() +
+  theme(text = element_text(size=17))
+
+# JRGCE
+arrow_uscan_jrgce <- ggplot(CTI_CPI_jrgce_uscan) +
+  geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
+                   xend = CTI_warmed, yend = CPI_warmed,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_ambient, y = CPI_ambient), color = "black") +
+  geom_point(aes(x = CTI_warmed, y = CPI_warmed), color = "red") +
+  labs(x = "CTI", y = "JRGCE\nCPI", title = "US/Canada") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal() +
+  theme(text = element_text(size=17))
+
+arrow_cfp_jrgce <- ggplot(CTI_CPI_jrgce_cfp) +
+  geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
+                   xend = CTI_warmed, yend = CPI_warmed,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_ambient, y = CPI_ambient), color = "black") +
+  geom_point(aes(x = CTI_warmed, y = CPI_warmed), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "CFP") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal() +
+  theme(text = element_text(size=17))
+
+arrow_1000_jrgce <- ggplot(CTI_CPI_jrgce_1000) +
+  geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
+                   xend = CTI_warmed, yend = CPI_warmed,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_ambient, y = CPI_ambient), color = "black") +
+  geom_point(aes(x = CTI_warmed, y = CPI_warmed), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "1000km buffer") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal() +
+  theme(text = element_text(size=17))
+
+arrow_500_jrgce <- ggplot(CTI_CPI_jrgce_500) +
+  geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
+                   xend = CTI_warmed, yend = CPI_warmed,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_ambient, y = CPI_ambient), color = "black") +
+  geom_point(aes(x = CTI_warmed, y = CPI_warmed), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "500km buffer") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal() +
+  theme(text = element_text(size=17))
+```
+
+#### Treatment effect on CTI and CPI over time
+
+```{r, message=F, warning=F, fig.width = 20, fig.height = 18}
+ggarrange(arrow_uscan_tera,arrow_eco8_tera,arrow_1000_tera,arrow_500_tera,
+          arrow_uscan_phace,arrow_eco9_phace,arrow_1000_phace,arrow_500_phace,
+          arrow_uscan_jrgce,arrow_cfp_jrgce,arrow_1000_jrgce,arrow_500_jrgce,
+          nrow = 3, ncol = 4)
+```

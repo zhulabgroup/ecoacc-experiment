@@ -1,8 +1,8 @@
-# TITLE:          PHACE GBIF scale of occurrences test
+# TITLE:          JRGCE GBIF scale of occurrences test
 # AUTHORS:        Kara Dobson
 # COLLABORATORS:  Kai Zhu, Peter Reich
-# DATA INPUT:     Clean PHACE data read in to get species list
-# DATA OUTPUT:    raw GBIF occurrence data at varying scales for each species in PHACE dataset
+# DATA INPUT:     Clean JRGCE data read in to get species list
+# DATA OUTPUT:    raw GBIF occurrence data at varying scales for each species in JRGCE dataset
 # PROJECT:        EcoAcc
 # DATE:           Dec 2024
 
@@ -13,16 +13,18 @@ library(rgbif)
 library(CoordinateCleaner)
 library(maps)
 
-
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
 setwd(path_data)
 
 # Read in data
-phace_data <- read.csv(" phace_clean.csv")
+jrgce_data <- read.csv(" jrgce_clean.csv")
 
 # Making a list of the species in our experimental data set for GBIF occurrences
-species_list <- unique(phace_data$species)
+species_list <- unique(jrgce_data$species)
+species_list <- species_list[species_list != "Festuca DUMMY"] # removing non-spp name
+species_list <- species_list[species_list != "Avena DUMMY"] # removing non-spp name
+print(species_list)
 
 # Testing the impacts of spp. occurrences scale on results
 # bounding box limits = c(min_longitude, min_latitude, max_longitude, max_latitude)
@@ -77,11 +79,11 @@ gbif_spp_uscan <- do.call(rbind.data.frame, spp_occurrences_uscan)
 
 # Filtering 1000km and 500km from the US and Canada data
 gbif_data_1000 <- gbif_spp_uscan %>%
-  filter(decimalLatitude <= 50 & decimalLatitude >= 32) %>%
-  filter(decimalLongitude >= -117 & decimalLongitude <= -93)
+  filter(decimalLatitude <= 46 & decimalLatitude >= 28) %>%
+  filter(decimalLongitude >= -134 & decimalLongitude <= -111)
 gbif_data_500 <- gbif_spp_uscan %>%
-  filter(decimalLatitude <= 46 & decimalLatitude >= 37) %>%
-  filter(decimalLongitude >= -111 & decimalLongitude <= -99)
+  filter(decimalLatitude <= 42 & decimalLatitude >= 33) %>%
+  filter(decimalLongitude >= -128 & decimalLongitude <= -117)
 
 # Checking distribution of occurrences for each species
 world <- map_data("world")
@@ -110,12 +112,12 @@ distb_occ <- function(data,spp){
           axis.text.x = element_text(size=14),
           axis.text.y = element_text(size=14))
 }
-distb_occ(gbif_spp_uscan,"Allium textile")
-distb_occ(gbif_data_1000,"Allium textile")
-distb_occ(gbif_data_500,"Allium textile")
+distb_occ(gbif_spp_uscan,"Avena fatua")
+distb_occ(gbif_data_1000,"Avena fatua")
+distb_occ(gbif_data_500,"Avena fatua")
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/data_for_testing/"
-write.csv(gbif_spp_uscan,paste(path_out,'gbif_phace_uscan.csv'))
-write.csv(gbif_data_1000,paste(path_out,'gbif_phace_1000.csv'))
-write.csv(gbif_data_500,paste(path_out,'gbif_phace_500.csv'))
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/data_for_testing/"
+write.csv(gbif_spp_uscan,paste(path_out,'gbif_jrgce_uscan.csv'))
+write.csv(gbif_data_1000,paste(path_out,'gbif_jrgce_1000.csv'))
+write.csv(gbif_data_500,paste(path_out,'gbif_jrgce_500.csv'))
