@@ -12,26 +12,17 @@ library(ggpubr)
 library(plotly)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data)
 # Load in data
-# Data using global spp occurrences from GBIF + year-round MAT:
 CTI_sens_teracon <- read.csv(" CTI_sens_teracon.csv")
 CTI_teracon <- read.csv(" CTI_teracon.csv")
 tera <- read.csv(" teracon_clean.csv")
 NPP_teracon <- read.csv(" eco_response_teracon.csv")
 NPP_overall_teracon <- read.csv(" eco_response_overall_teracon.csv")
 CTI_CPI_teracon <- read.csv(" CTI_CPI_teracon.csv")
-# Data using ecoregion 8 spp occurrences from GBIF + year-round MAT:
-CTI_sens_teracon_lim <- read.csv(" CTI_sens_teracon_limited.csv")
-CTI_teracon_lim <- read.csv(" CTI_teracon_limited.csv")
-CTI_CPI_teracon_lim <- read.csv(" CTI_CPI_teracon_limited.csv")
-niche_est_tera <- read.csv(" niche_estimate_teracon_limited.csv")
-# Data using ecoregion 8 spp occurrences from GBIF + 6-month temps (March-Aug):
-CTI_sens_teracon_6month <- read.csv(" CTI_sens_6month_teracon_limited.csv")
-CTI_teracon_6month <- read.csv(" CTI_6month_teracon_limited.csv")
-CTI_CPI_teracon_6month <- read.csv(" CTI_CPI_6month_teracon_limited.csv")
-# Data w/o big bluestem:
+niche_est_tera <- read.csv(" teracon_niche.csv")
+
 CTI_sens_teracon_noblue <- read.csv(" CTI_sens_teracon_nobluestem.csv")
 CTI_teracon_noblue <- read.csv(" CTI_teracon_nobluestem.csv")
 CTI_CPI_teracon_noblue <- read.csv(" CTI_CPI_teracon_nobluestem.csv")
@@ -122,7 +113,7 @@ ggarrange(CTI_tera_plot,npp_tera_plot,temp_tera_plot,
 
 ##### Fig: correlating biomass w/ CTI
 # TeRaCON
-CTI_yearly_avg_tera <- CTI_teracon_6month %>%
+CTI_yearly_avg_tera <- CTI_teracon %>%
   group_by(year,temp_treatment) %>%
   summarize(mean_CTI = mean(CTI))
 NPP_CTI_teracon <- left_join(CTI_yearly_avg_tera, NPP_overall_teracon, by=c("year","temp_treatment"))
@@ -473,6 +464,7 @@ niche_est_tera_avg <- niche_est_tera %>%
   dplyr::select(-c(mean_annual_temp, mean_annual_precip, latitude, longitude)) %>%
   distinct()
 tera_merge <- merge(tera_test,niche_est_tera_avg, by="species")
+
 phace_warm <- phace_merge %>%
   filter(temp_treatment == "warmed")
 phace_amb <- phace_merge %>%

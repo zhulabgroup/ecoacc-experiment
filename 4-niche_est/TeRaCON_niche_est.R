@@ -15,7 +15,7 @@ path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data)
 
 # Load in data
-chelsa_data <- read.csv(" CHELSA_6month_teracon_limited.csv") # "CHELSA_teracon_limited" in turbo only contains data for ecoregion 8, and 6month contains climate info for march-aug
+chelsa_data <- read.csv(" CHELSA_teracon.csv") # "CHELSA_teracon_limited" in turbo only contains data for ecoregion 8, and 6month contains climate info for march-aug
 
 
 # Calculating the median temp and precip for each species
@@ -53,6 +53,6 @@ plot_species_with_centroids(niche_est, "Asclepias tuberosa")
 
 # Upload data
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
-#write.csv(niche_est,paste(path_out,'niche_estimate_teracon.csv'),row.names=F)
-write.csv(niche_est,paste(path_out,'niche_estimate_6month_teracon_limited.csv'),row.names=F)
+write.csv(niche_est,paste(path_out,'niche_estimate_teracon.csv'),row.names=F)
+#write.csv(niche_est,paste(path_out,'niche_estimate_6month_teracon_limited.csv'),row.names=F)
 #write.csv(niche_est,paste(path_out,'niche_estimate_teracon_limited.csv'),row.names=F)

@@ -14,7 +14,7 @@ library(raster)
 path_data_gbif = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data_gbif)
 # Read in data
-gbif_data <- read.csv(" GBIF_teracon.csv") # "GBIF_teracon_limited" data in turbo is only for ecoregion 8
+gbif_data <- read.csv(" gbif_teracon.csv") # "GBIF_teracon_limited" data in turbo is only for ecoregion 8
 # Set path to chelsa data
 path_data_chelsa = "/nfs/turbo/seas-zhukai/datasets/climate/CHELSA/climatology/"
 setwd(path_data_chelsa)

@@ -19,22 +19,14 @@ library(ggpubr)
 path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data)
 # Load in data
-# Data using global spp occurrences from GBIF + year-round MAT:
 CTI_sens_teracon <- read.csv(" CTI_sens_teracon.csv")
 CTI_teracon <- read.csv(" CTI_teracon.csv")
 tera <- read.csv(" teracon_clean.csv")
 NPP_teracon <- read.csv(" eco_response_teracon.csv")
 NPP_overall_teracon <- read.csv(" eco_response_overall_teracon.csv")
 CTI_CPI_teracon <- read.csv(" CTI_CPI_teracon.csv")
-# Data using ecoregion 8 spp occurrences from GBIF + year-round MAT:
-CTI_sens_teracon_lim <- read.csv(" CTI_sens_teracon_limited.csv")
-CTI_teracon_lim <- read.csv(" CTI_teracon_limited.csv")
-CTI_CPI_teracon_lim <- read.csv(" CTI_CPI_teracon_limited.csv")
-# Data using ecoregion 8 spp occurrences from GBIF + 6-month temps (March-Aug):
-CTI_sens_teracon_6month <- read.csv(" CTI_sens_6month_teracon_limited.csv")
-CTI_teracon_6month <- read.csv(" CTI_6month_teracon_limited.csv")
-CTI_CPI_teracon_6month <- read.csv(" CTI_CPI_6month_teracon_limited.csv")
-# Data w/o big bluestem:
+niche_est_tera <- read.csv(" teracon_niche.csv")
+
 CTI_sens_teracon_noblue <- read.csv(" CTI_sens_teracon_nobluestem.csv")
 CTI_teracon_noblue <- read.csv(" CTI_teracon_nobluestem.csv")
 CTI_CPI_teracon_noblue <- read.csv(" CTI_CPI_teracon_nobluestem.csv")
@@ -68,7 +60,7 @@ Using community composition and ecosystem response data from various warming exp
 
 ```{r, message = F, warning = F, echo = F}
 # CTI figures
-CTI_tera_plot <- ggplot(CTI_sens_teracon_lim, aes(x = year, y = sensitivity)) +
+CTI_tera_plot <- ggplot(CTI_sens_teracon, aes(x = year, y = sensitivity)) +
   geom_smooth() +
   labs(x = "Year", y = "TeRaCON\nCTI (Warmed - Ambient)") +
   scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
@@ -104,7 +96,7 @@ npp_phace_plot <- ggplot(NPP_phace, aes(x = year, y = sensitivity)) +
   theme_bw()
 
 # Ambient temp change figures
-temp_tera_plot <- ggplot(CTI_sens_teracon_lim, aes(x = year, y = mean_C_temp_summer)) +
+temp_tera_plot <- ggplot(CTI_sens_teracon, aes(x = year, y = mean_C_temp_summer)) +
   geom_smooth() +
   labs(x = "Year", y = "Ambient temperature (°C)") +
   scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
@@ -128,7 +120,7 @@ ggarrange(CTI_tera_plot,npp_tera_plot,temp_tera_plot,
 ```{r, echo = F, message = F, warning = F}
 ##### Fig: correlating biomass w/ CTI
 # TeRaCON
-CTI_yearly_avg_tera <- CTI_teracon_lim %>%
+CTI_yearly_avg_tera <- CTI_teracon %>%
   group_by(year,temp_treatment) %>%
   summarize(mean_CTI = mean(CTI))
 NPP_CTI_teracon <- left_join(CTI_yearly_avg_tera, NPP_overall_teracon, by=c("year","temp_treatment"))
@@ -165,7 +157,7 @@ ggarrange(tera_scatter,jrgce_scatter,phace_scatter,
 
 ```{r, echo=F,warning=F,message=F}
 ##### Fig: Arrows pointing from ambient to warmed for each year #####
-arrow_teracon <- ggplot(CTI_CPI_teracon_lim) +
+arrow_teracon <- ggplot(CTI_CPI_teracon) +
   geom_segment(aes(x = CTI_HTamb, y = CPI_HTamb, 
                    xend = CTI_HTelv, yend = CPI_HTelv,
                    color = year),
@@ -209,7 +201,7 @@ ggarrange(arrow_teracon,arrow_jrgce,arrow_phace,
 ```{r, echo=F,message=F,warning=F}
 ##### Fig: Mean CTI over time in warmed and ambient #####
 # note: could also change y = CTI to a different metric (CTI_sd, CTI_skew, etc.)
-CTI_teracon_plot <- ggplot(CTI_teracon_lim, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+CTI_teracon_plot <- ggplot(CTI_teracon, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
   geom_jitter(alpha = 0.1,
               position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
   stat_summary(fun = mean,
@@ -280,7 +272,7 @@ CTI_yearly_avg_phace <- CTI_phace %>%
 CTI_yearly_avg_jrgce <- CTI_jrgce %>%
   group_by(year,temp_treatment) %>%
   summarize(mean_CTI = mean(CTI))
-CTI_yearly_avg_tera <- CTI_teracon_lim %>%
+CTI_yearly_avg_tera <- CTI_teracon %>%
   group_by(year,temp_treatment) %>%
   summarize(mean_CTI = mean(CTI))
 
