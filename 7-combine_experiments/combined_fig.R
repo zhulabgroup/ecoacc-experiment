@@ -12,7 +12,7 @@ library(ggpubr)
 library(plotly)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data)
 # Load in data
 # Data using global spp occurrences from GBIF + year-round MAT:
@@ -37,7 +37,7 @@ CTI_teracon_noblue <- read.csv(" CTI_teracon_nobluestem.csv")
 CTI_CPI_teracon_noblue <- read.csv(" CTI_CPI_teracon_nobluestem.csv")
 
 # Set path to data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
 setwd(path_data)
 # Load in data
 CTI_sens_jrgce <- read.csv(" CTI_sens_jrgce.csv")
@@ -51,7 +51,7 @@ CTI_CPI_jrgce <- read.csv(" CTI_CPI_jrgce.csv")
 niche_est_jrgce <- read.csv(" niche_estimate_jrgce.csv")
 
 # Set path to data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data)
 # Load in data
 CTI_sens_phace <- read.csv(" CTI_sens_phace_limited.csv")
@@ -489,3 +489,70 @@ abun_amb <- ggplot(phace_amb, aes(x = temp_niche, y = precip_niche)) +
 ggarrange(abun_warm,abun_amb,
           ncol = 2, nrow=1, common.legend = T, legend = "right")
 
+
+
+##### Fig: teracon --> w/ and w/o big bluestem
+CTI_blue_tera <- ggplot(CTI_teracon_6month, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  ylim(7,22) +
+  labs(title="w/ big bluestem") +
+  theme_minimal() +
+  scale_color_manual(values = c("HTamb" = "blue", "HTelv" = "red"))
+CTI_noblue_tera <- ggplot(CTI_teracon_noblue, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1,
+              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
+  stat_summary(fun = mean,
+               fun.min = mean,
+               fun.max = mean,
+               geom = "line",
+               # width = 0.4,
+               position = position_dodge(width = 0.7),
+               aes(color = temp_treatment, group = temp_treatment)) +
+  ylim(7,22) +
+  labs(title="w/o big bluestem") +
+  theme_minimal() +
+  scale_color_manual(values = c("HTamb" = "blue", "HTelv" = "red"))
+arrow_blue <- ggplot(CTI_CPI_teracon_6month) +
+  geom_segment(aes(x = CTI_HTamb, y = CPI_HTamb, 
+                   xend = CTI_HTelv, yend = CPI_HTelv,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_HTamb, y = CPI_HTamb), color = "black") +
+  geom_point(aes(x = CTI_HTelv, y = CPI_HTelv), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "w/ big bluestem") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal()
+arrow_noblue <- ggplot(CTI_CPI_teracon_noblue) +
+  geom_segment(aes(x = CTI_HTamb, y = CPI_HTamb, 
+                   xend = CTI_HTelv, yend = CPI_HTelv,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_HTamb, y = CPI_HTamb), color = "black") +
+  geom_point(aes(x = CTI_HTelv, y = CPI_HTelv), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "w/o big bluestem") +
+  scale_color_viridis_c(option = "magma") +
+  theme_minimal()
+CTI_blue_smooth <- ggplot(CTI_sens_teracon_6month, aes(x = year, y = sensitivity)) +
+  geom_smooth() +
+  labs(x = "Year", y = "CTI (Warmed - Ambient)",title = "w/ big bluestem") +
+  scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  ylim(-0.3,0.3) +
+  theme_bw()
+CTI_noblue_smooth <- ggplot(CTI_sens_teracon_noblue, aes(x = year, y = sensitivity)) +
+  geom_smooth() +
+  labs(x = "Year", y = "CTI (Warmed - Ambient)",title = "w/o big bluestem") +
+  scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  ylim(-0.3,0.3) +
+  theme_bw()
+# Combine figures into one multi-panel plot
+ggarrange(CTI_blue_tera, arrow_blue, CTI_blue_smooth,
+          CTI_noblue_tera, arrow_noblue, CTI_noblue_smooth,
+          ncol = 3, nrow=2)
