@@ -16,7 +16,7 @@ library(tidyverse)
 library(ggpubr)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data)
 # Load in data
 CTI_sens_teracon <- read.csv(" CTI_sens_teracon.csv")
@@ -26,16 +26,15 @@ NPP_teracon <- read.csv(" eco_response_teracon.csv")
 NPP_overall_teracon <- read.csv(" eco_response_overall_teracon.csv")
 CTI_CPI_teracon <- read.csv(" CTI_CPI_teracon.csv")
 niche_est_tera <- read.csv(" teracon_niche.csv")
-gbif_tera <- read.csv(" GBIF_teracon.csv")
 # Set path to turbo to get data; data for no bluestem
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/archived_data/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/data_for_testing/"
 setwd(path_data)
 CTI_sens_teracon_noblue <- read.csv(" CTI_sens_teracon_nobluestem.csv")
 CTI_teracon_noblue <- read.csv(" CTI_teracon_nobluestem.csv")
 CTI_CPI_teracon_noblue <- read.csv(" CTI_CPI_teracon_nobluestem.csv")
 
 # Set path to data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
 setwd(path_data)
 # Load in data
 CTI_sens_jrgce <- read.csv(" CTI_sens_jrgce.csv")
@@ -47,7 +46,18 @@ NPP_jrgce <- read.csv(" eco_response_jrgce.csv")
 NPP_overall_jrgce <- read.csv(" eco_response_overall_jrgce.csv")
 CTI_CPI_jrgce <- read.csv(" CTI_CPI_jrgce.csv")
 niche_est_jrgce <- read.csv(" jrgce_niche.csv")
-gbif_jrgce <- read.csv(" GBIF_jrgce.csv")
+
+# Set path to data
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
+setwd(path_data)
+# Load in data
+CTI_sens_phace <- read.csv(" CTI_sens_phace.csv")
+CTI_phace <- read.csv(" CTI_phace.csv")
+phace <- read.csv(" phace_clean.csv")
+NPP_phace <- read.csv(" eco_response_phace.csv")
+NPP_overall_phace <- read.csv(" eco_response_overall_phace.csv")
+CTI_CPI_phace <- read.csv(" CTI_CPI_phace.csv")
+niche_est_phace <- read.csv(" phace_niche.csv")
 ```
 
 Using community composition and ecosystem response data from various warming experiments, we can visualize changes in community structure (e.g., CTI) alongside changes in function (e.g., ANPP) due to warming. Including ambient temperatures changes over the course of each experiment may also inform the observed responses.
@@ -109,45 +119,6 @@ ggarrange(CTI_tera_plot,npp_tera_plot,temp_tera_plot,
           CTI_jrgce_plot,npp_jrgce_plot,temp_jrgce_plot,
           CTI_phace_plot,npp_phace_plot,
           ncol = 3, nrow=3, common.legend = T, legend = "right")
-```
-
-```{r, echo = F, message = F, warning = F}
-# Checking distribution of occurrences for each species
-world <- map_data("world")
-distb_occ <- function(data,spp){
-  
-  spp_data <- data %>%
-    filter(species == spp)
-  
-  ggplot() +
-    geom_map(
-      data = world, map = world,
-      aes(long, lat, map_id = region),
-      color = "lightgrey", fill = "darkgrey", size = 0.1
-    ) +
-    geom_point(
-      data = spp_data,
-      aes(decimalLongitude, decimalLatitude),
-      alpha = 0.7,
-      color = "red",
-      size=2
-    ) +
-    theme_classic() +
-    labs(x = "Longitude",y = "Latitude") + 
-    theme(axis.title.x = element_text(size=15),
-          axis.title.y = element_text(size=15),
-          axis.text.x = element_text(size=14),
-          axis.text.y = element_text(size=14))
-}
-```
-
-### 1000km GBIF occurrences for most common species in each experiment
-
-```{r, echo = F, message = F, warning = F, fig.width = 10, fig.height = 7}
-# Plot occurrence maps for abundant species in each experiment
-distb_occ(gbif_tera,"Andropogon gerardi")
-distb_occ(gbif_jrgce,"Festuca bromoides")
-distb_occ(gbif_phace,"Pascopyrum smithii")
 ```
 
 ```{r, echo = F, message = F, warning = F}
