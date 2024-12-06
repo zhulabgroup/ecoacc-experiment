@@ -1,15 +1,13 @@
-# TITLE:          TeRaCON CTI and CPI calculation 
+# TITLE:          TeRaCON CTI and CPI calculation with no Andropogon
 # AUTHORS:        Kara Dobson
 # COLLABORATORS:  Kai Zhu, Peter Reich
 # DATA INPUT:     Niche estimate data for teracon
-# DATA OUTPUT:    CTI and CPI calculations
+# DATA OUTPUT:    CTI and CPI calculations with dominant species removal (Andropogon)
 # PROJECT:        EcoAcc
-# DATE:           Oct 2024
+# DATE:           Dec 2024
 
 # Load packages
 library(tidyverse)
-library(lmerTest)
-library(emmeans)
 
 # Set path to turbo to get data
 path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
@@ -33,8 +31,8 @@ full_abun_data <- full_abun_data %>%
 full_abun_no_andro <- full_abun_data %>%
   filter(!(species == "Andropogon gerardi"))
 
-# Calculating CTI
-CTI <- full_abun_data %>%
+# CTI
+CTI_filt <- full_abun_no_andro %>%
   filter(Season == "August") %>%
   group_by(year,plot,mean_C_temp_summer,temp_treatment) %>%
   reframe(CTI = sum(percent_cover * temp_niche) / sum(percent_cover),
@@ -44,47 +42,45 @@ CTI <- full_abun_data %>%
           CTI_kurt = sum(percent_cover * (temp_niche - CTI)^4) / (sum(percent_cover) * CTI_sd^4) - 3,
           mean_C_temp_warmed = mean_C_temp_summer+2.5,
           disequilib = mean_C_temp_summer - CTI) %>%
+  filter(!(CTI == "NaN")) %>%
   distinct()
 
-# Calculating CTI sensitivity (warmed - ambient)
-CTI_sens <- CTI %>%
+# CTI Sensitivity
+CTI_sens_filt <- CTI_filt %>%
   dplyr::select(year,plot,mean_C_temp_summer,temp_treatment,CTI) %>%
   group_by(year, mean_C_temp_summer,temp_treatment) %>%
   summarize(mean_cti = mean(CTI)) %>%
   pivot_wider(names_from = temp_treatment, values_from = mean_cti) %>%
   mutate(sensitivity = HTelv - HTamb)
 
-# Calculating CPI
-CPI <- full_abun_data %>%
+# CPI
+CPI_filt <- full_abun_no_andro %>%
   filter(Season == "August") %>%
   group_by(year,plot,mean_C_temp_summer,water_treatment) %>%
   reframe(CPI = sum(percent_cover * precip_niche) / sum(percent_cover),
           CPI_var = sum(percent_cover * (precip_niche - CPI)^2) / sum(percent_cover),
           CPI_sd = sqrt(CPI_var),
           CPI_skew = sum(percent_cover * (precip_niche - CPI)^3) / (sum(percent_cover) * CPI_sd^3),
-          CPI_kurt = sum(percent_cover * (precip_niche - CPI)^4) / (sum(percent_cover) * CPI_sd^4) - 3)
+          CPI_kurt = sum(percent_cover * (precip_niche - CPI)^4) / (sum(percent_cover) * CPI_sd^4) - 3) %>%
+  filter(!(CPI == "NaN"))
 
 # CTI and CPI combined
-CTI_CPI <- full_abun_data %>%
+CTI_CPI_filt <- full_abun_no_andro %>%
   filter(Season == "August") %>%
   group_by(year,temp_treatment) %>%
   reframe(CPI = sum(percent_cover * precip_niche) / sum(percent_cover),
           CTI = sum(percent_cover * temp_niche) / sum(percent_cover)) %>%
+  filter(!(CTI == "NaN")) %>%
+  filter(!(CPI == "NaN")) %>%
   pivot_wider(names_from = temp_treatment,
               values_from = c(CTI, CPI),
               names_sep = "_")
 
-# Models
-cti_mod <- lmerTest::lmer(CTI_sd ~ temp_treatment*as.factor(year) + (1|plot), data=CTI)
-anova(cti_mod)  
-emm <- emmeans(cti_mod, ~ temp_treatment * year)
-summary(emm)
-pairs(emm, by = "year")
-
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
-write.csv(CTI,paste(path_out,'CTI_teracon.csv'))
-write.csv(CTI_sens,paste(path_out,'CTI_sens_teracon.csv'))
-write.csv(CTI_CPI,paste(path_out,'CTI_CPI_teracon.csv'))
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/data_for_testing/"
+write.csv(CTI_filt,paste(path_out,'CTI_teracon_nobluestem.csv'))
+write.csv(CTI_sens_filt,paste(path_out,'CTI_sens_teracon_nobluestem.csv'))
+write.csv(CTI_CPI_filt,paste(path_out,'CTI_CPI_teracon_nobluestem.csv'))
+
 
