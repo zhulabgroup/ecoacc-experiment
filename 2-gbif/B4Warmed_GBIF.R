@@ -118,7 +118,7 @@ distb_occ(gbif_spp_hwrc,"Abies balsamea")
 
 # Upload data
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/B4Warmed/"
-write.csv(gbif_spp_cfc,paste(path_out,'gbif_b4warmed_cfc.csv'))
-write.csv(gbif_spp_hwrc,paste(path_out,'gbif_b4warmed_hwrc.csv'))
+write.csv(gbif_spp_cfc,paste(path_out,'GBIF_b4warmed_cfc.csv'))
+write.csv(gbif_spp_hwrc,paste(path_out,'GBIF_b4warmed_hwrc.csv'))
 
 
