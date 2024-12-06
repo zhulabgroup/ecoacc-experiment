@@ -10,9 +10,10 @@
 library(tidyverse)
 library(ggpubr)
 library(plotly)
+library(maps)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data)
 # Load in data
 CTI_sens_teracon <- read.csv(" CTI_sens_teracon.csv")
@@ -22,7 +23,10 @@ NPP_teracon <- read.csv(" eco_response_teracon.csv")
 NPP_overall_teracon <- read.csv(" eco_response_overall_teracon.csv")
 CTI_CPI_teracon <- read.csv(" CTI_CPI_teracon.csv")
 niche_est_tera <- read.csv(" teracon_niche.csv")
-
+gbif_tera <- read.csv(" GBIF_teracon.csv")
+# Set path to turbo to get data; data for no bluestem
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/archived_data/"
+setwd(path_data)
 CTI_sens_teracon_noblue <- read.csv(" CTI_sens_teracon_nobluestem.csv")
 CTI_teracon_noblue <- read.csv(" CTI_teracon_nobluestem.csv")
 CTI_CPI_teracon_noblue <- read.csv(" CTI_CPI_teracon_nobluestem.csv")
@@ -39,20 +43,54 @@ jrgce <- jrgce %>%
 NPP_jrgce <- read.csv(" eco_response_jrgce.csv")
 NPP_overall_jrgce <- read.csv(" eco_response_overall_jrgce.csv")
 CTI_CPI_jrgce <- read.csv(" CTI_CPI_jrgce.csv")
-niche_est_jrgce <- read.csv(" niche_estimate_jrgce.csv")
+niche_est_jrgce <- read.csv(" jrgce_niche.csv")
+gbif_jrgce <- read.csv(" GBIF_jrgce.csv")
 
 # Set path to data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data)
 # Load in data
-CTI_sens_phace <- read.csv(" CTI_sens_phace_limited.csv")
-CTI_phace <- read.csv(" CTI_phace_limited.csv")
+CTI_sens_phace <- read.csv(" CTI_sens_phace.csv")
+CTI_phace <- read.csv(" CTI_phace.csv")
 phace <- read.csv(" phace_clean.csv")
 NPP_phace <- read.csv(" eco_response_phace.csv")
 NPP_overall_phace <- read.csv(" eco_response_overall_phace.csv")
-CTI_CPI_phace <- read.csv(" CTI_CPI_phace_limited.csv")
-niche_est_phace <- read.csv(" niche_estimate_phace_limited.csv")
+CTI_CPI_phace <- read.csv(" CTI_CPI_phace.csv")
+niche_est_phace <- read.csv(" phace_niche.csv")
+gbif_phace <- read.csv(" GBIF_phace.csv")
 
+
+# Checking distribution of occurrences for each species
+world <- map_data("world")
+distb_occ <- function(data,spp){
+  
+  spp_data <- data %>%
+    filter(species == spp)
+  
+  ggplot() +
+    geom_map(
+      data = world, map = world,
+      aes(long, lat, map_id = region),
+      color = "lightgrey", fill = "darkgrey", size = 0.1
+    ) +
+    geom_point(
+      data = spp_data,
+      aes(decimalLongitude, decimalLatitude),
+      alpha = 0.7,
+      color = "red",
+      size=2
+    ) +
+    theme_classic() +
+    labs(x = "Longitude",y = "Latitude") + 
+    theme(axis.title.x = element_text(size=15),
+          axis.title.y = element_text(size=15),
+          axis.text.x = element_text(size=14),
+          axis.text.y = element_text(size=14))
+}
+# Plot occurrence maps for abundant species in each experiment
+distb_occ(gbif_tera,"Andropogon gerardi")
+distb_occ(gbif_jrgce,"Festuca bromoides")
+distb_occ(gbif_phace,"Pascopyrum smithii")
 
 ##### Fig: CTI, ANPP, and ambient temps over time #####
 # CTI figures

@@ -1,10 +1,11 @@
-# TITLE:          TeRaCON GBIF occurrences
+# TITLE:          JRGCE GBIF occurrences and CHELSA data
 # AUTHORS:        Kara Dobson
 # COLLABORATORS:  Kai Zhu, Peter Reich
-# DATA INPUT:     clean teracon data read in to get species list
-# DATA OUTPUT:    raw GBIF occurrence data for each species in TeRaCON dataset
+# DATA INPUT:     Clean JRGCE data read in
+# DATA OUTPUT:    GBIF and CHELSA data for spp in JRGCE
 # PROJECT:        EcoAcc
-# DATE:           Oct 2024
+# DATE:           Nov 2024
+
 
 # Load packages
 library(tidyverse)
@@ -14,19 +15,23 @@ library(CoordinateCleaner)
 library(maps)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
 setwd(path_data)
 
 # Read in data
-teracon_data <- read.csv(" teracon_clean.csv")
+jrgce_data <- read.csv(" jrgce_clean.csv")
 
 # Making a list of the species in our experimental data set for GBIF occurrences
-species_list <- unique(teracon_data$species)
-species_list1 <- species_list[1:10]
-species_list2 <- species_list[11:16]
+species_list <- unique(jrgce_data$species)
+species_list <- species_list[species_list != "Festuca DUMMY"] # removing non-spp name
+species_list <- species_list[species_list != "Avena DUMMY"] # removing non-spp name
+print(species_list)
 
-# 1000 km around experiment location
-bbox_1000 <- c(-106, 36, -80, 54)
+# Testing the impacts of spp. occurrences scale on results
+# Decided to ultimately use a 1000km buffer around the US and Canada; below on line 82 subsets out the 1000km buffer
+# bounding box limits = c(min_longitude, min_latitude, max_longitude, max_latitude)
+# U.S. and Canada
+bbox_uscan <- c(-141, 24, -53, 83)
 
 # Function to get occurrence data for each spp from GBIF, then cleaning those coordinates
 occurrences <- function(spp, bbox) {
@@ -69,15 +74,15 @@ occurrences <- function(spp, bbox) {
   return(list_of_occ)
 }
 # Run function
-spp_occurrences1 <- occurrences(spp = species_list1)
-spp_occurrences2 <- occurrences(spp = species_list2)
+spp_occurrences_uscan <- occurrences(species_list, bbox_uscan)
 
 # Pulling lat and long from GBIF
-GBIF_species1 <- do.call(rbind.data.frame, spp_occurrences1)
-GBIF_species2 <- do.call(rbind.data.frame, spp_occurrences2)
+gbif_spp_uscan <- do.call(rbind.data.frame, spp_occurrences_uscan)
 
-# Merging the two lists
-GBIF_species <- rbind(GBIF_species1, GBIF_species2)
+# Filtering 1000km from the US and Canada data
+gbif_data_1000 <- gbif_spp_uscan %>%
+  filter(decimalLatitude <= 46 & decimalLatitude >= 28) %>%
+  filter(decimalLongitude >= -134 & decimalLongitude <= -111)
 
 # Checking distribution of occurrences for each species
 world <- map_data("world")
@@ -106,18 +111,37 @@ distb_occ <- function(data,spp){
           axis.text.x = element_text(size=14),
           axis.text.y = element_text(size=14))
 }
-distb_occ(GBIF_species,"Bouteloua gracilis")
-
+distb_occ(gbif_data_1000,"Avena fatua")
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
-write.csv(GBIF_species,paste(path_out,'GBIF_teracon.csv'))
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+write.csv(gbif_data_1000,paste(path_out,'GBIF_jrgce.csv'))
 
 
 
 
-### Old code to subset out ecoregion 8 for TeRaCON GBIF data
-# This data is within the archived_data on Turbo
-gbif_data_limits <- GBIF_species %>%
-  filter(decimalLatitude <= 45 & decimalLatitude >= 29) %>%
-  filter(decimalLongitude >= -95 & decimalLongitude <= -70)
+
+### Old code to import GBIF data from Zhu, Song et al. Grassland paper
+# This data is in the archived data for JRGCE
+# Load packages
+library(tidyverse)
+
+# Set path to turbo to get data
+path_data = "/nfs/turbo/seas-zhukai/proj-grassland-cfp/intermediate/climate-niche/"
+path_clean_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+setwd(path_clean_data)
+
+# Read in data
+gbif_jrgce <- readRDS("gbif-chelsa.rds") #GBIF and CHELSA data were already downloaded for grassland project
+jrgce <- read.csv(" jrgce_clean.csv")
+
+# Make a species list; we only want to keep spp in the gbif data that are in the jrgce data
+spp_list <- unique(jrgce$species)
+
+# Filter the gbif data to those species
+gbif_jrgce_filtered <- gbif_jrgce %>%
+  filter(species %in% spp_list)
+
+# Upload data
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+write.csv(gbif_jrgce_filtered,paste(path_out,'CHELSA_GBIF_jrgce.csv'),row.names=F)

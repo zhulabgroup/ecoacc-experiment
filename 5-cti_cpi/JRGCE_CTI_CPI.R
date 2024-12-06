@@ -12,13 +12,13 @@ library(lmerTest)
 library(emmeans)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
 setwd(path_data)
 
 # Load in data
-niche_est <- read.csv(" niche_estimate_jrgce.csv")
+niche_est <- read.csv(" jrgce_niche.csv")
 niche_est <- niche_est %>%
-  dplyr::select(-c(tmp,ppt)) %>%
+  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
   distinct()
 jrgce <- read.csv(" jrgce_clean.csv")
 
@@ -32,8 +32,7 @@ full_abun_data <- full_abun_data %>%
   mutate(temp_treatment = if_else(str_detect(treatment, "T"), "warmed", "ambient")) %>%
   mutate(water_treatment = if_else(str_detect(treatment, "P"), "precip", "ambient"))
 
-
-# Calculating CTI and CPI
+# Calculating CTI
 CTI <- full_abun_data %>%
   group_by(year,plot,mean_C_temp_summer,temp_treatment) %>%
   reframe(CTI = sum(percent_cover * temp_niche) / sum(percent_cover),
@@ -69,58 +68,7 @@ CTI_CPI <- full_abun_data %>%
               values_from = c(CTI, CPI),
               names_sep = "_")
 
-
-# Plot CTI
-ggplot(CTI, aes(x = year, y = CTI_sd, color = temp_treatment, group=temp_treatment)) +
-  geom_jitter(alpha = 0.2,
-              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
-  #geom_smooth() +
-  stat_summary(fun = mean,
-               fun.min = mean,
-               fun.max = mean,
-               geom = "crossbar",
-               width = 0.4,
-               position = position_dodge(width = 0.7),
-               aes(color = temp_treatment, group = temp_treatment)) +
-  #geom_line(aes(x = year, y = scaled_temp), color="blue") +
-  theme_minimal() +
-  scale_color_manual(values = c("ambient" = "blue", "warmed" = "red"))
-
-# Plot CTI sensitivity
-ggplot(CTI_sens, aes(x = year, y = sensitivity)) +
-  geom_smooth() +
-  labs(x = "Year", y = "CTI (Warmed - Ambient)") +
-  scale_x_continuous(breaks = seq(1998, 2014, by = 2)) +
-  theme_bw()
-
-# Plot CPI
-ggplot(CPI, aes(x = year, y = CPI, color = water_treatment)) +
-  geom_jitter(alpha = 0.2,
-              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
-  stat_summary(fun = mean,
-               fun.min = mean,
-               fun.max = mean,
-               geom = "crossbar",
-               width = 0.4,
-               position = position_dodge(width = 0.7),
-               aes(color = water_treatment, group = water_treatment)) +
-  theme_minimal() +
-  scale_color_manual(values = c("ambient" = "blue", "precip" = "red"))
-
-# Arrow figure
-ggplot(CTI_CPI) +
-  geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
-                   xend = CTI_warmed, yend = CPI_warmed,
-                   color = year),
-               arrow = arrow(length = unit(0.1, "inches"))) +
-  geom_point(aes(x = CTI_ambient, y = CPI_ambient), color = "black") +
-  geom_point(aes(x = CTI_warmed, y = CPI_warmed), color = "red") +
-  labs(x = "CTI", y = "CPI", title = "CTI and CPI: Ambient to Elevated") +
-  scale_color_viridis_c(option = "magma") +
-  theme_minimal()
-
-
-# Models
+# Models (note: move to new script at some point)
 cti_mod <- lmerTest::lmer(CTI ~ temp_treatment*as.factor(year) + (1|plot), data=CTI)
 anova(cti_mod)  
 emm <- emmeans(cti_mod, ~ temp_treatment * year)
@@ -129,7 +77,7 @@ pairs(emm, by = "year")
 
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
 write.csv(CTI,paste(path_out,'CTI_jrgce.csv'))
 write.csv(CTI_sens,paste(path_out,'CTI_sens_jrgce.csv'))
 write.csv(CTI_CPI,paste(path_out,'CTI_CPI_jrgce.csv'))

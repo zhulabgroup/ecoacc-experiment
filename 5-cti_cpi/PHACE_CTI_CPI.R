@@ -16,13 +16,13 @@ path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data)
 
 # Load in data
-niche_est <- read.csv(" niche_estimate_phace_limited.csv")
+niche_est <- read.csv(" phace_niche.csv")
 niche_est <- niche_est %>%
   dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
   distinct()
 phace <- read.csv(" phace_clean.csv")
 
-# Combining teracon abundance data with niche estimate data
+# Combining phace abundance data with niche estimate data
 full_abun_data <- left_join(phace, niche_est, by = "species")
 full_abun_data <- full_abun_data %>%
   filter(!is.na(rel_abun)) %>%
@@ -56,9 +56,8 @@ CTI_CPI <- full_abun_data %>%
               values_from = c(CTI, CPI),
               names_sep = "_")
 
-
 # Upload data
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
-write.csv(CTI,paste(path_out,'CTI_phace_limited.csv'))
-write.csv(CTI_sens,paste(path_out,'CTI_sens_phace_limited.csv'))
-write.csv(CTI_CPI,paste(path_out,'CTI_CPI_phace_limited.csv'))
+write.csv(CTI,paste(path_out,'CTI_phace.csv'))
+write.csv(CTI_sens,paste(path_out,'CTI_sens_phace.csv'))
+write.csv(CTI_CPI,paste(path_out,'CTI_CPI_phace.csv'))

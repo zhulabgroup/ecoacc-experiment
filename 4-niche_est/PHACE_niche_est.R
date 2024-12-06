@@ -15,7 +15,7 @@ path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data)
 
 # Load in data
-chelsa_data <- read.csv(" CHELSA_phace_limited.csv") # "CHELSA_phace_limited" in turbo only contains data for ecoregion 9
+chelsa_data <- read.csv(" CHELSA_phace.csv")
 
 # Calculating the median temp and precip for each species
 chelsa_data$species[chelsa_data$species == "Elymus smithii"] <- "Pascopyrum smithii" # fixing spp name to match phace
@@ -37,4 +37,4 @@ niche_est <- chelsa_data %>%
 
 # Upload data
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
-write.csv(niche_est,paste(path_out,'niche_estimate_phace_limited.csv'),row.names=F)
+write.csv(niche_est,paste(path_out,'phace_niche.csv'),row.names=F)

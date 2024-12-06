@@ -11,11 +11,10 @@ library(tidyverse)
 
 # Set path to turbo to get data
 path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
-path_home = "/home/kcdobson"
 setwd(path_data)
 
 # Load in data
-chelsa_data <- read.csv(" CHELSA_GBIF_jrgce.csv")
+chelsa_data <- read.csv(" CHELSA_jrgce.csv")
 
 
 # Calculating the median temp and precip for each species
@@ -43,4 +42,4 @@ plot_species_with_centroids(niche_est, "Danthonia californica")
 
 # Upload data
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
-write.csv(niche_est,paste(path_out,'niche_estimate_jrgce.csv'),row.names=F)
+write.csv(niche_est,paste(path_out,'jrgce_niche.csv'),row.names=F)

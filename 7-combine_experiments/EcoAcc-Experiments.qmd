@@ -16,7 +16,7 @@ library(tidyverse)
 library(ggpubr)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data)
 # Load in data
 CTI_sens_teracon <- read.csv(" CTI_sens_teracon.csv")
@@ -26,13 +26,15 @@ NPP_teracon <- read.csv(" eco_response_teracon.csv")
 NPP_overall_teracon <- read.csv(" eco_response_overall_teracon.csv")
 CTI_CPI_teracon <- read.csv(" CTI_CPI_teracon.csv")
 niche_est_tera <- read.csv(" teracon_niche.csv")
-
+# Set path to turbo to get data; data for no bluestem
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/archived_data/"
+setwd(path_data)
 CTI_sens_teracon_noblue <- read.csv(" CTI_sens_teracon_nobluestem.csv")
 CTI_teracon_noblue <- read.csv(" CTI_teracon_nobluestem.csv")
 CTI_CPI_teracon_noblue <- read.csv(" CTI_CPI_teracon_nobluestem.csv")
 
 # Set path to data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
 setwd(path_data)
 # Load in data
 CTI_sens_jrgce <- read.csv(" CTI_sens_jrgce.csv")
@@ -43,17 +45,19 @@ jrgce <- jrgce %>%
 NPP_jrgce <- read.csv(" eco_response_jrgce.csv")
 NPP_overall_jrgce <- read.csv(" eco_response_overall_jrgce.csv")
 CTI_CPI_jrgce <- read.csv(" CTI_CPI_jrgce.csv")
+niche_est_jrgce <- read.csv(" jrgce_niche.csv")
 
 # Set path to data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data)
 # Load in data
-CTI_sens_phace <- read.csv(" CTI_sens_phace_limited.csv")
-CTI_phace <- read.csv(" CTI_phace_limited.csv")
+CTI_sens_phace <- read.csv(" CTI_sens_phace.csv")
+CTI_phace <- read.csv(" CTI_phace.csv")
 phace <- read.csv(" phace_clean.csv")
 NPP_phace <- read.csv(" eco_response_phace.csv")
 NPP_overall_phace <- read.csv(" eco_response_overall_phace.csv")
-CTI_CPI_phace <- read.csv(" CTI_CPI_phace_limited.csv")
+CTI_CPI_phace <- read.csv(" CTI_CPI_phace.csv")
+niche_est_phace <- read.csv(" phace_niche.csv")
 ```
 
 Using community composition and ecosystem response data from various warming experiments, we can visualize changes in community structure (e.g., CTI) alongside changes in function (e.g., ANPP) due to warming. Including ambient temperatures changes over the course of each experiment may also inform the observed responses.

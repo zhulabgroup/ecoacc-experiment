@@ -25,14 +25,11 @@ species_list <- unique(phace_data$species)
 species_list1 <- species_list[1:25]
 species_list2 <- species_list[26:53]
 
-# Many occurrences exist outside of the U.S.
-# Because PHACE is in ecoregion 9 (EPA), I'm limiting the occurrences to a rough bounding box around that ecoregion
-# Northwest corner: approximately 49.0° N, 105.0° W (near the border of Canada and Montana/North Dakota)
-# Northeast corner: approximately 49.0° N, 95.0° W (near the border of Canada and Minnesota)
-# Southwest corner: approximately 25.0° N, 105.0° W (along the Texas/New Mexico border)
-# Southeast corner: approximately 25.0° N, 95.0° W (along the Texas gulf coast)
+# Testing the impacts of spp. occurrences scale on results
+# Decided to ultimately use a 1000km buffer around the US and Canada; below on line 86 subsets out the 1000km buffer
 # bounding box limits = c(min_longitude, min_latitude, max_longitude, max_latitude)
-bbox <- c(-105, 25, -95, 49)
+# U.S. and Canada
+bbox_uscan <- c(-141, 24, -53, 83)
 
 # Function to get occurrence data for each spp from GBIF, then cleaning those coordinates
 occurrences <- function(spp, bbox) {
@@ -85,6 +82,11 @@ GBIF_species2 <- do.call(rbind.data.frame, spp_occurrences2)
 # Merging the two lists
 GBIF_species <- rbind(GBIF_species1, GBIF_species2)
 
+# Filtering 1000km from the US and Canada data
+gbif_data_1000 <- GBIF_species %>%
+  filter(decimalLatitude <= 50 & decimalLatitude >= 32) %>%
+  filter(decimalLongitude >= -117 & decimalLongitude <= -93)
+
 # Checking distribution of occurrences for each species
 world <- map_data("world")
 distb_occ <- function(data,spp){
@@ -117,4 +119,10 @@ distb_occ(GBIF_species,"Allium textile")
 
 # Upload data
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
-write.csv(GBIF_species,paste(path_out,'GBIF_phace_limited.csv'))
+write.csv(gbif_data_1000,paste(path_out,'GBIF_phace.csv'))
+
+
+
+### Old code for the bounding box for ecoregion 9
+# The data for ecoregion 9 GBIF occurrences is in the archived data on Turbo
+bbox <- c(-105, 25, -95, 49)
