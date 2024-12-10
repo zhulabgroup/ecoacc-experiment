@@ -25,11 +25,13 @@ CTI_CPI_teracon <- read.csv(" CTI_CPI_teracon.csv")
 niche_est_tera <- read.csv(" teracon_niche.csv")
 gbif_tera <- read.csv(" GBIF_teracon.csv")
 # Set path to turbo to get data; data for no bluestem
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/data_for_testing/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/data_for_testing/"
 setwd(path_data)
 CTI_sens_teracon_noblue <- read.csv(" CTI_sens_teracon_nobluestem.csv")
 CTI_teracon_noblue <- read.csv(" CTI_teracon_nobluestem.csv")
 CTI_CPI_teracon_noblue <- read.csv(" CTI_CPI_teracon_nobluestem.csv")
+NPP_teracon_noblue <- read.csv(" eco_response_teracon_noblue.csv")
+NPP_overall_teracon_noblue <- read.csv(" eco_response_overall_teracon_noblue.csv")
 
 # Set path to data
 path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
@@ -131,58 +133,9 @@ CTI_jrgce_plot <- ggplot(CTI_jrgce, aes(x = mean_C_temp_summer, y = CTI, color =
 
 
 
-##### Fig: Species climate niche overlayed w/ treatment effects
-# TeRaCON
-niche_est_tera_avg <- niche_est_tera[,c(1,6,7)]
-niche_est_tera_avg <- niche_est_tera_avg %>%
-  distinct()
-teracon_niche <- ggplot() +
-  #geom_segment(data=CTI_CPI_teracon_lim, aes(x = CTI_HTamb, y = CPI_HTamb, 
-  #                                           xend = CTI_HTelv, yend = CPI_HTelv,
-  #                                           color = year),
-  #             arrow = arrow(length = unit(0.1, "inches"))) +
-  geom_point(data=CTI_CPI_teracon, aes(x = CTI_HTamb, y = CPI_HTamb, color = year)) +
-  geom_point(data=CTI_CPI_teracon, aes(x = CTI_HTelv, y = CPI_HTelv, color = year)) +
-  geom_point(data=niche_est_tera_avg, aes(x = temp_niche, y = precip_niche)) +
-  labs(x = "Temperature", y = "Precipitation", title = "TeRaCON") +
-  scale_color_viridis_c(option = "magma") +
-  theme_minimal()
-
-# JRGCE
-niche_est_jrgce_avg <- niche_est_jrgce[,c(1,6,7)]
-niche_est_jrgce_avg <- niche_est_jrgce_avg %>%
-  distinct()
-jrgce_niche <- ggplot(CTI_CPI_jrgce) +
-  #geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
-  #                 xend = CTI_warmed, yend = CPI_warmed,
-  #                 color = year),
-  #             arrow = arrow(length = unit(0.1, "inches"))) +
-  geom_point(aes(x = CTI_ambient, y = CPI_ambient, color = year)) +
-  geom_point(aes(x = CTI_warmed, y = CPI_warmed, color = year)) +
-  geom_point(data=niche_est_jrgce_avg, aes(x = temp_niche, y = precip_niche)) +
-  labs(x = "Temperature", y = "Precipitation", title = "JRGCE") +
-  scale_color_viridis_c(option = "magma") +
-  theme_minimal()
-
-# PHACE
-niche_est_phace_avg <- niche_est_phace[,c(1,6,7)]
-niche_est_phace_avg <- niche_est_phace_avg %>%
-  distinct()
-phace_niche <- ggplot(CTI_CPI_phace) +
-  #geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
-  #                 xend = CTI_warmed, yend = CPI_warmed,
-  #                 color = year),
-  #             arrow = arrow(length = unit(0.1, "inches"))) +
-  geom_point(aes(x = CTI_ambient, y = CPI_ambient, color = year)) +
-  geom_point(aes(x = CTI_warmed, y = CPI_warmed, color = year)) +
-  geom_point(data=niche_est_phace_avg, aes(x = temp_niche, y = precip_niche)) +
-  labs(x = "Temperature", y = "Precipitation", title = "PHACE") +
-  scale_color_viridis_c(option = "magma") +
-  theme_minimal()
-
+##### Fig:  interactive plot for species niche estimates
 plot_ly(data=niche_est_phace_avg, x = ~temp_niche, y = ~precip_niche,
         type="scatter",color=~species)
-
 
 
 
@@ -222,7 +175,7 @@ ggarrange(abun_warm,abun_amb,
 
 
 ##### Fig: teracon --> w/ and w/o big bluestem
-CTI_blue_tera <- ggplot(CTI_teracon_6month, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+CTI_blue_tera <- ggplot(CTI_teracon, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
   geom_jitter(alpha = 0.1,
               position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
   stat_summary(fun = mean,
@@ -232,7 +185,6 @@ CTI_blue_tera <- ggplot(CTI_teracon_6month, aes(x = year, y = CTI, color = temp_
                # width = 0.4,
                position = position_dodge(width = 0.7),
                aes(color = temp_treatment, group = temp_treatment)) +
-  ylim(7,22) +
   labs(title="w/ big bluestem") +
   theme_minimal() +
   scale_color_manual(values = c("HTamb" = "blue", "HTelv" = "red"))
@@ -246,11 +198,10 @@ CTI_noblue_tera <- ggplot(CTI_teracon_noblue, aes(x = year, y = CTI, color = tem
                # width = 0.4,
                position = position_dodge(width = 0.7),
                aes(color = temp_treatment, group = temp_treatment)) +
-  ylim(7,22) +
   labs(title="w/o big bluestem") +
   theme_minimal() +
   scale_color_manual(values = c("HTamb" = "blue", "HTelv" = "red"))
-arrow_blue <- ggplot(CTI_CPI_teracon_6month) +
+arrow_blue <- ggplot(CTI_CPI_teracon) +
   geom_segment(aes(x = CTI_HTamb, y = CPI_HTamb, 
                    xend = CTI_HTelv, yend = CPI_HTelv,
                    color = year),
@@ -270,7 +221,7 @@ arrow_noblue <- ggplot(CTI_CPI_teracon_noblue) +
   labs(x = "CTI", y = "CPI", title = "w/o big bluestem") +
   scale_color_viridis_c(option = "magma") +
   theme_minimal()
-CTI_blue_smooth <- ggplot(CTI_sens_teracon_6month, aes(x = year, y = sensitivity)) +
+CTI_blue_smooth <- ggplot(CTI_sens_teracon, aes(x = year, y = sensitivity)) +
   geom_smooth() +
   labs(x = "Year", y = "CTI (Warmed - Ambient)",title = "w/ big bluestem") +
   scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
@@ -286,3 +237,25 @@ CTI_noblue_smooth <- ggplot(CTI_sens_teracon_noblue, aes(x = year, y = sensitivi
 ggarrange(CTI_blue_tera, arrow_blue, CTI_blue_smooth,
           CTI_noblue_tera, arrow_noblue, CTI_noblue_smooth,
           ncol = 3, nrow=2)
+
+
+
+#### Fig: teracon --> CTI vs. biomass w/ and w/o big bluestem
+CTI_yearly_avg_tera <- CTI_teracon %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
+NPP_CTI_teracon <- left_join(CTI_yearly_avg_tera, NPP_overall_teracon, by=c("year","temp_treatment"))
+tera_scatter <- ggscatter(NPP_CTI_teracon, x = "mean_ab_bio", y = "mean_CTI", 
+                          add = "reg.line", conf.int = TRUE, 
+                          cor.coef = TRUE, cor.method = "pearson",
+                          xlab = "Biomass", ylab = "TeRaCON\nCTI")
+
+CTI_yearly_avg_tera_noblue <- CTI_teracon_noblue %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
+NPP_CTI_teracon_noblue <- left_join(CTI_yearly_avg_tera_noblue, NPP_overall_teracon_noblue, by=c("year","temp_treatment"))
+tera_scatter <- ggscatter(NPP_CTI_teracon_noblue, x = "mean_ab_bio", y = "mean_CTI", 
+                          add = "reg.line", conf.int = TRUE, 
+                          cor.coef = TRUE, cor.method = "pearson",
+                          xlab = "Biomass", ylab = "TeRaCON\nCTI")
+
