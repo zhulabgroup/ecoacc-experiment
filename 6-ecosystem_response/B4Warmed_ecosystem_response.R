@@ -10,7 +10,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/B4Warmed/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/B4Warmed/"
 setwd(path_data)
 
 # Load in data
@@ -25,14 +25,14 @@ eco_grouped <- eco_b4 %>%
   pivot_wider(names_from = temp_treatment, values_from = value) %>%
   mutate(sensitivity_high_temp = `3.4` - amb) %>%
   mutate(sensitivity_med_temp = `1.7` - amb) %>%
-  dplyr::select(year, variable, sensitivity_high_temp,sensitivity_med_temp)
+  dplyr::select(year,site, variable, sensitivity_high_temp,sensitivity_med_temp)
 eco_grouped_overall <- eco_b4 %>%
-  group_by(year,temp_treatment) %>%
+  group_by(year,site,temp_treatment) %>%
   reframe(mean_ab_bio = mean(total_biomass))
 
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/B4Warmed/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/B4Warmed/"
 write.csv(eco_grouped,paste(path_out,'eco_response_b4warmed.csv'))
 write.csv(eco_grouped_overall,paste(path_out,'eco_response_overall_b4warmed.csv'))
 

@@ -10,11 +10,17 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data)
-
 # Load in data
 eco_teracon <- read.csv(" teracon_ecosystem_dat_clean.csv")
+
+# Set path to turbo to get data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/data_for_testing/"
+setwd(path_data)
+# Load in data
+eco_teracon_noblue <- read.csv(" teracon_ecosystem_dat_clean_noblue.csv")
+
 # Filter data to August (harvest) and calculate the mean ecosystem response vars for each year + treatment
 # Then, calculating 'sensitivity' as warmed-ambient each year for that var
 eco_grouped <- eco_teracon %>%
@@ -35,6 +41,25 @@ eco_grouped <- eco_teracon %>%
   pivot_wider(names_from = temp_treatment, values_from = value) %>%
   mutate(sensitivity = HTelv - HTamb) %>%
   dplyr::select(year, variable, sensitivity)
+eco_grouped_noblue <- eco_teracon_noblue %>%
+  filter(Season == "August") %>%
+  group_by(year,temp_treatment) %>%
+  reframe(mean_ab_bio = mean(ab_biomass),
+          mean_bl_bio = mean(bl_biomass),
+          mean_total_bio = mean(total_biomass),
+          mean_ab_and_root = mean(biomass_plus_root),
+          mean_total_n = mean(total_n),
+          mean_bl_c = mean(bl_c),
+          mean_bl_n = mean(bl_n),
+          mean_ab_c = mean(ab_c),
+          mean_ab_n = mean(ab_n)) %>%
+  pivot_longer(cols = c(mean_ab_bio, mean_bl_bio, mean_total_bio,mean_ab_and_root,
+                        mean_total_n, mean_bl_c, mean_bl_n,
+                        mean_ab_c,mean_ab_n), names_to = "variable", values_to = "value") %>%
+  pivot_wider(names_from = temp_treatment, values_from = value) %>%
+  mutate(sensitivity = HTelv - HTamb) %>%
+  dplyr::select(year, variable, sensitivity)
+
 eco_grouped_overall <- eco_teracon %>%
   filter(Season == "August") %>%
   group_by(year,temp_treatment) %>%
@@ -47,21 +72,18 @@ eco_grouped_overall <- eco_teracon %>%
           mean_bl_n = mean(bl_n),
           mean_ab_c = mean(ab_c),
           mean_ab_n = mean(ab_n))
-
-
-# Function to plot changes in function over time (warmed - ambient) for a given ecosystem response var
-sens_plot <- function(df, response_var) {
-  
-  df <- df %>%
-    filter(variable == response_var)
-  
-  ggplot(df, aes(x = year, y = sensitivity)) +
-    geom_smooth() +
-    labs(x = "Year", y = "Biomass (Warmed - Ambient)") +
-    scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
-    theme_bw()
-}
-sens_plot(eco_grouped,"mean_ab_bio")
+eco_grouped_overall_noblue <- eco_teracon_noblue %>%
+  filter(Season == "August") %>%
+  group_by(year,temp_treatment) %>%
+  reframe(mean_ab_bio = mean(ab_biomass, na.rm=T),
+          mean_bl_bio = mean(bl_biomass),
+          mean_total_bio = mean(total_biomass),
+          mean_ab_and_root = mean(biomass_plus_root, na.rm=T),
+          mean_total_n = mean(total_n),
+          mean_bl_c = mean(bl_c),
+          mean_bl_n = mean(bl_n),
+          mean_ab_c = mean(ab_c),
+          mean_ab_n = mean(ab_n))
 
 
 # Models
@@ -75,3 +97,6 @@ summary(eco_mod)
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
 write.csv(eco_grouped,paste(path_out,'eco_response_teracon.csv'))
 write.csv(eco_grouped_overall,paste(path_out,'eco_response_overall_teracon.csv'))
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/data_for_testing/"
+write.csv(eco_grouped_noblue,paste(path_out,'eco_response_teracon_noblue.csv'))
+write.csv(eco_grouped_overall_noblue,paste(path_out,'eco_response_overall_teracon_noblue.csv'))
