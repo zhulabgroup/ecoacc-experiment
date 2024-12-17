@@ -10,7 +10,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/TeRaCON"
+path_data = "/Volumes/seas-zhukai/datasets/vegetation/TeRaCON"
 setwd(path_data)
 
 # Read in data
@@ -20,10 +20,12 @@ teracon_data <- read.csv("teracon harvest file for Kara Dobson_241021.csv")
 colnames(teracon_data)
 teracon_data_sub <- teracon_data[,c(1:9,11,27,109:125)] # for % cover
 teracon_data_sub_eco <- teracon_data[,c(1:9,11,27,55,68:69,74,76,78,80,82,84)] # for ecosystem response
+teracon_data_sub_eco_blue <- teracon_data[,c(1:9,11,27,42,55,68:69,74,76,78,80,82,84)]
 
 # Removing first test row
 teracon_data_sub <- teracon_data_sub[2:1153,]
 teracon_data_sub_eco <- teracon_data_sub_eco[2:1153,]
+teracon_data_sub_eco_blue <- teracon_data_sub_eco_blue[2:1153,]
 
 # Wide to long for just percent cover values
 teracon_data_long <- teracon_data_sub %>%
@@ -49,6 +51,14 @@ teracon_data_long <- teracon_data_long %>%
 teracon_data_sub_eco <- teracon_data_sub_eco %>%
   rename(mean_temp_summer = Mean.Amb.May.June.July.Temp..F.) %>%
   mutate(mean_C_temp_summer = (mean_temp_summer-32)*5/9)
+teracon_data_sub_eco_blue <- teracon_data_sub_eco_blue %>%
+  rename(mean_temp_summer = Mean.Amb.May.June.July.Temp..F.) %>%
+  mutate(mean_C_temp_summer = (mean_temp_summer-32)*5/9)
+
+# Subsetting to no big bluestem
+teracon_data_sub_eco_blue <- teracon_data_sub_eco_blue %>%
+  mutate(ab_biomass = AbovegroundTotal.Biomass..g.m.2. - Andropogon.gerardi..g.m.2.)
+teracon_data_sub_eco_blue <- teracon_data_sub_eco_blue[,-c(12,13)]
 
 # Harmonizing column names - these should match across all experiments
 teracon_data_long <- teracon_data_long %>%
@@ -77,9 +87,27 @@ teracon_data_sub_eco <- teracon_data_sub_eco %>%
   rename(ab_n = Aboveground.N..total....g.m.2.) %>%
   rename(ab_c = Aboveground.Carbon...) %>%
   mutate(biomass_plus_root = ab_biomass+root_ingrowth)
+teracon_data_sub_eco_blue <- teracon_data_sub_eco_blue %>%
+  rename(plot = Plot) %>%
+  rename(temp_treatment = Temp.Treatment) %>%
+  rename(water_treatment = Water.Treatment) %>%
+  rename(n_treatment = Nitrogen.Treatment) %>%
+  rename(cn_treatment = C.and.N.treatment) %>%
+  rename(co2_treatment = CO2.Treatment) %>%
+  rename(bl_biomass = Total.root.biomass.0.20..g.m.2.) %>%
+  rename(total_biomass = Total.Biomass) %>%
+  rename(root_ingrowth = Annual.Total.Root.Ingrowth..g.m.2.) %>%
+  rename(total_n = Whole.Plot.Total.N..g.m.2.) %>%
+  rename(bl_n = Belowground.N..total....g.m.2.) %>%
+  rename(bl_c = Belowground.Carbon...) %>%
+  rename(ab_n = Aboveground.N..total....g.m.2.) %>%
+  rename(ab_c = Aboveground.Carbon...) %>%
+  mutate(biomass_plus_root = ab_biomass+root_ingrowth)
   
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
 write.csv(teracon_data_long,paste(path_out,'teracon_clean.csv'))
 write.csv(teracon_data_sub_eco,paste(path_out,'teracon_ecosystem_dat_clean.csv'))
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/data_for_testing/"
+write.csv(teracon_data_sub_eco_blue,paste(path_out,'teracon_ecosystem_dat_clean_noblue.csv'))
