@@ -155,7 +155,7 @@ temp_jrgce_plot <- ggplot(CTI_sens_jrgce, aes(x = year, y = mean_C_temp_summer))
 
 ### Changes in CTI, NPP, and ambient temperatures
 
-```{r, echo = F, message = F, warning = F, fig.width = 10, fig.height = 9}
+```{r,echo = F, message = F, warning = F, fig.width = 10, fig.height = 9}
 ggarrange2(CTI_jrgce_plot,npp_jrgce_plot,temp_jrgce_plot,
            CTI_phace_plot,npp_phace_plot,
            CTI_tera_plot,npp_tera_plot,temp_tera_plot,
@@ -437,6 +437,8 @@ arrow_sens_tera <- ggplot(CTI_CPI_tera_sens) +
   geom_point(aes(x = CTI_sens, y = CPI_sens), color = "red") +
   labs(x = "CTI", y = "CPI", title = "TeRaCON") +
   scale_color_viridis_c(option = "viridis") +
+  ylim(-50,40) +
+  xlim(-0.35,0.45) +
   theme_minimal()
 
 arrow_sens_jrgce <- ggplot(CTI_CPI_jrgce_sens) +
@@ -448,6 +450,8 @@ arrow_sens_jrgce <- ggplot(CTI_CPI_jrgce_sens) +
   geom_point(aes(x = CTI_sens, y = CPI_sens), color = "red") +
   labs(x = "CTI", y = "CPI", title = "JRGCE") +
   scale_color_viridis_c(option = "viridis") +
+  ylim(-50,40) +
+  xlim(-0.35,0.45) +
   theme_minimal()
 
 arrow_sens_phace <- ggplot(CTI_CPI_phace_sens) +
@@ -459,6 +463,8 @@ arrow_sens_phace <- ggplot(CTI_CPI_phace_sens) +
   geom_point(aes(x = CTI_sens, y = CPI_sens), color = "red") +
   labs(x = "CTI", y = "CPI", title = "PHACE") +
   scale_color_viridis_c(option = "viridis") +
+  ylim(-50,40) +
+  xlim(-0.35,0.45) +
   theme_minimal()
 
 arrow_sens_b4_cfc <- ggplot(CTI_CPI_b4_sens_cfc) +
@@ -470,6 +476,8 @@ arrow_sens_b4_cfc <- ggplot(CTI_CPI_b4_sens_cfc) +
   geom_point(aes(x = CTI_sens, y = CPI_sens), color = "red") +
   labs(x = "CTI", y = "CPI", title = "B4Warmed CFC") +
   scale_color_viridis_c(option = "viridis") +
+  ylim(-50,40) +
+  xlim(-0.35,0.45) +
   theme_minimal()
 
 arrow_sens_b4_hwrc <- ggplot(CTI_CPI_b4_sens_hwrc) +
@@ -481,6 +489,8 @@ arrow_sens_b4_hwrc <- ggplot(CTI_CPI_b4_sens_hwrc) +
   geom_point(aes(x = CTI_sens, y = CPI_sens), color = "red") +
   labs(x = "CTI", y = "CPI", title = "B4Warmed HWRC") +
   scale_color_viridis_c(option = "viridis") +
+  ylim(-50,40) +
+  xlim(-0.35,0.45) +
   theme_minimal()
 ```
 
@@ -489,6 +499,72 @@ arrow_sens_b4_hwrc <- ggplot(CTI_CPI_b4_sens_hwrc) +
 ```{r, echo=F,warning=F,message=F,fig.width = 12, fig.height = 7}
 ggarrange(arrow_sens_jrgce,arrow_sens_phace,arrow_sens_tera,arrow_sens_b4_cfc,arrow_sens_b4_hwrc,
           ncol = 3, nrow=2)
+```
+
+```{r, echo=F,message=F,warning=F}
+# Filter to maximum year per experiment
+tera_max <- CTI_CPI_tera_sens %>%
+  filter(year == max(year))
+jrgce_max <- CTI_CPI_jrgce_sens %>%
+  filter(year == max(year))
+phace_max <- CTI_CPI_phace_sens %>%
+  filter(year == max(year))
+b4_cfc_max <- CTI_CPI_b4_sens_cfc %>%
+  filter(year == max(year))
+b4_hwrc_max <- CTI_CPI_b4_sens_hwrc %>%
+  filter(year == max(year))
+
+cols <- c("jrgce_col"="#882255","phace_col"="#CC6677","tera_col"="#DDCC77",
+          "b4_cfc_col" = "#44AA99", "b4_hwrc_col" = "#117733")
+```
+
+### Shifts in CTI and CPI; final year for all experiments
+
+```{r, echo=F,warning=F,message=F,fig.width = 8, fig.height = 5}
+ggplot() +
+  geom_segment(data=tera_max,
+               aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled,
+                   xend = CTI_sens, yend = CPI_sens, color = "tera_col"),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(data=tera_max,
+             aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled), color = "black") +
+  geom_point(data=tera_max,
+             aes(x = CTI_sens, y = CPI_sens), color = "red") +
+  geom_segment(data=phace_max,
+               aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled,
+                   xend = CTI_sens, yend = CPI_sens, color = "phace_col"),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(data=phace_max,
+             aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled), color = "black") +
+  geom_point(data=phace_max,
+             aes(x = CTI_sens, y = CPI_sens), color = "red") +
+  geom_segment(data=jrgce_max,
+               aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled,
+                   xend = CTI_sens, yend = CPI_sens, color = "jrgce_col"),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(data=jrgce_max,
+             aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled), color = "black") +
+  geom_point(data=jrgce_max,
+             aes(x = CTI_sens, y = CPI_sens), color = "red") +
+  geom_segment(data=b4_cfc_max,
+               aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled,
+                   xend = CTI_sens, yend = CPI_sens, color = "b4_cfc_col"),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(data=b4_cfc_max,
+             aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled), color = "black") +
+  geom_point(data=b4_cfc_max,
+             aes(x = CTI_sens, y = CPI_sens), color = "red") +
+  geom_segment(data=b4_hwrc_max,
+               aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled,
+                   xend = CTI_sens, yend = CPI_sens, color = "b4_hwrc_col"),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(data=b4_hwrc_max,
+             aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled), color = "black") +
+  geom_point(data=b4_hwrc_max,
+             aes(x = CTI_sens, y = CPI_sens), color = "red") +
+  labs(x = "CTI", y = "CPI") +
+  scale_colour_manual(name="Experiment",values=cols) +
+  theme_minimal()
 ```
 
 ```{r, echo=F,message=F,warning=F}
