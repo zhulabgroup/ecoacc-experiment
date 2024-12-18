@@ -40,6 +40,12 @@ setwd(path_data)
 # Load in data
 try <- read.csv("TryAccSpecies.csv")
 
+# Set path to data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/TRY_data/"
+setwd(path_data)
+# Load in data
+try_full_data <- read.csv("species_try_growthform.csv")
+
 
 # Make lists of all species in each experiment
 tera_species <- unique(tera$species)
