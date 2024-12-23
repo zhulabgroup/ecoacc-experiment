@@ -27,12 +27,6 @@ NPP_teracon <- read.csv(" eco_response_teracon.csv")
 NPP_overall_teracon <- read.csv(" eco_response_overall_teracon.csv")
 CTI_CPI_teracon <- read.csv(" CTI_CPI_teracon.csv")
 niche_est_tera <- read.csv(" teracon_niche.csv")
-# Set path to turbo to get data; data for no bluestem
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/data_for_testing/"
-setwd(path_data)
-CTI_sens_teracon_noblue <- read.csv(" CTI_sens_teracon_nobluestem.csv")
-CTI_teracon_noblue <- read.csv(" CTI_teracon_nobluestem.csv")
-CTI_CPI_teracon_noblue <- read.csv(" CTI_CPI_teracon_nobluestem.csv")
 
 # Set path to data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
@@ -112,17 +106,17 @@ NPP_teracon <- NPP_teracon %>%
   filter(variable == "mean_ab_bio")
 npp_tera_plot <- ggplot(NPP_teracon, aes(x = year, y = sensitivity)) +
   geom_smooth() +
-  labs(x = "Year", y = "Biomass (Warmed - Ambient)") +
+  labs(x = "Year", y = "Biomass\n(Warmed - Ambient)") +
   scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
   theme_bw()
 npp_jrgce_plot <- ggplot(NPP_jrgce, aes(x = year, y = sensitivity)) +
   geom_smooth() +
-  labs(x = "Year", y = "Biomass (Warmed - Ambient)") +
+  labs(x = "Year", y = "Biomass\n(Warmed - Ambient)") +
   scale_x_continuous(breaks = seq(1998, 2014, by = 3)) +
   theme_bw()
 npp_phace_plot <- ggplot(NPP_phace, aes(x = year, y = sensitivity)) +
   geom_smooth() +
-  labs(x = "Year", y = "Biomass (Warmed - Ambient)") +
+  labs(x = "Year", y = "Biomass\n(Warmed - Ambient)") +
   scale_x_continuous(breaks = seq(2007, 2013)) +
   theme_bw()
 NPP_b4_cfc <- NPP_b4 %>%
@@ -131,12 +125,12 @@ NPP_b4_hwrc <- NPP_b4 %>%
   filter(site == "HWRC")
 npp_b4_cfc_plot <- ggplot(NPP_b4_cfc, aes(x = year, y = sensitivity_high_temp)) +
   geom_smooth() +
-  labs(x = "Year", y = "Biomass (Warmed - Ambient)") +
+  labs(x = "Year", y = "Biomass\n(Warmed - Ambient)") +
   scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
   theme_bw()
 npp_b4_hwrc_plot <- ggplot(NPP_b4_hwrc, aes(x = year, y = sensitivity_high_temp)) +
   geom_smooth() +
-  labs(x = "Year", y = "Biomass (Warmed - Ambient)") +
+  labs(x = "Year", y = "Biomass\n(Warmed - Ambient)") +
   scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
   theme_bw()
 
@@ -293,7 +287,7 @@ arrow_b4_hwrc <- ggplot(CTI_CPI_b4_hwrc) +
 
 ### Shifts in CTI and CPI; year and treatment effects
 
-```{r, echo=F,warning=F,message=F, fig.width = 14, fig.height = 6}
+```{r, echo=F,warning=F,message=F, fig.width = 14, fig.height = 7}
 ggarrange(arrow_jrgce,arrow_phace,arrow_teracon,arrow_b4_cfc,arrow_b4_hwrc,
           ncol = 3, nrow=2)
 ```
@@ -571,84 +565,59 @@ ggplot() +
 ##### Fig: Mean CTI over time in warmed and ambient #####
 # note: could also change y = CTI to a different metric (CTI_sd, CTI_skew, etc.)
 CTI_teracon_plot <- ggplot(CTI_teracon, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
-  geom_jitter(alpha = 0.1,
-              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
-  stat_summary(fun = mean,
-               fun.min = mean,
-               fun.max = mean,
-               geom = "line",
-              # width = 0.4,
-               position = position_dodge(width = 0.7),
-               aes(color = temp_treatment, group = temp_treatment)) +
-  labs(title="TeRaCON") +
+  geom_jitter(alpha = 0.1) +
+  geom_smooth() +
+  labs(title="TeRaCON", x = "Year") +
   theme_minimal() +
-  scale_color_manual(values = c("HTamb" = "blue", "HTelv" = "red"))
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red"))
 
 CTI_jrgce <- CTI_jrgce %>%
   filter(!(year == 1998))
 CTI_jrgce_plot <- ggplot(CTI_jrgce, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
-  geom_jitter(alpha = 0.1,
-              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
-  stat_summary(fun = mean,
-               fun.min = mean,
-               fun.max = mean,
-               geom = "line",
-               #width = 0.4,
-               position = position_dodge(width = 0.7),
-               aes(color = temp_treatment, group = temp_treatment)) +
-  labs(title = "JRGCE") +
+  geom_jitter(alpha = 0.1) +
+  geom_smooth() +
+  labs(title = "JRGCE", x = "Year") +
   theme_minimal() +
-  scale_color_manual(values = c("ambient" = "blue", "warmed" = "red"))
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red"))
 
 CTI_phace_plot <- ggplot(CTI_phace, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
-  geom_jitter(alpha = 0.1,
-              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
-  stat_summary(fun = mean,
-               fun.min = mean,
-               fun.max = mean,
-               geom = "line",
-               #width = 0.4,
-               position = position_dodge(width = 0.7),
-               aes(color = temp_treatment, group = temp_treatment)) +
-  labs(title = "PHACE") +
+  geom_jitter(alpha = 0.1) +
+  geom_smooth() +
+  labs(title = "PHACE", x = "Year") +
   theme_minimal() +
-  scale_color_manual(values = c("ambient" = "blue", "warmed" = "red"))
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red"))
 
 CTI_b4_cfc <- CTI_b4 %>%
   filter(site == "CFC")
 CTI_b4_hwrc <- CTI_b4 %>%
   filter(site == "HWRC")
 CTI_b4_cfc_plot <- ggplot(CTI_b4_cfc, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
-  geom_jitter(alpha = 0.1,
-              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
-  stat_summary(fun = mean,
-               fun.min = mean,
-               fun.max = mean,
-               geom = "line",
-               #width = 0.4,
-               position = position_dodge(width = 0.7),
-               aes(color = temp_treatment, group = temp_treatment)) +
-  labs(title = "B4Warmed CFC") +
+  geom_jitter(alpha = 0.1) + 
+  geom_smooth() +
+  labs(title = "B4Warmed CFC", x = "Year") +
   theme_minimal() +
-  scale_color_manual(values = c("amb" = "blue", '1.7' = "orange", "3.4" = "red"))
+  scale_color_manual(name = "Treatment",
+                     labels = c("1.7°C Warmed","3.4°C Warmed","Ambient"),
+                     values = c("orange","red","blue"))
 CTI_b4_hwrc_plot <- ggplot(CTI_b4_hwrc, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
-  geom_jitter(alpha = 0.1,
-              position = position_jitterdodge(dodge.width = 0.7)) +  # Add jittered points
-  stat_summary(fun = mean,
-               fun.min = mean,
-               fun.max = mean,
-               geom = "line",
-               #width = 0.4,
-               position = position_dodge(width = 0.7),
-               aes(color = temp_treatment, group = temp_treatment)) +
-  labs(title = "B4Warmed HWRC") +
+  geom_jitter(alpha = 0.1) + 
+  geom_smooth() +
+  labs(title = "B4Warmed HWRC", x = "Year") +
   theme_minimal() +
-  scale_color_manual(values = c("amb" = "blue", '1.7' = "orange", "3.4" = "red"))
+  scale_color_manual(name = "Treatment",
+                     labels = c("1.7°C Warmed","3.4°C Warmed","Ambient"),
+                     values = c("orange","red","blue"))
 ```
 
 ### Temporal trends in CTI between treatments
 
-```{r, echo=F,warning=F,message=F,fig.width = 15, fig.height = 6}
+```{r, echo=F,warning=F,message=F,fig.width = 15, fig.height = 8}
 ggarrange(CTI_jrgce_plot,CTI_phace_plot,CTI_teracon_plot,CTI_b4_cfc_plot,CTI_b4_hwrc_plot,
           ncol = 3, nrow=2)
 ```

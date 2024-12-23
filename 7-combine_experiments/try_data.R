@@ -11,25 +11,25 @@ library(tidyverse)
 library(rtry)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data)
 # Load in data
 tera <- read.csv(" teracon_clean.csv")
 
 # Set path to data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
 setwd(path_data)
 # Load in data
 jrgce <- read.csv(" jrgce_clean.csv")
 
 # Set path to data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data)
 # Load in data
 phace <- read.csv(" phace_clean.csv")
 
 # Set path to data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/B4Warmed/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/B4Warmed/"
 setwd(path_data)
 # Load in data
 b4 <- read.csv(" b4warmed_clean.csv")
@@ -61,7 +61,6 @@ all_species <- data.frame(AccSpeciesName = all_species)
 
 # Renaming species to match the names found in Try
 all_species$AccSpeciesName[all_species$AccSpeciesName == "Agropyron repens"] <- "Elymus repens"
-all_species$AccSpeciesName[all_species$AccSpeciesName == "Koeleria cristata"] <- "Koeleria macrantha"
 all_species$AccSpeciesName[all_species$AccSpeciesName == "Lysimachia arvensis"] <- "Anagallis arvensis"
 all_species$AccSpeciesName[all_species$AccSpeciesName == "Stipa pulchra"] <- "Nassella pulchra"
 
@@ -299,6 +298,9 @@ all_species$life_cycle[all_species$AccSpeciesName == "Kickxia spuria"] <- "Peren
 all_species$growth_form[all_species$AccSpeciesName == "Koeleria macrantha"] <- "Graminoid"
 all_species$life_cycle[all_species$AccSpeciesName == "Koeleria macrantha"] <- "Perennial"
 
+all_species$growth_form[all_species$AccSpeciesName == "Koeleria cristata"] <- "Graminoid"
+all_species$life_cycle[all_species$AccSpeciesName == "Koeleria cristata"] <- "Perennial"
+
 all_species$growth_form[all_species$AccSpeciesName == "Lactuca serriola"] <- "Forb"
 all_species$life_cycle[all_species$AccSpeciesName == "Lactuca serriola"] <- "Biennial"
 
@@ -508,8 +510,12 @@ all_species$life_cycle[all_species$AccSpeciesName == "Zeltnera davyi"] <- "Annua
 
 # Fix column name
 colnames(all_species)[which(names(all_species) == "AccSpeciesName")] <- "species"
+all_species$species[all_species$species == "Elymus repens"] <- "Agropyron repens"
+all_species$species[all_species$species == "Anagallis arvensis"] <- "Lysimachia arvensis"
+all_species$species[all_species$species == "Nassella pulchra"] <- "Stipa pulchra"
+
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TRY_data/"
-write.csv(all_species,paste(path_out,'exp_species_growth_lifecycle.csv'))
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/TRY_data/"
+write.csv(all_species,paste(path_out,'exp_species_growth_lifecycle.csv'),row.names=F)
 
