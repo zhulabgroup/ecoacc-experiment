@@ -4,7 +4,7 @@
 # DATA INPUT:     Niche estimate and ecosystem response data for all experiments 
 # DATA OUTPUT:    Combined figures
 # PROJECT:        EcoAcc
-# DATE:           Dec 2024
+# DATE:           Jan 2025
 
 # Load packages
 library(tidyverse)
@@ -35,16 +35,16 @@ setwd(path_data)
 b4 <- read.csv(" b4warmed_clean.csv")
 
 # Set path to data
-path_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/traits/TRY_growthform_species/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
 setwd(path_data)
 # Load in data
-try <- read.csv("TryAccSpecies.csv")
+ok <- read.csv(" ok_clean.csv")
 
 # Set path to data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TRY_data/"
+path_data = "/Volumes/seas-zhukai/datasets/vegetation/traits/TRY/"
 setwd(path_data)
 # Load in data
-try_full_data <- read.csv("species_try_growthform.csv")
+try <- read.csv("TRY_species_list.csv")
 
 
 # Make lists of all species in each experiment
@@ -67,8 +67,16 @@ all_species$AccSpeciesName[all_species$AccSpeciesName == "Stipa pulchra"] <- "Na
 # Merging try growth form species with my species list
 try_spp <- left_join(all_species, try, by = c("AccSpeciesName"))
 
-# Print a list of AccSpeciesID without NAs (used this list to download data from TRY for these species IDs)
+# Print a comma separated list of all AccSpeciesID to input into TRY
 try_spp$AccSpeciesID[!is.na(try_spp$AccSpeciesID)]
+
+
+# Data downloaded from TRY using above species list
+# Set path to data
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TRY_data/"
+setwd(path_data)
+# Load in data
+try_full_data <- read.csv("species_try_growthform.csv")
 
 
 

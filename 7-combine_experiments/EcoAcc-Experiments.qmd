@@ -15,6 +15,7 @@ editor_options:
 library(tidyverse)
 library(ggpubr)
 library(deeptime)
+library(patchwork)
 
 # Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
@@ -65,12 +66,24 @@ NPP_b4 <- read.csv(" eco_response_b4warmed.csv")
 NPP_overall_b4 <- read.csv(" eco_response_overall_b4warmed.csv")
 CTI_CPI_b4 <- read.csv(" CTI_CPI_b4warmed.csv")
 niche_est_b4 <- read.csv(" b4warmed_niche.csv")
+
+# Set path to data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
+setwd(path_data)
+# Load in data
+CTI_sens_ok <- read.csv(" CTI_sens_ok.csv")
+CTI_ok <- read.csv(" CTI_ok.csv")
+ok <- read.csv(" ok_clean.csv")
+NPP_ok <- read.csv(" eco_response_ok.csv")
+NPP_overall_ok <- read.csv(" eco_response_overall_ok.csv")
+CTI_CPI_ok <- read.csv(" CTI_CPI_ok.csv")
+niche_est_ok <- read.csv(" ok_niche.csv")
 ```
 
 Using community composition and ecosystem response data from various warming experiments, we can visualize changes in community structure (e.g., CTI) alongside changes in function (e.g., ANPP) due to warming. Including ambient temperatures changes over the course of each experiment may also inform the observed responses.
 
 ```{r, message = F, warning = F, echo = F}
-# CTI figures
+# CTI sensitivity figures
 CTI_tera_plot <- ggplot(CTI_sens_teracon, aes(x = year, y = sensitivity)) +
   geom_smooth() +
   labs(x = "Year", y = "TeRaCON\nCTI (Warmed - Ambient)") +
@@ -99,6 +112,69 @@ CTI_b4_hwrc_plot <- ggplot(CTI_sens_b4_hwrc, aes(x = year, y = sensitivity_high_
   geom_smooth() +
   labs(x = "Year", y = "B4Warmed HWRC\nCTI (Warmed - Ambient)") +
   scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
+  theme_bw()
+CTI_ok_plot <- ggplot(CTI_sens_ok, aes(x = year, y = sensitivity)) +
+  geom_smooth() +
+  labs(x = "Year", y = "Oklahoma\nCTI (Warmed - Ambient)") +
+  #scale_x_continuous(breaks = seq(2007, 2013)) +
+  theme_bw()
+
+# CTI figures
+CTI_tera_plot2 <- ggplot(CTI_teracon, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_smooth() +
+  labs(x = "Year", y = "TeRaCON\nCTI") +
+  scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw()
+CTI_jrgce_plot2 <- ggplot(CTI_jrgce, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_smooth() +
+  labs(x = "Year", y = "JRGCE\nCTI") +
+  scale_x_continuous(breaks = seq(1998, 2014, by = 3)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw()
+CTI_phace_plot2 <- ggplot(CTI_phace, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_smooth() +
+  labs(x = "Year", y = "PHACE\nCTI") +
+  scale_x_continuous(breaks = seq(2007, 2013)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw()
+CTI_b4_cfc <- CTI_b4 %>%
+  filter(site == "CFC") %>%
+  filter(temp_treatment == "amb" | temp_treatment == 3.4)
+CTI_b4_hwrc <- CTI_b4 %>%
+  filter(site == "HWRC") %>%
+  filter(temp_treatment == "amb" | temp_treatment == 3.4)
+CTI_b4_cfc_plot2 <- ggplot(CTI_b4_cfc, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_smooth() +
+  labs(x = "Year", y = "B4Warmed CFC\nCTI") +
+  scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
+  scale_color_manual(name = "Treatment",
+                     breaks=c("amb","3.4"),
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw()
+CTI_b4_hwrc_plot2 <- ggplot(CTI_b4_hwrc, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_smooth() +
+  labs(x = "Year", y = "B4Warmed HWRC\nCTI") +
+  scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
+  scale_color_manual(name = "Treatment",
+                     breaks=c("amb","3.4"),
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw()
+CTI_ok_plot2 <- ggplot(CTI_ok, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_smooth() +
+  labs(x = "Year", y = "Oklahoma\nCTI") +
+  #scale_x_continuous(breaks = seq(2007, 2013)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
   theme_bw()
 
 # Biomass figures
@@ -133,6 +209,11 @@ npp_b4_hwrc_plot <- ggplot(NPP_b4_hwrc, aes(x = year, y = sensitivity_high_temp)
   labs(x = "Year", y = "Biomass\n(Warmed - Ambient)") +
   scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
   theme_bw()
+npp_ok_plot <- ggplot(NPP_ok, aes(x = year, y = sensitivity)) +
+  geom_smooth() +
+  labs(x = "Year", y = "Biomass\n(Warmed - Ambient)") +
+  #scale_x_continuous(breaks = seq(2007, 2013)) +
+  theme_bw()
 
 # Ambient temp change figures
 temp_tera_plot <- ggplot(CTI_sens_teracon, aes(x = year, y = mean_C_temp_summer)) +
@@ -147,19 +228,30 @@ temp_jrgce_plot <- ggplot(CTI_sens_jrgce, aes(x = year, y = mean_C_temp_summer))
   theme_bw()
 ```
 
+### Changes in CTI over time between treatments
+
+```{r,echo = F, message = F, warning = F, fig.width = 10, fig.height = 7}
+combined <- wrap_plots(CTI_jrgce_plot2,CTI_phace_plot2,CTI_tera_plot2,
+           CTI_ok_plot2,CTI_b4_cfc_plot2,CTI_b4_hwrc_plot2,
+           ncol = 3) & theme(legend.position = "right")
+combined + plot_layout(guides = "collect")
+```
+
 ### Changes in CTI, NPP, and ambient temperatures
 
 ```{r,echo = F, message = F, warning = F, fig.width = 10, fig.height = 9}
 ggarrange2(CTI_jrgce_plot,npp_jrgce_plot,temp_jrgce_plot,
            CTI_phace_plot,npp_phace_plot,
            CTI_tera_plot,npp_tera_plot,temp_tera_plot,
+           CTI_ok_plot,npp_ok_plot,
            CTI_b4_cfc_plot,npp_b4_cfc_plot,
            CTI_b4_hwrc_plot,npp_b4_hwrc_plot,
            layout = matrix(c(1, 2, 3,
                             4, 5, 0,
                             6, 7, 8,
                             9, 10, 0,
-                            11, 12, 0), nrow = 5, byrow = TRUE)
+                            11, 12, 0,
+                            13, 14, 0), nrow = 6, byrow = TRUE)
 )
 ```
 
@@ -215,12 +307,21 @@ b4_scatter_hwrc <- ggscatter(NPP_CTI_b4_hwrc, x = "mean_ab_bio", y = "mean_CTI",
                            add = "reg.line", conf.int = TRUE, 
                            cor.coef = TRUE, cor.method = "pearson",
                            xlab = "Biomass", ylab = "B4Warmed HWRC\nCTI")
+# OK
+CTI_yearly_avg_ok <- CTI_ok %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
+NPP_CTI_ok <- left_join(CTI_yearly_avg_ok, NPP_overall_ok, by=c("year","temp_treatment"))
+ok_scatter <- ggscatter(NPP_CTI_ok, x = "mean_ab_bio", y = "mean_CTI", 
+                           add = "reg.line", conf.int = TRUE, 
+                           cor.coef = TRUE, cor.method = "pearson",
+                           xlab = "Biomass", ylab = "Oklahoma\nCTI")
 ```
 
 ### Correlation between biomass and CTI
 
 ```{r, echo = F, message = F, warning = F, fig.width = 14, fig.height = 6}
-ggarrange(jrgce_scatter,phace_scatter,tera_scatter,b4_scatter_cfc,b4_scatter_hwrc,
+ggarrange(jrgce_scatter,phace_scatter,tera_scatter,ok_scatter,b4_scatter_cfc,b4_scatter_hwrc,
           ncol=3,nrow=2)
 ```
 
@@ -283,12 +384,23 @@ arrow_b4_hwrc <- ggplot(CTI_CPI_b4_hwrc) +
   labs(x = "CTI", y = "CPI", title = "B4Warmed HWRC") +
   scale_color_viridis_c(option = "viridis") +
   theme_minimal()
+
+arrow_ok <- ggplot(CTI_CPI_ok) +
+  geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
+                   xend = CTI_warmed, yend = CPI_warmed,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_ambient, y = CPI_ambient), color = "black") +
+  geom_point(aes(x = CTI_warmed, y = CPI_warmed), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "Oklahoma") +
+  scale_color_viridis_c(option = "viridis") +
+  theme_minimal()
 ```
 
 ### Shifts in CTI and CPI; year and treatment effects
 
 ```{r, echo=F,warning=F,message=F, fig.width = 14, fig.height = 7}
-ggarrange(arrow_jrgce,arrow_phace,arrow_teracon,arrow_b4_cfc,arrow_b4_hwrc,
+ggarrange(arrow_jrgce,arrow_phace,arrow_teracon,arrow_ok,arrow_b4_cfc,arrow_b4_hwrc,
           ncol = 3, nrow=2)
 ```
 
@@ -379,12 +491,28 @@ b4_niche_hwrc <- ggplot(CTI_CPI_b4_hwrc) +
   labs(x = "Temperature", y = "Precipitation", title = "B4Warmed HWRC") +
   scale_color_viridis_c(option = "viridis") +
   theme_minimal()
+
+# PHACE
+niche_est_ok_avg <- niche_est_ok[,c(1,6,7)]
+niche_est_ok_avg <- niche_est_ok_avg %>%
+  distinct()
+ok_niche <- ggplot(CTI_CPI_ok) +
+  geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
+                   xend = CTI_warmed, yend = CPI_warmed,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_ambient, y = CPI_ambient), color = "black") +
+  geom_point(aes(x = CTI_warmed, y = CPI_warmed), color = "red") +
+  geom_point(data=niche_est_ok_avg, aes(x = temp_niche, y = precip_niche)) +
+  labs(x = "Temperature", y = "Precipitation", title = "Oklahoma") +
+  scale_color_viridis_c(option = "viridis") +
+  theme_minimal()
 ```
 
 ### Shifts in CTI and CPI: Treatment arrows overlaid on species climate niches
 
 ```{r, echo=F,warning=F,message=F,fig.width = 12, fig.height = 7}
-ggarrange(jrgce_niche,phace_niche,teracon_niche,b4_niche_cfc,b4_niche_hwrc,
+ggarrange(jrgce_niche,phace_niche,teracon_niche,ok_niche,b4_niche_cfc,b4_niche_hwrc,
           ncol=3,nrow=2)
 ```
 
@@ -421,6 +549,12 @@ CTI_CPI_b4_sens_hwrc <- CTI_CPI_b4 %>%
          CPI_sens = CPI_3.4 - CPI_amb)
 CTI_CPI_b4_sens_hwrc$CTI_ambient_scaled <- 0
 CTI_CPI_b4_sens_hwrc$CPI_ambient_scaled <- 0
+
+CTI_CPI_ok_sens <- CTI_CPI_ok %>%
+  mutate(CTI_sens = CTI_warmed - CTI_ambient,
+         CPI_sens = CPI_warmed - CPI_ambient)
+CTI_CPI_ok_sens$CTI_ambient_scaled <- 0
+CTI_CPI_ok_sens$CPI_ambient_scaled <- 0
 
 arrow_sens_tera <- ggplot(CTI_CPI_tera_sens) +
   geom_segment(aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled, 
@@ -486,12 +620,25 @@ arrow_sens_b4_hwrc <- ggplot(CTI_CPI_b4_sens_hwrc) +
   ylim(-50,40) +
   xlim(-0.35,0.45) +
   theme_minimal()
+
+arrow_sens_ok <- ggplot(CTI_CPI_ok_sens) +
+  geom_segment(aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled, 
+                   xend = CTI_sens, yend = CPI_sens,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled), color = "black") +
+  geom_point(aes(x = CTI_sens, y = CPI_sens), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "Oklahoma") +
+  scale_color_viridis_c(option = "viridis") +
+  ylim(-50,40) +
+  xlim(-0.35,0.45) +
+  theme_minimal()
 ```
 
 ### Shifts in CTI and CPI; ambient treatment centered on 0
 
 ```{r, echo=F,warning=F,message=F,fig.width = 12, fig.height = 7}
-ggarrange(arrow_sens_jrgce,arrow_sens_phace,arrow_sens_tera,arrow_sens_b4_cfc,arrow_sens_b4_hwrc,
+ggarrange(arrow_sens_jrgce,arrow_sens_phace,arrow_sens_tera,arrow_sens_ok,arrow_sens_b4_cfc,arrow_sens_b4_hwrc,
           ncol = 3, nrow=2)
 ```
 
@@ -503,13 +650,15 @@ jrgce_max <- CTI_CPI_jrgce_sens %>%
   filter(year == max(year))
 phace_max <- CTI_CPI_phace_sens %>%
   filter(year == max(year))
+ok_max <- CTI_CPI_ok_sens %>%
+  filter(year == max(year))
 b4_cfc_max <- CTI_CPI_b4_sens_cfc %>%
   filter(year == max(year))
 b4_hwrc_max <- CTI_CPI_b4_sens_hwrc %>%
   filter(year == max(year))
 
-cols <- c("jrgce_col"="#882255","phace_col"="#CC6677","tera_col"="#DDCC77",
-          "b4_cfc_col" = "#44AA99", "b4_hwrc_col" = "#117733")
+cols <- c("jrgce_col"="#332288","phace_col"="#117733","tera_col"="#882255",
+         "ok_col" =  "#88CCEE", "b4_cfc_col" = "#AA4499", "b4_hwrc_col" = "#DDCC77")
 ```
 
 ### Shifts in CTI and CPI; final year for all experiments
@@ -540,6 +689,14 @@ ggplot() +
              aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled), color = "black") +
   geom_point(data=jrgce_max,
              aes(x = CTI_sens, y = CPI_sens), color = "red") +
+   geom_segment(data=ok_max,
+               aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled,
+                   xend = CTI_sens, yend = CPI_sens, color = "ok_col"),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(data=ok_max,
+             aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled), color = "black") +
+  geom_point(data=ok_max,
+             aes(x = CTI_sens, y = CPI_sens), color = "red") +
   geom_segment(data=b4_cfc_max,
                aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled,
                    xend = CTI_sens, yend = CPI_sens, color = "b4_cfc_col"),
@@ -555,6 +712,83 @@ ggplot() +
   geom_point(data=b4_hwrc_max,
              aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled), color = "black") +
   geom_point(data=b4_hwrc_max,
+             aes(x = CTI_sens, y = CPI_sens), color = "red") +
+  labs(x = "CTI", y = "CPI") +
+  scale_colour_manual(name="Experiment",values=cols) +
+  theme_minimal()
+```
+
+```{r,echo=F,message=F,warning=F}
+# Filter so all experiments contain only their 7th year of data
+# PHACE ran the shortest at 7 years in length; looking at the 7th year for all
+tera_seventh_year <- CTI_CPI_tera_sens %>%
+  filter(year == 2018)
+jrgce_seventh_year <- CTI_CPI_jrgce_sens %>%
+  filter(year == 2005)
+phace_seventh_year <- CTI_CPI_phace_sens %>%
+  filter(year == 2013)
+ok_seventh_year <- CTI_CPI_ok_sens %>%
+  filter(year == 2006)
+b4_cfc_seventh_year <- CTI_CPI_b4_sens_cfc %>%
+  filter(year == 2014)
+b4_hwrc_seventh_year <- CTI_CPI_b4_sens_hwrc %>%
+  filter(year == 2014)
+
+cols <- c("jrgce_col"="#332288","phace_col"="#117733","tera_col"="#882255",
+         "ok_col" =  "#88CCEE", "b4_cfc_col" = "#AA4499", "b4_hwrc_col" = "#DDCC77")
+```
+
+### Shifts in CTI and CPI; seventh year for all experiments
+
+```{r, echo=F,warning=F,message=F,fig.width = 8, fig.height = 5}
+ggplot() +
+  geom_segment(data=tera_seventh_year,
+               aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled,
+                   xend = CTI_sens, yend = CPI_sens, color = "tera_col"),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(data=tera_seventh_year,
+             aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled), color = "black") +
+  geom_point(data=tera_seventh_year,
+             aes(x = CTI_sens, y = CPI_sens), color = "red") +
+  geom_segment(data=phace_seventh_year,
+               aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled,
+                   xend = CTI_sens, yend = CPI_sens, color = "phace_col"),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(data=phace_seventh_year,
+             aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled), color = "black") +
+  geom_point(data=phace_seventh_year,
+             aes(x = CTI_sens, y = CPI_sens), color = "red") +
+  geom_segment(data=jrgce_seventh_year,
+               aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled,
+                   xend = CTI_sens, yend = CPI_sens, color = "jrgce_col"),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(data=jrgce_seventh_year,
+             aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled), color = "black") +
+  geom_point(data=jrgce_seventh_year,
+             aes(x = CTI_sens, y = CPI_sens), color = "red") +
+   geom_segment(data=ok_seventh_year,
+               aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled,
+                   xend = CTI_sens, yend = CPI_sens, color = "ok_col"),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(data=ok_seventh_year,
+             aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled), color = "black") +
+  geom_point(data=ok_seventh_year,
+             aes(x = CTI_sens, y = CPI_sens), color = "red") +
+  geom_segment(data=b4_cfc_seventh_year,
+               aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled,
+                   xend = CTI_sens, yend = CPI_sens, color = "b4_cfc_col"),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(data=b4_cfc_seventh_year,
+             aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled), color = "black") +
+  geom_point(data=b4_cfc_seventh_year,
+             aes(x = CTI_sens, y = CPI_sens), color = "red") +
+  geom_segment(data=b4_hwrc_seventh_year,
+               aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled,
+                   xend = CTI_sens, yend = CPI_sens, color = "b4_hwrc_col"),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(data=b4_hwrc_seventh_year,
+             aes(x = CTI_ambient_scaled, y = CPI_ambient_scaled), color = "black") +
+  geom_point(data=b4_hwrc_seventh_year,
              aes(x = CTI_sens, y = CPI_sens), color = "red") +
   labs(x = "CTI", y = "CPI") +
   scale_colour_manual(name="Experiment",values=cols) +
@@ -593,6 +827,15 @@ CTI_phace_plot <- ggplot(CTI_phace, aes(x = year, y = CTI, color = temp_treatmen
                      labels = c("Ambient","Warmed"),
                      values = c("blue","red"))
 
+CTI_ok_plot <- ggplot(CTI_ok, aes(x = year, y = CTI, color = temp_treatment, group=temp_treatment)) +
+  geom_jitter(alpha = 0.1) +
+  geom_smooth() +
+  labs(title = "Oklahoma", x = "Year") +
+  theme_minimal() +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red"))
+
 CTI_b4_cfc <- CTI_b4 %>%
   filter(site == "CFC")
 CTI_b4_hwrc <- CTI_b4 %>%
@@ -618,13 +861,16 @@ CTI_b4_hwrc_plot <- ggplot(CTI_b4_hwrc, aes(x = year, y = CTI, color = temp_trea
 ### Temporal trends in CTI between treatments
 
 ```{r, echo=F,warning=F,message=F,fig.width = 15, fig.height = 8}
-ggarrange(CTI_jrgce_plot,CTI_phace_plot,CTI_teracon_plot,CTI_b4_cfc_plot,CTI_b4_hwrc_plot,
+ggarrange(CTI_jrgce_plot,CTI_phace_plot,CTI_teracon_plot,CTI_ok_plot,CTI_b4_cfc_plot,CTI_b4_hwrc_plot,
           ncol = 3, nrow=2)
 ```
 
 ```{r,echo=F,warning=F,message=F}
 # Calculate mean spp abundance per year and treatment
 phace_test <- phace %>%
+  group_by(year, temp_treatment,species) %>%
+  summarize(avg_abun = mean(rel_abun, na.rm=T))
+ok_test <- ok %>%
   group_by(year, temp_treatment,species) %>%
   summarize(avg_abun = mean(rel_abun, na.rm=T))
 jrgce_test <- jrgce %>%
@@ -651,6 +897,9 @@ b4_test_hwrc <- b4_hwrc %>%
 CTI_yearly_avg_phace <- CTI_phace %>%
   group_by(year,temp_treatment) %>%
   summarize(mean_CTI = mean(CTI))
+CTI_yearly_avg_ok <- CTI_ok %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
 CTI_yearly_avg_jrgce <- CTI_jrgce %>%
   group_by(year,temp_treatment) %>%
   summarize(mean_CTI = mean(CTI))
@@ -668,6 +917,7 @@ CTI_yearly_avg_b4_hwrc <- CTI_b4_hwrc %>%
 
 # Merging CTI and species abundance data
 phace_spp_abun <- merge(CTI_yearly_avg_phace,phace_test, by=c("year","temp_treatment"))
+ok_spp_abun <- merge(CTI_yearly_avg_ok,ok_test, by=c("year","temp_treatment"))
 jrgce_spp_abun <- merge(CTI_yearly_avg_jrgce,jrgce_test, by=c("year","temp_treatment"))
 tera_spp_abun <- merge(CTI_yearly_avg_tera,tera_test, by=c("year","temp_treatment"))
 b4_spp_abun_cfc <- merge(CTI_yearly_avg_b4_cfc,b4_test_cfc, by=c("year","temp_treatment"))
@@ -676,6 +926,9 @@ b4_spp_abun_hwrc <- merge(CTI_yearly_avg_b4_hwrc,b4_test_hwrc, by=c("year","temp
 ### Stats: Which species show significant increases or decreases in abundance as a function of CTI?
 # Perform regression analysis for each species
 results_phace <- phace_spp_abun %>%
+  group_by(species) %>%
+  do(model = lm(avg_abun ~ mean_CTI, data = .))
+results_ok <- ok_spp_abun %>%
   group_by(species) %>%
   do(model = lm(avg_abun ~ mean_CTI, data = .))
 results_jrgce <- jrgce_spp_abun %>%
@@ -695,6 +948,10 @@ results_b4_hwrc <- b4_spp_abun_hwrc %>%
 
 # Extract coefficients and p-values
 results_phace_summary <- results_phace %>%
+  rowwise() %>%
+  mutate(slope = coef(model)[["mean_CTI"]],
+         p_value = summary(model)$coefficients["mean_CTI", "Pr(>|t|)"])
+results_ok_summary <- results_ok %>%
   rowwise() %>%
   mutate(slope = coef(model)[["mean_CTI"]],
          p_value = summary(model)$coefficients["mean_CTI", "Pr(>|t|)"])
@@ -718,6 +975,8 @@ results_b4_summary_hwrc <- results_b4_hwrc %>%
 # Apply multiple testing correction (Benjamini-Hochberg)
 results_phace_summary <- results_phace_summary %>%
   mutate(adj_p_value = p.adjust(p_value, method = "BH"))
+results_ok_summary <- results_ok_summary %>%
+  mutate(adj_p_value = p.adjust(p_value, method = "BH"))
 results_jrgce_summary <- results_jrgce_summary %>%
   mutate(adj_p_value = p.adjust(p_value, method = "BH"))
 results_tera_summary <- results_tera_summary %>%
@@ -729,6 +988,8 @@ results_b4_summary_hwrc <- results_b4_summary_hwrc %>%
 
 # Filter out species with significant effects
 results_phace_sig <- results_phace_summary %>%
+  filter(adj_p_value <= 0.06)
+results_ok_sig <- results_ok_summary %>%
   filter(adj_p_value <= 0.06)
 results_jrgce_sig <- results_jrgce_summary %>%
   filter(adj_p_value <= 0.06)
@@ -743,6 +1004,113 @@ results_b4_sig_hwrc <- results_b4_summary_hwrc %>%
 phace_spp_list <- unique(results_phace_sig$species)
 phace_sig_spp <- phace_spp_abun %>%
   filter(species %in% phace_spp_list)
+
+ok_spp_list <- unique(results_ok_sig$species)
+ok_sig_spp <- ok_spp_abun %>%
+  filter(species %in% ok_spp_list)
+
+jrgce_spp_list <- unique(results_jrgce_sig$species)
+jrgce_sig_spp <- jrgce_spp_abun %>%
+  filter(species %in% jrgce_spp_list)
+
+tera_spp_list <- unique(results_tera_sig$species)
+tera_sig_spp <- tera_spp_abun %>%
+  filter(species %in% tera_spp_list)
+
+b4_spp_list_cfc <- unique(results_b4_sig_cfc$species)
+b4_sig_spp_cfc <- b4_spp_abun_cfc %>%
+  filter(species %in% b4_spp_list_cfc)
+
+b4_spp_list_hwrc <- unique(results_b4_sig_hwrc$species)
+b4_sig_spp_hwrc <- b4_spp_abun_hwrc %>%
+  filter(species %in% b4_spp_list_hwrc)
+
+
+### Stats: Which species show significant increases or decreases in abundance as a function of year?
+# Perform regression analysis for each species
+results_phace_year <- phace_spp_abun %>%
+  group_by(species) %>%
+  do(model = lm(avg_abun ~ year, data = .))
+results_ok_year <- ok_spp_abun %>%
+  group_by(species) %>%
+  do(model = lm(avg_abun ~ year, data = .))
+results_jrgce_year <- jrgce_spp_abun %>%
+  filter(!(species == "Madia gracilis" | species == "Quercus lobata" | species == "Festuca DUMMY")) %>% # removing spp w/ NAs
+  group_by(species) %>%
+  do(model = lm(avg_abun ~ year, data = .))
+results_tera_year <- tera_spp_abun %>%
+  filter(!(species == "Total Planted Species")) %>%
+  group_by(species) %>%
+  do(model = lm(avg_abun ~ year, data = .))
+results_b4_cfc_year <- b4_spp_abun_cfc %>%
+  group_by(species) %>%
+  do(model = lm(avg_abun ~ year, data = .))
+results_b4_hwrc_year <- b4_spp_abun_hwrc %>%
+  group_by(species) %>%
+  do(model = lm(avg_abun ~ year, data = .))
+
+# Extract coefficients and p-values
+results_phace_summary_year <- results_phace_year %>%
+  rowwise() %>%
+  mutate(slope = coef(model)[["year"]],
+         p_value = summary(model)$coefficients["year", "Pr(>|t|)"])
+results_ok_summary_year <- results_ok_year %>%
+  rowwise() %>%
+  mutate(slope = coef(model)[["year"]],
+         p_value = summary(model)$coefficients["year", "Pr(>|t|)"])
+results_jrgce_summary_year <- results_jrgce_year %>%
+  rowwise() %>%
+  mutate(slope = coef(model)[["year"]],
+         p_value = summary(model)$coefficients["year", "Pr(>|t|)"])
+results_tera_summary_year <- results_tera_year %>%
+  rowwise() %>%
+  mutate(slope = coef(model)[["year"]],
+         p_value = summary(model)$coefficients["year", "Pr(>|t|)"])
+results_b4_summary_cfc_year <- results_b4_cfc_year %>%
+  rowwise() %>%
+  mutate(slope = coef(model)[["year"]],
+         p_value = summary(model)$coefficients["year", "Pr(>|t|)"])
+results_b4_summary_hwrc_year <- results_b4_hwrc_year %>%
+  rowwise() %>%
+  mutate(slope = coef(model)[["year"]],
+         p_value = summary(model)$coefficients["year", "Pr(>|t|)"])
+
+# Apply multiple testing correction (Benjamini-Hochberg)
+results_phace_summary <- results_phace_summary %>%
+  mutate(adj_p_value = p.adjust(p_value, method = "BH"))
+results_ok_summary <- results_ok_summary %>%
+  mutate(adj_p_value = p.adjust(p_value, method = "BH"))
+results_jrgce_summary <- results_jrgce_summary %>%
+  mutate(adj_p_value = p.adjust(p_value, method = "BH"))
+results_tera_summary <- results_tera_summary %>%
+  mutate(adj_p_value = p.adjust(p_value, method = "BH"))
+results_b4_summary_cfc <- results_b4_summary_cfc %>%
+  mutate(adj_p_value = p.adjust(p_value, method = "BH"))
+results_b4_summary_hwrc <- results_b4_summary_hwrc %>%
+  mutate(adj_p_value = p.adjust(p_value, method = "BH"))
+
+# Filter out species with significant effects
+results_phace_sig <- results_phace_summary %>%
+  filter(adj_p_value <= 0.06)
+results_ok_sig <- results_ok_summary %>%
+  filter(adj_p_value <= 0.06)
+results_jrgce_sig <- results_jrgce_summary %>%
+  filter(adj_p_value <= 0.06)
+results_tera_sig <- results_tera_summary %>%
+  filter(adj_p_value <= 0.06)
+results_b4_sig_cfc <- results_b4_summary_cfc %>%
+  filter(adj_p_value <= 0.06)
+results_b4_sig_hwrc <- results_b4_summary_hwrc %>%
+  filter(adj_p_value <= 0.06)
+
+# Filtering data to sig. species
+phace_spp_list <- unique(results_phace_sig$species)
+phace_sig_spp <- phace_spp_abun %>%
+  filter(species %in% phace_spp_list)
+
+ok_spp_list <- unique(results_ok_sig$species)
+ok_sig_spp <- ok_spp_abun %>%
+  filter(species %in% ok_spp_list)
 
 jrgce_spp_list <- unique(results_jrgce_sig$species)
 jrgce_sig_spp <- jrgce_spp_abun %>%
@@ -780,6 +1148,16 @@ ggplot(phace_sig_spp, aes(x = mean_CTI, y = avg_abun)) +
   geom_point() +
   theme_minimal() +
   labs(title = "PHACE: Mean CTI vs Abundance for Different Species",
+       x = "Mean CTI",
+       y = "Abundance") +
+  #scale_color_manual(values = c("ambient" = "blue", "warmed" = "red")) +
+  facet_wrap(~ species, scales = "free_y")
+
+ggplot(ok_sig_spp, aes(x = mean_CTI, y = avg_abun)) +
+  geom_smooth(method="lm") +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Oklahoma: Mean CTI vs Abundance for Different Species",
        x = "Mean CTI",
        y = "Abundance") +
   #scale_color_manual(values = c("ambient" = "blue", "warmed" = "red")) +
@@ -827,6 +1205,15 @@ phace_merge_stats$change <- ifelse(phace_merge_stats$significance == "significan
 phace_merge_stats <- phace_merge_stats %>%
   filter(!is.na(change))
 
+ok_merge <- merge(ok_test,niche_est_ok_avg, by="species")
+ok_merge_stats <- merge(ok_merge,results_ok_summary, by="species")
+ok_merge_stats$significance <- ifelse(ok_merge_stats$adj_p_value <= 0.06, "significant", "not significant")
+ok_merge_stats$slope_value <- ifelse(ok_merge_stats$slope > 0, "positive", "negative")
+ok_merge_stats$change <- ifelse(ok_merge_stats$significance == "significant" & ok_merge_stats$slope_value == "positive", "increase",
+                                   ifelse(ok_merge_stats$significance == "significant" & ok_merge_stats$slope_value == "negative", "decrease", "no change"))
+ok_merge_stats <- ok_merge_stats %>%
+  filter(!is.na(change))
+
 tera_merge <- merge(tera_test,niche_est_tera_avg, by="species")
 tera_merge_stats <- merge(tera_merge,results_tera_summary, by="species")
 tera_merge_stats$significance <- ifelse(tera_merge_stats$adj_p_value <= 0.06, "significant", "not significant")
@@ -862,6 +1249,11 @@ phace_sig <- ggplot(phace_merge_stats, aes(x = change, y = temp_niche)) +
   labs(y = "PHACE\nTemperature niche", x = "Species abundance change as a function of increasing CTI") +
   #facet_wrap(.~temp_treatment) +
   theme_bw()
+ok_sig <- ggplot(ok_merge_stats, aes(x = change, y = temp_niche)) +
+  geom_boxplot() +
+  labs(y = "Oklahoma\nTemperature niche", x = "Species abundance change as a function of increasing CTI") +
+  #facet_wrap(.~temp_treatment) +
+  theme_bw()
 tera_sig <- ggplot(tera_merge_stats, aes(x = change, y = temp_niche)) +
   geom_boxplot() +
   labs(y = "TeRaCON\nTemperature niche", x = "Species abundance change as a function of increasing CTI") +
@@ -887,25 +1279,28 @@ b4_sig_hwrc <- ggplot(b4_merge_stats_hwrc, aes(x = change, y = temp_niche)) +
 ### Boxplots of species' temperature niches that showed decreases, increases, or no change as a function of increasing CTI
 
 ```{r,message=F,echo=F,fig.width = 15, fig.height = 6}
-ggarrange(jrgce_sig,phace_sig,tera_sig,b4_sig_cfc,b4_sig_hwrc,
+ggarrange(jrgce_sig,phace_sig,tera_sig,ok_sig,b4_sig_cfc,b4_sig_hwrc,
           nrow=2,ncol=3)
 ```
 
 ```{r,echo=F,message=F,warning=F,print=F}
 #median(niche_est_tera_avg$temp_niche) # 8.75
 #median(niche_est_phace_avg$temp_niche) # 8.65
+#median(niche_est_ok_avg$temp_niche) # 14.78
 #median(niche_est_jrgce_avg$temp_niche) # 14.65
 #median(niche_est_b4_avg_cfc$temp_niche) # 7.95
 #median(niche_est_b4_avg_hwrc$temp_niche) # 7.84
 
 tera_merge_stats$niche_cat <- ifelse(tera_merge_stats$temp_niche >= 8.75, "High temp niche", "Low temp niche")
 phace_merge_stats$niche_cat <- ifelse(phace_merge_stats$temp_niche >= 8.65, "High temp niche", "Low temp niche")
+ok_merge_stats$niche_cat <- ifelse(ok_merge_stats$temp_niche >= 14.78, "High temp niche", "Low temp niche")
 jrgce_merge_stats$niche_cat <- ifelse(jrgce_merge_stats$temp_niche >= 14.65, "High temp niche", "Low temp niche")
 b4_merge_stats_cfc$niche_cat <- ifelse(b4_merge_stats_cfc$temp_niche >= 7.95, "High temp niche", "Low temp niche")
 b4_merge_stats_hwrc$niche_cat <- ifelse(b4_merge_stats_hwrc$temp_niche >= 7.84, "High temp niche", "Low temp niche")
 
 tera_sig_spp_cat <- left_join(tera_sig_spp,tera_merge_stats,by=c("species","year","temp_treatment"))
 phace_sig_spp_cat <- left_join(phace_sig_spp,phace_merge_stats,by=c("species","year","temp_treatment"))
+ok_sig_spp_cat <- left_join(ok_sig_spp,ok_merge_stats,by=c("species","year","temp_treatment"))
 jrgce_sig_spp_cat <- left_join(jrgce_sig_spp,jrgce_merge_stats,by=c("species","year","temp_treatment"))
 b4_sig_spp_cat_cfc <- left_join(b4_sig_spp_cfc,b4_merge_stats_cfc,by=c("species","year","temp_treatment"))
 b4_sig_spp_cat_hwrc <- left_join(b4_sig_spp_hwrc,b4_merge_stats_hwrc,by=c("species","year","temp_treatment"))
@@ -930,6 +1325,16 @@ ggplot(phace_sig_spp_cat, aes(x = mean_CTI, y = avg_abun.x*100, color = temp_nic
   geom_point() +
   theme_minimal() +
   labs(title = "PHACE",
+       x = "Mean CTI",
+       y = "Abundance (%)") +
+  facet_wrap(~reorder(species, temp_niche), scales = "free_y") +
+  scale_color_viridis_c(option = "viridis")
+
+ggplot(ok_sig_spp_cat, aes(x = mean_CTI, y = avg_abun.x*100, color = temp_niche)) +
+  geom_smooth(method="lm") +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Oklahoma",
        x = "Mean CTI",
        y = "Abundance (%)") +
   facet_wrap(~reorder(species, temp_niche), scales = "free_y") +
@@ -982,6 +1387,16 @@ ggplot(phace_sig_spp_cat, aes(x = mean_CTI, y = avg_abun.x*100, group = species,
   geom_point() +
   theme_minimal() +
   labs(title = "PHACE",
+       x = "Mean CTI",
+       y = "Abundance (%)") +
+  #facet_wrap(~reorder(species, temp_niche), scales = "free_y") +
+  scale_color_viridis_c(option = "viridis")
+
+ggplot(ok_sig_spp_cat, aes(x = mean_CTI, y = avg_abun.x*100, group = species,color = temp_niche)) +
+  geom_smooth(method="lm") +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Oklahoma",
        x = "Mean CTI",
        y = "Abundance (%)") +
   #facet_wrap(~reorder(species, temp_niche), scales = "free_y") +
