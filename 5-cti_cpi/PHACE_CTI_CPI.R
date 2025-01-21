@@ -12,7 +12,7 @@ library(lmerTest)
 library(emmeans)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data)
 
 # Load in data
@@ -24,10 +24,6 @@ phace <- read.csv(" phace_clean.csv")
 
 # Combining phace abundance data with niche estimate data
 full_abun_data <- left_join(phace, niche_est, by = "species")
-full_abun_data <- full_abun_data %>%
-  filter(!is.na(rel_abun)) %>%
-  filter(!is.na(temp_niche)) %>%
-  filter(!is.na(precip_niche))
 
 # Calculating CTI
 CTI <- full_abun_data %>%
@@ -57,7 +53,7 @@ CTI_CPI <- full_abun_data %>%
               names_sep = "_")
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
 write.csv(CTI,paste(path_out,'CTI_phace.csv'))
 write.csv(CTI_sens,paste(path_out,'CTI_sens_phace.csv'))
 write.csv(CTI_CPI,paste(path_out,'CTI_CPI_phace.csv'))

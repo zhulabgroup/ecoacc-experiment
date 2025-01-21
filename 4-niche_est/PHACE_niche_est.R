@@ -11,7 +11,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data)
 
 # Load in data
@@ -36,5 +36,5 @@ niche_est <- chelsa_data %>%
 
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
 write.csv(niche_est,paste(path_out,'phace_niche.csv'),row.names=F)

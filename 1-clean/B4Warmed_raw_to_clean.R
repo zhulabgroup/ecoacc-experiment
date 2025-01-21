@@ -58,6 +58,10 @@ b4_abun <- b4_abun %>%
 b4_biomass <- b4_biomass %>%
   filter(canopy_condition == "Open")
 
+test <- b4_abun %>%
+  group_by(year,plot,site) %>%
+  summarize(total_rel_abun = sum(rel_abun))
+
 
 # Upload data
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/B4Warmed/"

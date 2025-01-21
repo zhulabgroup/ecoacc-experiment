@@ -10,7 +10,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data)
 
 # Load in data
@@ -30,7 +30,7 @@ eco_grouped_overall <- eco_phace %>%
 
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
 write.csv(eco_grouped,paste(path_out,'eco_response_phace.csv'))
 write.csv(eco_grouped_overall,paste(path_out,'eco_response_overall_phace.csv'))
 
