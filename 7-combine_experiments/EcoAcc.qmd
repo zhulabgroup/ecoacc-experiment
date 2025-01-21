@@ -1,0 +1,1249 @@
+---
+title: "EcoAcc: Long-term experimental data"
+author: "Kara Dobson"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+format: 
+  html:
+    code-fold: true
+    code-line-numbers: true
+    code-tools:
+      source: false
+    toc: true
+embed-resources: true
+dpi: 300
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, echo = F, message = F, warning = F}
+# Load packages
+library(tidyverse)
+library(ggpubr)
+library(deeptime)
+library(patchwork)
+library(plotly)
+library(maps)
+library(mapdata)
+library(gridExtra)
+library(viridis)
+
+# Set path to turbo to get data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/TRY_data/"
+setwd(path_data)
+# Load in data
+traits <- read.csv(" exp_species_traits.csv")
+
+# Set path to turbo to get data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+setwd(path_data)
+# Load in data
+CTI_sens_teracon <- read.csv(" CTI_sens_teracon.csv")
+CTI_teracon <- read.csv(" CTI_teracon.csv")
+tera <- read.csv(" teracon_clean.csv")
+NPP_teracon <- read.csv(" eco_response_teracon.csv")
+NPP_overall_teracon <- read.csv(" eco_response_overall_teracon.csv")
+CTI_CPI_teracon <- read.csv(" CTI_CPI_teracon.csv")
+niche_est_tera <- read.csv(" teracon_niche.csv")
+
+# Set path to data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+setwd(path_data)
+# Load in data
+CTI_sens_jrgce <- read.csv(" CTI_sens_jrgce.csv")
+CTI_jrgce <- read.csv(" CTI_jrgce.csv")
+jrgce <- read.csv(" jrgce_clean.csv")
+jrgce <- jrgce %>%
+  mutate(temp_treatment = if_else(str_detect(treatment, "T"), "warmed", "ambient"))
+NPP_jrgce <- read.csv(" eco_response_jrgce.csv")
+NPP_overall_jrgce <- read.csv(" eco_response_overall_jrgce.csv")
+CTI_CPI_jrgce <- read.csv(" CTI_CPI_jrgce.csv")
+niche_est_jrgce <- read.csv(" jrgce_niche.csv")
+
+# Set path to data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
+setwd(path_data)
+# Load in data
+CTI_sens_phace <- read.csv(" CTI_sens_phace.csv")
+CTI_phace <- read.csv(" CTI_phace.csv")
+phace <- read.csv(" phace_clean.csv")
+NPP_phace <- read.csv(" eco_response_phace.csv")
+NPP_overall_phace <- read.csv(" eco_response_overall_phace.csv")
+CTI_CPI_phace <- read.csv(" CTI_CPI_phace.csv")
+niche_est_phace <- read.csv(" phace_niche.csv")
+
+# Set path to data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/B4Warmed/"
+setwd(path_data)
+# Load in data
+CTI_sens_b4 <- read.csv(" CTI_sens_b4warmed.csv")
+CTI_b4 <- read.csv(" CTI_b4warmed.csv")
+b4 <- read.csv(" b4warmed_clean.csv")
+NPP_b4 <- read.csv(" eco_response_b4warmed.csv")
+NPP_overall_b4 <- read.csv(" eco_response_overall_b4warmed.csv")
+CTI_CPI_b4 <- read.csv(" CTI_CPI_b4warmed.csv")
+niche_est_b4 <- read.csv(" b4warmed_niche.csv")
+
+# Set path to data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
+setwd(path_data)
+# Load in data
+CTI_sens_ok <- read.csv(" CTI_sens_ok.csv")
+CTI_ok <- read.csv(" CTI_ok.csv")
+ok <- read.csv(" ok_clean.csv")
+NPP_ok <- read.csv(" eco_response_ok.csv")
+NPP_overall_ok <- read.csv(" eco_response_overall_ok.csv")
+CTI_CPI_ok <- read.csv(" CTI_CPI_ok.csv")
+niche_est_ok <- read.csv(" ok_niche.csv")
+```
+
+Using community composition and ecosystem response data from various warming experiments, we can visualize changes in community structure (e.g., CTI) alongside changes in function (e.g., ANPP) due to warming.
+
+The experimental warming data set currently contains 6 sites across the U.S., shown below. These sites differ in terms of the length of the warming experiment, the amount warmed, and the species types present. However, all experiments contain a measurement of community composition and aboveground biomass for each year.
+
+Community composition data: JRGCE and TeRaCON = percent cover, Oklahoma = relative abundance (using percent cover?), PHACE = relative abundance (using biomass data), B4Warmed = relative abundance (using current year's stem biomass)
+
+## Map of the locations of each warming experiment
+
+```{r, message = F, warning = F,fig.width = 10, fig.height = 6}
+# Load data
+us_map <- map_data("state")
+
+# List of locations for each experiment
+locations <- tibble(
+  Experiment = c("TeRaCON", "B4Warmed CFC", "B4Warmed HWRC", "Oklahoma", "PHACE", "JRGCE"),
+  lat = c(45, 46.7, 47.9, 35, 41.2, 37.4),
+  long = c(-93, -92.5, -91.8, -97.5, -104.9, -122.2)
+)
+
+ggplot() +
+  geom_polygon(data = us_map, aes(x = long, y = lat, group = group), fill = "lightgray", color = "black") +
+  geom_point(data = locations, aes(x = long, y = lat, color = Experiment), size = 4) +
+  coord_fixed(1.3) +
+  scale_color_viridis(discrete=T) +
+  theme_minimal() +
+  theme(legend.text = element_text(size=12),
+        legend.title = element_text(size=12),
+        axis.text = element_text(size=12),
+        axis.title = element_text(size=12))
+```
+
+## CTI and NPP
+
+### Changes in CTI over time between warmed and ambient treatments from 6 in situ warming experiments
+
+CTI = community temperature index; a higher CTI means the community is "warmer", i.e., has a greater prevalence of warm-loving species. Similarly, CPI = community precipitation index, wherein a higher CPI means the community contains a greater prevalence of wet-loving species.
+
+For these 6 experiments, we see an effect of the warming treatment on CTI, in which the warmed communities contain higher CTI than the ambient communities. The temporal trend is fuzzier, but these experiments are all relatively short-term.
+
+```{r,message = F, warning = F, fig.width = 10, fig.height = 6}
+# CTI sensitivity figures
+CTI_tera_plot <- ggplot(CTI_sens_teracon, aes(x = year, y = sensitivity)) +
+  geom_smooth() +
+  labs(x = "Year", y = "TeRaCON") +
+  scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  theme_bw()
+CTI_jrgce_plot <- ggplot(CTI_sens_jrgce, aes(x = year, y = sensitivity)) +
+  geom_smooth() +
+  labs(x = "Year", y = "JRGCE", title="CTI (Warmed - Ambient)") +
+  scale_x_continuous(breaks = seq(1998, 2014, by = 3)) +
+  theme_bw()
+CTI_phace_plot <- ggplot(CTI_sens_phace, aes(x = year, y = sensitivity)) +
+  geom_smooth() +
+  labs(x = "Year", y = "PHACE") +
+  scale_x_continuous(breaks = seq(2007, 2013)) +
+  theme_bw()
+CTI_sens_b4_cfc <- CTI_sens_b4 %>%
+  filter(site == "CFC")
+CTI_sens_b4_hwrc <- CTI_sens_b4 %>%
+  filter(site == "HWRC")
+CTI_b4_cfc_plot <- ggplot(CTI_sens_b4_cfc, aes(x = year, y = sensitivity_high_temp)) +
+  geom_smooth() +
+  labs(x = "Year", y = "B4Warmed CFC") +
+  scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
+  theme_bw()
+CTI_b4_hwrc_plot <- ggplot(CTI_sens_b4_hwrc, aes(x = year, y = sensitivity_high_temp)) +
+  geom_smooth() +
+  labs(x = "Year", y = "B4Warmed HWRC") +
+  scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
+  theme_bw()
+CTI_ok_plot <- ggplot(CTI_sens_ok, aes(x = year, y = sensitivity)) +
+  geom_smooth() +
+  labs(x = "Year", y = "Oklahoma") +
+  #scale_x_continuous(breaks = seq(2007, 2013)) +
+  theme_bw()
+
+# CTI figures
+CTI_tera_plot2 <- ggplot(CTI_teracon, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_smooth() +
+  labs(x = "Year", y = "CTI", title="TeRaCON") +
+  scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw()
+CTI_jrgce_plot2 <- ggplot(CTI_jrgce, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_smooth() +
+  labs(x = "Year", y = "CTI",title="JRGCE") +
+  scale_x_continuous(breaks = seq(1998, 2014, by = 3)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw()
+CTI_phace_plot2 <- ggplot(CTI_phace, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_smooth() +
+  labs(x = "Year", y = "CTI",title="PHACE") +
+  scale_x_continuous(breaks = seq(2007, 2013)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw()
+CTI_b4_cfc <- CTI_b4 %>%
+  filter(site == "CFC") %>%
+  filter(temp_treatment == "amb" | temp_treatment == 3.4)
+CTI_b4_hwrc <- CTI_b4 %>%
+  filter(site == "HWRC") %>%
+  filter(temp_treatment == "amb" | temp_treatment == 3.4)
+CTI_b4_cfc_plot2 <- ggplot(CTI_b4_cfc, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_smooth() +
+  labs(x = "Year", y = "CTI",title="B4Warmed CFC") +
+  scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
+  scale_color_manual(name = "Treatment",
+                     breaks=c("amb","3.4"),
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw()
+CTI_b4_hwrc_plot2 <- ggplot(CTI_b4_hwrc, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_smooth() +
+  labs(x = "Year", y = "CTI",title="B4Warmed HWRC") +
+  scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
+  scale_color_manual(name = "Treatment",
+                     breaks=c("amb","3.4"),
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw()
+CTI_ok_plot2 <- ggplot(CTI_ok, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_smooth() +
+  labs(x = "Year", y = "CTI",title="Oklahoma") +
+  #scale_x_continuous(breaks = seq(2007, 2013)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw()
+
+# Biomass figures
+NPP_teracon <- NPP_teracon %>%
+  filter(variable == "mean_ab_bio")
+npp_tera_plot <- ggplot(NPP_teracon, aes(x = year, y = sensitivity)) +
+  geom_smooth() +
+  labs(x = "Year", y = NULL) +
+  scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  theme_bw()
+npp_jrgce_plot <- ggplot(NPP_jrgce, aes(x = year, y = sensitivity)) +
+  geom_smooth() +
+  labs(x = "Year", y = NULL, title="Biomass\n(Warmed - Ambient)") +
+  scale_x_continuous(breaks = seq(1998, 2014, by = 3)) +
+  theme_bw()
+npp_phace_plot <- ggplot(NPP_phace, aes(x = year, y = sensitivity)) +
+  geom_smooth() +
+  labs(x = "Year", y = NULL) +
+  scale_x_continuous(breaks = seq(2007, 2013)) +
+  theme_bw()
+NPP_b4_cfc <- NPP_b4 %>%
+  filter(site == "CFC")
+NPP_b4_hwrc <- NPP_b4 %>%
+  filter(site == "HWRC")
+npp_b4_cfc_plot <- ggplot(NPP_b4_cfc, aes(x = year, y = sensitivity_high_temp)) +
+  geom_smooth() +
+  labs(x = "Year", y = NULL) +
+  scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
+  theme_bw()
+npp_b4_hwrc_plot <- ggplot(NPP_b4_hwrc, aes(x = year, y = sensitivity_high_temp)) +
+  geom_smooth() +
+  labs(x = "Year", y = NULL) +
+  scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
+  theme_bw()
+npp_ok_plot <- ggplot(NPP_ok, aes(x = year, y = sensitivity)) +
+  geom_smooth() +
+  labs(x = "Year", y = NULL) +
+  #scale_x_continuous(breaks = seq(2007, 2013)) +
+  theme_bw()
+
+# Ambient temp change figures
+temp_tera_plot <- ggplot(CTI_sens_teracon, aes(x = year, y = mean_C_temp_summer)) +
+  geom_smooth() +
+  labs(x = "Year", y = NULL) +
+  scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  theme_bw()
+temp_jrgce_plot <- ggplot(CTI_sens_jrgce, aes(x = year, y = mean_C_temp_summer)) +
+  geom_smooth() +
+  labs(x = "Year", title = "Ambient temperature (°C)",y=NULL) +
+  scale_x_continuous(breaks = seq(1998, 2014, by = 3)) +
+  theme_bw()
+
+combined <- wrap_plots(CTI_jrgce_plot2,CTI_phace_plot2,CTI_tera_plot2,
+           CTI_ok_plot2,CTI_b4_cfc_plot2,CTI_b4_hwrc_plot2,
+           ncol = 3) & theme(legend.position = "right")
+combined + plot_layout(guides = "collect")
+```
+
+### The effect of warming (warmed - ambient) on CTI and NPP over time
+
+```{r,message = F, warning = F, fig.width = 6, fig.height = 9}
+ggarrange2(CTI_jrgce_plot,npp_jrgce_plot,
+           CTI_phace_plot,npp_phace_plot,
+           CTI_tera_plot,npp_tera_plot,
+           CTI_ok_plot,npp_ok_plot,
+           CTI_b4_cfc_plot,npp_b4_cfc_plot,
+           CTI_b4_hwrc_plot,npp_b4_hwrc_plot,
+           nrow = 6, byrow = TRUE)
+```
+
+### Relationship between CTI and aboveground biomass production each year
+
+```{r, message = F, warning = F, fig.width = 14, fig.height = 6}
+##### Fig: correlating biomass w/ CTI
+# TeRaCON
+CTI_yearly_avg_tera <- CTI_teracon %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
+NPP_CTI_teracon <- left_join(CTI_yearly_avg_tera, NPP_overall_teracon, by=c("year","temp_treatment"))
+tera_scatter <- ggscatter(NPP_CTI_teracon, x = "mean_CTI", y = "mean_ab_bio", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "CTI", ylab = "Biomass", title="TeRaCON")
+# JRGCE
+CTI_yearly_avg_jrgce <- CTI_jrgce %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
+NPP_CTI_jrgce <- left_join(CTI_yearly_avg_jrgce, NPP_overall_jrgce, by=c("year","temp_treatment"))
+jrgce_scatter <- ggscatter(NPP_CTI_jrgce, x = "mean_CTI", y = "mean_ab_bio", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "CTI", ylab = "Biomass",title="JRGCE")
+# PHACE
+CTI_yearly_avg_phace <- CTI_phace %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
+NPP_CTI_phace <- left_join(CTI_yearly_avg_phace, NPP_overall_phace, by=c("year","temp_treatment"))
+phace_scatter <- ggscatter(NPP_CTI_phace, x = "mean_CTI", y = "mean_ab_bio", 
+                           add = "reg.line", conf.int = TRUE, 
+                           cor.coef = TRUE, cor.method = "pearson",
+                           xlab = "CTI", ylab = "Biomass",title="PHACE")
+# B4Warmed
+CTI_yearly_avg_b4_cfc <- CTI_b4 %>%
+  filter(site == "CFC") %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
+CTI_yearly_avg_b4_hwrc <- CTI_b4 %>%
+  filter(site == "HWRC") %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
+NPP_overall_b4_cfc <- NPP_overall_b4 %>%
+  filter(site == "CFC")
+NPP_overall_b4_hwrc <- NPP_overall_b4 %>%
+  filter(site == "HWRC")
+NPP_CTI_b4_cfc <- left_join(CTI_yearly_avg_b4_cfc, NPP_overall_b4_cfc, by=c("year","temp_treatment"))
+NPP_CTI_b4_hwrc <- left_join(CTI_yearly_avg_b4_hwrc, NPP_overall_b4_hwrc, by=c("year","temp_treatment"))
+b4_scatter_cfc <- ggscatter(NPP_CTI_b4_cfc, x = "mean_CTI", y = "mean_ab_bio", 
+                           add = "reg.line", conf.int = TRUE, 
+                           cor.coef = TRUE, cor.method = "pearson",
+                           xlab = "CTI", ylab = "Biomass",title="B4Warmed CFC")
+b4_scatter_hwrc <- ggscatter(NPP_CTI_b4_hwrc, x = "mean_CTI", y = "mean_ab_bio", 
+                           add = "reg.line", conf.int = TRUE, 
+                           cor.coef = TRUE, cor.method = "pearson",
+                           xlab = "CTI", ylab = "Biomass",title="B4Warmed HWRC")
+# OK
+CTI_yearly_avg_ok <- CTI_ok %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
+NPP_CTI_ok <- left_join(CTI_yearly_avg_ok, NPP_overall_ok, by=c("year","temp_treatment"))
+ok_scatter <- ggscatter(NPP_CTI_ok, x = "mean_CTI", y = "mean_ab_bio", 
+                           add = "reg.line", conf.int = TRUE, 
+                           cor.coef = TRUE, cor.method = "pearson",
+                           xlab = "CTI", ylab = "Biomass",title="Oklahoma")
+
+# plot
+ggarrange(jrgce_scatter,phace_scatter,tera_scatter,ok_scatter,b4_scatter_cfc,b4_scatter_hwrc,
+          ncol=3,nrow=2)
+```
+
+## Treatment arrows
+
+### Each arrow represents one year. The arrow points in the direction of the treatment effect (ambient –\> warmed) and is colored by the year (yellow = most recent)
+
+For example, CTI of PHACE declined over time, but the warmed treatment increased CTI over time when compared to the ambient treatment. On the contrary, B4Warmed doesn't show a strong temporal trend, but the treatment effect shows the majority of years with higher CTI and CPI under warmed conditions.
+
+```{r, warning=F,message=F, fig.width = 14, fig.height = 7}
+##### Fig: Arrows pointing from ambient to warmed for each year #####
+arrow_teracon <- ggplot(CTI_CPI_teracon) +
+  geom_segment(aes(x = CTI_HTamb, y = CPI_HTamb, 
+                   xend = CTI_HTelv, yend = CPI_HTelv,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_HTamb, y = CPI_HTamb), color = "black") +
+  geom_point(aes(x = CTI_HTelv, y = CPI_HTelv), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "TeRaCON") +
+  scale_color_viridis_c(option = "viridis") +
+  theme_minimal()
+
+arrow_jrgce <- ggplot(CTI_CPI_jrgce) +
+  geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
+                   xend = CTI_warmed, yend = CPI_warmed,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_ambient, y = CPI_ambient), color = "black") +
+  geom_point(aes(x = CTI_warmed, y = CPI_warmed), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "JRGCE") +
+  scale_color_viridis_c(option = "viridis") +
+  theme_minimal()
+
+arrow_phace <- ggplot(CTI_CPI_phace) +
+  geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
+                   xend = CTI_warmed, yend = CPI_warmed,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_ambient, y = CPI_ambient), color = "black") +
+  geom_point(aes(x = CTI_warmed, y = CPI_warmed), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "PHACE") +
+  scale_color_viridis_c(option = "viridis") +
+  theme_minimal()
+
+CTI_CPI_b4_cfc <- CTI_CPI_b4 %>%
+  filter(site == "CFC")
+CTI_CPI_b4_hwrc <- CTI_CPI_b4 %>%
+  filter(site == "HWRC")
+arrow_b4_cfc <- ggplot(CTI_CPI_b4_cfc) +
+  geom_segment(aes(x = CTI_amb, y = CPI_amb, 
+                   xend = CTI_3.4, yend = CPI_3.4,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_amb, y = CPI_amb), color = "black") +
+  geom_point(aes(x = CTI_3.4, y = CPI_3.4), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "B4Warmed CFC") +
+  scale_color_viridis_c(option = "viridis") +
+  theme_minimal()
+arrow_b4_hwrc <- ggplot(CTI_CPI_b4_hwrc) +
+  geom_segment(aes(x = CTI_amb, y = CPI_amb, 
+                   xend = CTI_3.4, yend = CPI_3.4,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_amb, y = CPI_amb), color = "black") +
+  geom_point(aes(x = CTI_3.4, y = CPI_3.4), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "B4Warmed HWRC") +
+  scale_color_viridis_c(option = "viridis") +
+  theme_minimal()
+
+arrow_ok <- ggplot(CTI_CPI_ok) +
+  geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
+                   xend = CTI_warmed, yend = CPI_warmed,
+                   color = year),
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_point(aes(x = CTI_ambient, y = CPI_ambient), color = "black") +
+  geom_point(aes(x = CTI_warmed, y = CPI_warmed), color = "red") +
+  labs(x = "CTI", y = "CPI", title = "Oklahoma") +
+  scale_color_viridis_c(option = "viridis") +
+  theme_minimal()
+
+ggarrange(arrow_jrgce,arrow_phace,arrow_teracon,arrow_ok,arrow_b4_cfc,arrow_b4_hwrc,
+          ncol = 3, nrow=2)
+```
+
+## Species-level analyses
+
+```{r,echo=F,message=F,warning=F,fig.width = 15, fig.height = 6}
+# Species average niche
+niche_est_tera_avg <- niche_est_tera[,c(1,6,7)]
+niche_est_tera_avg <- niche_est_tera_avg %>%
+  distinct()
+niche_est_jrgce_avg <- niche_est_jrgce[,c(1,6,7)]
+niche_est_jrgce_avg <- niche_est_jrgce_avg %>%
+  distinct()
+niche_est_phace_avg <- niche_est_phace[,c(1,6,7)]
+niche_est_phace_avg <- niche_est_phace_avg %>%
+  distinct()
+niche_est_b4_cfc <- niche_est_b4 %>%
+  filter(site == "CFC")
+CTI_CPI_b4_cfc <- CTI_CPI_b4 %>%
+  filter(site == "CFC")
+niche_est_b4_hwrc <- niche_est_b4 %>%
+  filter(site == "HWRC")
+CTI_CPI_b4_hwrc <- CTI_CPI_b4 %>%
+  filter(site == "HWRC")
+niche_est_b4_avg_cfc <- niche_est_b4_cfc[,c(1,7,8)]
+niche_est_b4_avg_cfc <- niche_est_b4_avg_cfc %>%
+  distinct()
+niche_est_b4_avg_hwrc <- niche_est_b4_hwrc[,c(1,7,8)]
+niche_est_b4_avg_hwrc <- niche_est_b4_avg_hwrc %>%
+  distinct()
+niche_est_ok_avg <- niche_est_ok[,c(1,6,7)]
+niche_est_ok_avg <- niche_est_ok_avg %>%
+  distinct()
+
+# Calculate mean spp abundance per year and treatment
+phace_test <- phace %>%
+  group_by(year, temp_treatment,species) %>%
+  summarize(avg_abun = mean(rel_abun, na.rm=T))
+ok_test <- ok %>%
+  group_by(year, temp_treatment,species) %>%
+  summarize(avg_abun = mean(rel_abun, na.rm=T))
+jrgce_test <- jrgce %>%
+  group_by(year, temp_treatment,species) %>%
+  summarize(avg_abun = mean(percent_cover, na.rm=T))
+tera_test <- tera %>%
+  filter(!(species == "Total Planted Species")) %>%
+  group_by(year, temp_treatment,species) %>%
+  summarize(avg_abun = mean(percent_cover, na.rm=T))
+#b4_3.4 <- b4 %>%
+#  filter(temp_treatment == "3.4" | temp_treatment == "amb")
+b4_cfc <- b4 %>%
+  filter(site == "CFC")
+b4_hwrc <- b4 %>%
+  filter(site == "HWRC")
+b4_test_cfc <- b4_cfc %>%
+  group_by(year, temp_treatment,species) %>%
+  summarize(avg_abun = mean(rel_abun, na.rm=T))
+b4_test_hwrc <- b4_hwrc %>%
+  group_by(year, temp_treatment,species) %>%
+  summarize(avg_abun = mean(rel_abun, na.rm=T))
+
+# Calculating mean CTI per year and treatment
+CTI_yearly_avg_phace <- CTI_phace %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
+CTI_yearly_avg_ok <- CTI_ok %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
+CTI_yearly_avg_jrgce <- CTI_jrgce %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
+CTI_yearly_avg_tera <- CTI_teracon %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
+#CTI_b4_3.4 <- CTI_b4 %>%
+#  filter(temp_treatment == "3.4" | temp_treatment == "amb")
+CTI_yearly_avg_b4_cfc <- CTI_b4_cfc %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
+CTI_yearly_avg_b4_hwrc <- CTI_b4_hwrc %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI))
+
+# Merging CTI and species abundance data
+phace_spp_abun <- merge(CTI_yearly_avg_phace,phace_test, by=c("year","temp_treatment"))
+ok_spp_abun <- merge(CTI_yearly_avg_ok,ok_test, by=c("year","temp_treatment"))
+jrgce_spp_abun <- merge(CTI_yearly_avg_jrgce,jrgce_test, by=c("year","temp_treatment"))
+tera_spp_abun <- merge(CTI_yearly_avg_tera,tera_test, by=c("year","temp_treatment"))
+b4_spp_abun_cfc <- merge(CTI_yearly_avg_b4_cfc,b4_test_cfc, by=c("year","temp_treatment"))
+b4_spp_abun_hwrc <- merge(CTI_yearly_avg_b4_hwrc,b4_test_hwrc, by=c("year","temp_treatment"))
+
+### Stats: Which species show significant increases or decreases in abundance as a function of CTI?
+# Perform regression analysis for each species
+results_phace <- phace_spp_abun %>%
+  group_by(species) %>%
+  do(model = lm(avg_abun ~ mean_CTI, data = .))
+results_ok <- ok_spp_abun %>%
+  group_by(species) %>%
+  do(model = lm(avg_abun ~ mean_CTI, data = .))
+results_jrgce <- jrgce_spp_abun %>%
+  filter(!(species == "Madia gracilis" | species == "Quercus lobata" | species == "Festuca DUMMY")) %>% # removing spp w/ NAs
+  group_by(species) %>%
+  do(model = lm(avg_abun ~ mean_CTI, data = .))
+results_tera <- tera_spp_abun %>%
+  filter(!(species == "Total Planted Species")) %>%
+  group_by(species) %>%
+  do(model = lm(avg_abun ~ mean_CTI, data = .))
+results_b4_cfc <- b4_spp_abun_cfc %>%
+  group_by(species) %>%
+  do(model = lm(avg_abun ~ mean_CTI, data = .))
+results_b4_hwrc <- b4_spp_abun_hwrc %>%
+  group_by(species) %>%
+  do(model = lm(avg_abun ~ mean_CTI, data = .))
+
+# Extract coefficients and p-values
+results_phace_summary <- results_phace %>%
+  rowwise() %>%
+  mutate(slope = coef(model)[["mean_CTI"]],
+         p_value = summary(model)$coefficients["mean_CTI", "Pr(>|t|)"])
+results_ok_summary <- results_ok %>%
+  rowwise() %>%
+  mutate(slope = coef(model)[["mean_CTI"]],
+         p_value = summary(model)$coefficients["mean_CTI", "Pr(>|t|)"])
+results_jrgce_summary <- results_jrgce %>%
+  rowwise() %>%
+  mutate(slope = coef(model)[["mean_CTI"]],
+         p_value = summary(model)$coefficients["mean_CTI", "Pr(>|t|)"])
+results_tera_summary <- results_tera %>%
+  rowwise() %>%
+  mutate(slope = coef(model)[["mean_CTI"]],
+         p_value = summary(model)$coefficients["mean_CTI", "Pr(>|t|)"])
+results_b4_summary_cfc <- results_b4_cfc %>%
+  rowwise() %>%
+  mutate(slope = coef(model)[["mean_CTI"]],
+         p_value = summary(model)$coefficients["mean_CTI", "Pr(>|t|)"])
+results_b4_summary_hwrc <- results_b4_hwrc %>%
+  rowwise() %>%
+  mutate(slope = coef(model)[["mean_CTI"]],
+         p_value = summary(model)$coefficients["mean_CTI", "Pr(>|t|)"])
+
+# Apply multiple testing correction (Benjamini-Hochberg)
+results_phace_summary <- results_phace_summary %>%
+  mutate(adj_p_value = p.adjust(p_value, method = "BH"))
+results_ok_summary <- results_ok_summary %>%
+  mutate(adj_p_value = p.adjust(p_value, method = "BH"))
+results_jrgce_summary <- results_jrgce_summary %>%
+  mutate(adj_p_value = p.adjust(p_value, method = "BH"))
+results_tera_summary <- results_tera_summary %>%
+  mutate(adj_p_value = p.adjust(p_value, method = "BH"))
+results_b4_summary_cfc <- results_b4_summary_cfc %>%
+  mutate(adj_p_value = p.adjust(p_value, method = "BH"))
+results_b4_summary_hwrc <- results_b4_summary_hwrc %>%
+  mutate(adj_p_value = p.adjust(p_value, method = "BH"))
+
+# Filter out species with significant effects
+results_phace_sig <- results_phace_summary %>%
+  filter(adj_p_value <= 0.06)
+results_ok_sig <- results_ok_summary %>%
+  filter(adj_p_value <= 0.06)
+results_jrgce_sig <- results_jrgce_summary %>%
+  filter(adj_p_value <= 0.06)
+results_tera_sig <- results_tera_summary %>%
+  filter(adj_p_value <= 0.06)
+results_b4_sig_cfc <- results_b4_summary_cfc %>%
+  filter(adj_p_value <= 0.06)
+results_b4_sig_hwrc <- results_b4_summary_hwrc %>%
+  filter(adj_p_value <= 0.06)
+
+# Filtering data to sig. species
+phace_spp_list <- unique(results_phace_sig$species)
+phace_sig_spp <- phace_spp_abun %>%
+  filter(species %in% phace_spp_list)
+
+ok_spp_list <- unique(results_ok_sig$species)
+ok_sig_spp <- ok_spp_abun %>%
+  filter(species %in% ok_spp_list)
+
+jrgce_spp_list <- unique(results_jrgce_sig$species)
+jrgce_sig_spp <- jrgce_spp_abun %>%
+  filter(species %in% jrgce_spp_list)
+
+tera_spp_list <- unique(results_tera_sig$species)
+tera_sig_spp <- tera_spp_abun %>%
+  filter(species %in% tera_spp_list)
+
+b4_spp_list_cfc <- unique(results_b4_sig_cfc$species)
+b4_sig_spp_cfc <- b4_spp_abun_cfc %>%
+  filter(species %in% b4_spp_list_cfc)
+
+b4_spp_list_hwrc <- unique(results_b4_sig_hwrc$species)
+b4_sig_spp_hwrc <- b4_spp_abun_hwrc %>%
+  filter(species %in% b4_spp_list_hwrc)
+
+### Fig: boxplot of spp that increase, decrease, or show no change 
+phace_merge <- merge(phace_test,niche_est_phace_avg, by="species")
+phace_merge_stats <- merge(phace_merge,results_phace_summary, by="species")
+phace_merge_stats$significance <- ifelse(phace_merge_stats$adj_p_value <= 0.06, "significant", "not significant")
+phace_merge_stats$slope_value <- ifelse(phace_merge_stats$slope > 0, "positive", "negative")
+phace_merge_stats$change <- ifelse(phace_merge_stats$significance == "significant" & phace_merge_stats$slope_value == "positive", "increase",
+                                    ifelse(phace_merge_stats$significance == "significant" & phace_merge_stats$slope_value == "negative", "decrease", "no change"))
+phace_merge_stats <- phace_merge_stats %>%
+  filter(!is.na(change))
+
+ok_merge <- merge(ok_test,niche_est_ok_avg, by="species")
+ok_merge_stats <- merge(ok_merge,results_ok_summary, by="species")
+ok_merge_stats$significance <- ifelse(ok_merge_stats$adj_p_value <= 0.06, "significant", "not significant")
+ok_merge_stats$slope_value <- ifelse(ok_merge_stats$slope > 0, "positive", "negative")
+ok_merge_stats$change <- ifelse(ok_merge_stats$significance == "significant" & ok_merge_stats$slope_value == "positive", "increase",
+                                   ifelse(ok_merge_stats$significance == "significant" & ok_merge_stats$slope_value == "negative", "decrease", "no change"))
+ok_merge_stats <- ok_merge_stats %>%
+  filter(!is.na(change))
+
+tera_merge <- merge(tera_test,niche_est_tera_avg, by="species")
+tera_merge_stats <- merge(tera_merge,results_tera_summary, by="species")
+tera_merge_stats$significance <- ifelse(tera_merge_stats$adj_p_value <= 0.06, "significant", "not significant")
+tera_merge_stats$slope_value <- ifelse(tera_merge_stats$slope > 0, "positive", "negative")
+tera_merge_stats$change <- ifelse(tera_merge_stats$significance == "significant" & tera_merge_stats$slope_value == "positive", "increase",
+                                   ifelse(tera_merge_stats$significance == "significant" & tera_merge_stats$slope_value == "negative", "decrease", "no change"))
+
+jrgce_merge <- merge(jrgce_test,niche_est_jrgce_avg, by="species")
+jrgce_merge_stats <- merge(jrgce_merge,results_jrgce_summary, by="species")
+jrgce_merge_stats$significance <- ifelse(jrgce_merge_stats$adj_p_value <= 0.06, "significant", "not significant")
+jrgce_merge_stats$slope_value <- ifelse(jrgce_merge_stats$slope > 0, "positive", "negative")
+jrgce_merge_stats$change <- ifelse(jrgce_merge_stats$significance == "significant" & jrgce_merge_stats$slope_value == "positive", "increase",
+                                  ifelse(jrgce_merge_stats$significance == "significant" & jrgce_merge_stats$slope_value == "negative", "decrease", "no change"))
+jrgce_merge_stats <- jrgce_merge_stats %>%
+  filter(!is.na(change))
+
+b4_merge_cfc <- merge(b4_test_cfc,niche_est_b4_avg_cfc, by="species")
+b4_merge_stats_cfc <- merge(b4_merge_cfc,results_b4_summary_cfc, by="species")
+b4_merge_stats_cfc$significance <- ifelse(b4_merge_stats_cfc$adj_p_value <= 0.06, "significant", "not significant")
+b4_merge_stats_cfc$slope_value <- ifelse(b4_merge_stats_cfc$slope > 0, "positive", "negative")
+b4_merge_stats_cfc$change <- ifelse(b4_merge_stats_cfc$significance == "significant" & b4_merge_stats_cfc$slope_value == "positive", "increase",
+                                   ifelse(b4_merge_stats_cfc$significance == "significant" & b4_merge_stats_cfc$slope_value == "negative", "decrease", "no change"))
+b4_merge_stats_cfc <-  b4_merge_stats_cfc %>%
+  filter(!is.na(change))
+
+b4_merge_hwrc <- merge(b4_test_hwrc,niche_est_b4_avg_hwrc, by="species")
+b4_merge_stats_hwrc <- merge(b4_merge_hwrc,results_b4_summary_hwrc, by="species")
+b4_merge_stats_hwrc$significance <- ifelse(b4_merge_stats_hwrc$adj_p_value <= 0.06, "significant", "not significant")
+b4_merge_stats_hwrc$slope_value <- ifelse(b4_merge_stats_hwrc$slope > 0, "positive", "negative")
+b4_merge_stats_hwrc$change <- ifelse(b4_merge_stats_hwrc$significance == "significant" & b4_merge_stats_hwrc$slope_value == "positive", "increase",
+                                    ifelse(b4_merge_stats_hwrc$significance == "significant" & b4_merge_stats_hwrc$slope_value == "negative", "decrease", "no change"))
+b4_merge_stats_hwrc <-  b4_merge_stats_hwrc %>%
+  filter(!is.na(change))
+
+# Code to determine median niche for each community to color species by
+#median(niche_est_tera_avg$temp_niche) # 8.75
+#median(niche_est_phace_avg$temp_niche) # 8.65
+#median(niche_est_ok_avg$temp_niche) # 14.78
+#median(niche_est_jrgce_avg$temp_niche) # 14.65
+#median(niche_est_b4_avg_cfc$temp_niche) # 7.95
+#median(niche_est_b4_avg_hwrc$temp_niche) # 7.84
+
+tera_merge_stats$niche_cat <- ifelse(tera_merge_stats$temp_niche >= 8.75, "High temp niche", "Low temp niche")
+phace_merge_stats$niche_cat <- ifelse(phace_merge_stats$temp_niche >= 8.65, "High temp niche", "Low temp niche")
+ok_merge_stats$niche_cat <- ifelse(ok_merge_stats$temp_niche >= 14.78, "High temp niche", "Low temp niche")
+jrgce_merge_stats$niche_cat <- ifelse(jrgce_merge_stats$temp_niche >= 14.65, "High temp niche", "Low temp niche")
+b4_merge_stats_cfc$niche_cat <- ifelse(b4_merge_stats_cfc$temp_niche >= 7.95, "High temp niche", "Low temp niche")
+b4_merge_stats_hwrc$niche_cat <- ifelse(b4_merge_stats_hwrc$temp_niche >= 7.84, "High temp niche", "Low temp niche")
+
+tera_sig_spp_cat <- left_join(tera_sig_spp,tera_merge_stats,by=c("species","year","temp_treatment"))
+phace_sig_spp_cat <- left_join(phace_sig_spp,phace_merge_stats,by=c("species","year","temp_treatment"))
+ok_sig_spp_cat <- left_join(ok_sig_spp,ok_merge_stats,by=c("species","year","temp_treatment"))
+jrgce_sig_spp_cat <- left_join(jrgce_sig_spp,jrgce_merge_stats,by=c("species","year","temp_treatment"))
+b4_sig_spp_cat_cfc <- left_join(b4_sig_spp_cfc,b4_merge_stats_cfc,by=c("species","year","temp_treatment"))
+b4_sig_spp_cat_hwrc <- left_join(b4_sig_spp_hwrc,b4_merge_stats_hwrc,by=c("species","year","temp_treatment"))
+
+
+phace_sig <- ggplot(phace_merge_stats, aes(x = change, y = temp_niche)) +
+  geom_boxplot() +
+  labs(y = "Temperature niche", x = "Species abundance change as a function of increasing CTI",title="PHACE") +
+  #facet_wrap(.~temp_treatment) +
+  theme_bw()
+ok_sig <- ggplot(ok_merge_stats, aes(x = change, y = temp_niche)) +
+  geom_boxplot() +
+  labs(y = "Temperature niche", x = "Species abundance change as a function of increasing CTI",title="Oklahoma") +
+  #facet_wrap(.~temp_treatment) +
+  theme_bw()
+tera_sig <- ggplot(tera_merge_stats, aes(x = change, y = temp_niche)) +
+  geom_boxplot() +
+  labs(y = "Temperature niche", x = "Species abundance change as a function of increasing CTI",title="TeRaCON") +
+  #facet_wrap(.~temp_treatment) +
+  theme_bw()
+jrgce_sig <- ggplot(jrgce_merge_stats, aes(x = change, y = temp_niche)) +
+  geom_boxplot() +
+  labs(y = "Temperature niche", x = "Species abundance change as a function of increasing CTI",title="JRGCE") +
+  #facet_wrap(.~temp_treatment) +
+  theme_bw()
+b4_sig_cfc <- ggplot(b4_merge_stats_cfc, aes(x = change, y = temp_niche)) +
+  geom_boxplot() +
+  labs(y = "Temperature niche", x = "Species abundance change as a function of increasing CTI",title="B4Warmed CFC") +
+  #facet_wrap(.~temp_treatment) +
+  theme_bw()
+b4_sig_hwrc <- ggplot(b4_merge_stats_hwrc, aes(x = change, y = temp_niche)) +
+  geom_boxplot() +
+  labs(y = "Temperature niche", x = "Species abundance change as a function of increasing CTI",title="B4Warmed HWRC") +
+  #facet_wrap(.~temp_treatment) +
+  theme_bw()
+#ggarrange(jrgce_sig,phace_sig,tera_sig,ok_sig,b4_sig_cfc,b4_sig_hwrc,
+#          nrow=2,ncol=3)
+```
+
+### Species contributions to CTI
+
+Which species contribute most to the change in CTI over time? The red arrow represents the overall slope of CTI over time (for PHACE, CTI declined over time), whereas the bars represent the contribution of each species to that change in CTI. The species contribution = the slope of that species' abundance over time \* the species' temperature index
+
+```{r,message=F,warning=F,fig.width = 13, fig.height = 6}
+# Combining phace abundance data with niche estimate data
+niche_est_phace <- niche_est_phace %>%
+  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
+  distinct()
+full_abun_data_phace <- left_join(phace, niche_est_phace, by = "species")
+
+# Calculating CTI
+CTI <- full_abun_data_phace %>%
+  group_by(year, plot) %>%
+  reframe(CTI = sum(rel_abun * temp_niche) / sum(rel_abun)) %>%
+  distinct()
+
+# Matching abundance data w/ CTI data
+abun <- full_abun_data_phace %>%
+  select(year,plot,species,rel_abun,temp_niche) %>%
+  filter(!is.na(rel_abun)) %>%
+  filter(!is.na(species))
+
+# Compute linear slopes using covariance and variance
+# CTI
+slope_CTI <- cov(CTI$year, CTI$CTI) / var(CTI$year)
+
+# Species
+# Initialize a list to store slopes
+slopes <- list()
+# Unique species names
+unique_species <- unique(abun$species)
+# Calculate the slope for each species
+for (species in unique_species) {
+  # Subset the data for the current species
+  species_data <- abun[abun$species == species, ]
+  
+  # Extract time and corresponding values
+  time <- species_data$year
+  value <- species_data$rel_abun
+  
+  # Calculate the slope
+  slope <- cov(time, value) / var(time)
+  
+  # Store the slope in the list
+  slopes[[species]] <- slope
+}
+
+# Initialize a vector or list to store contributions
+contributions <- numeric(length(slopes))
+names(contributions) <- names(slopes)
+
+# Calculate the contribution for each species
+for (species in names(slopes)) {
+  # Find the thermal niche for the current species
+  niche_value <- abun$temp_niche[abun$species == species]
+  
+  # Compute the contribution: slope * thermal niche
+  contributions[species] <- slopes[[species]] * niche_value
+}
+
+# Sum of contributions
+slope_sum <- sum(contributions)
+
+
+# Pull out species names and species slopes into their own lists
+species_contribution <- unlist(contributions)
+species_names <- names(contributions)
+# Create a data frame for plotting
+data_for_plot <- data.frame(
+  species = c(species_names),
+  contribution = c(species_contribution)
+)
+
+# Merge with niche data
+data_for_plot <- left_join(data_for_plot, niche_est_phace, by = c("species"))
+
+# Merge w abundance data
+data_for_abun_plot <- left_join(abun,data_for_plot,by=c("species","temp_niche"))
+
+# Remove data whose absolute value for slope is < 0.0002
+data_for_plot <- data_for_plot[abs(data_for_plot$contribution) > 0.002, ]
+data_for_abun_plot <- data_for_abun_plot[abs(data_for_abun_plot$contribution) > 0.002, ]
+
+
+phace_scatter <- ggscatter(CTI_phace, x = "year", y = "CTI", 
+          color = "temp_treatment",add = "reg.line", conf.int = T, 
+          cor.coef = F, cor.method = "pearson",
+          xlab = "Year", ylab = "CTI",title="PHACE") +
+  stat_regline_equation(
+    aes(label =  paste(after_stat(eq.label), ..adj.rr.label.., sep = "~~~~"))) +
+  scale_color_manual(labels = c("ambient","warmed"),
+                     values = c("blue","red")) +
+  scale_fill_manual(labels = c("ambient","warmed"),
+                     values = c("blue","red"))
+
+# Bar plot
+p <- ggplot(data_for_plot, aes(x = reorder(species, -abs(contribution)), y = contribution, fill = temp_niche)) +
+    geom_bar(stat = "identity") +
+    xlab("Species") +
+    ylab("Contribution to CTI") +
+    scale_fill_gradientn(colors = c("blue", "orangered"), 
+                         name = "Species temperature (°C)") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    coord_cartesian(xlim = c(0.5, length(unique(data_for_plot$species)) + 0.5)) +
+    # Annotate the plot with the slope_CTI value
+    geom_segment(aes(x = 0.5, xend = 0.5, y = 0, yend = slope_CTI),
+                 arrow = arrow(type = "closed", length = unit(0.1, "inches")),
+                 color = "red") +
+    theme(legend.text = element_text(size = 11)) +
+    # Add dummy arrow for legend
+    geom_segment(aes(x = Inf, y = -Inf, xend = Inf, yend = -Inf, color = "Delta CTI"),
+                 arrow = arrow(type = "closed", length = unit(0.2, "inches")),
+                 linetype = "solid", size = 0.5, show.legend = TRUE) +
+    guides(color = guide_legend(override.aes = list(linetype = "solid", size = 1, color = "red", alpha = 1))) +
+    scale_color_manual(name = NULL, values = "red", labels = "Slope of CTI")
+
+ggarrange(phace_scatter,p,
+          widths = c(0.5,1.5))
+```
+
+### Species contributing to warming effect
+
+The above figure demonstrates species that contributed to the CTI decline over time, but what about the effect of warming? Here, I quantified the warming effect on CTI (warmed CTI - ambient CTI) for each year, then performed the contribution analysis to determine which species contributed to the increasing warming effect on CTI over time
+
+```{r,message=F,warning=F,fig.width = 13, fig.height = 6}
+# Calculating CTI
+CTI_diff_df <- full_abun_data_phace %>%
+  group_by(year,temp_treatment) %>%
+  reframe(CTI = sum(rel_abun * temp_niche) / sum(rel_abun)) %>%
+  distinct() %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_cti = mean(CTI)) %>%
+  pivot_wider(names_from = temp_treatment, values_from = mean_cti) %>%
+  mutate(CTI_diff = warmed - ambient)
+
+# Matching abundance data w/ CTI data
+abun_diff <- full_abun_data_phace %>%
+  group_by(year, species, temp_treatment) %>%
+  summarize(rel_abun_avg = mean(rel_abun)) %>%
+  pivot_wider(names_from = temp_treatment, values_from = rel_abun_avg) %>%
+  mutate(rel_abun_diff = warmed - ambient)
+abun_diff <- left_join(abun_diff, niche_est_phace, by = "species")
+
+
+# Compute linear slopes using covariance and variance
+# CTI
+slope_CTI_diff <- cov(CTI_diff_df$year, CTI_diff_df$CTI_diff) / var(CTI_diff_df$year)
+
+# Species
+# Initialize a list to store slopes
+slopes_diff <- list()
+# Unique species names
+unique_species_diff <- unique(abun_diff$species)
+# Calculate the slope for each species
+for (species in unique_species_diff) {
+  # Subset the data for the current species
+  species_data <- abun_diff[abun_diff$species == species, ]
+  
+  # Extract time and corresponding values
+  time <- species_data$year
+  value <- species_data$rel_abun_diff
+  
+  # Calculate the slope
+  slope <- cov(time, value) / var(time)
+  
+  # Store the slope in the list
+  slopes_diff[[species]] <- slope
+}
+
+
+
+# Initialize a vector or list to store contributions
+contributions_diff <- numeric(length(slopes_diff))
+names(contributions_diff) <- names(slopes_diff)
+
+# Calculate the contribution for each species
+for (species in names(slopes_diff)) {
+  # Find the thermal niche for the current species
+  niche_value <- abun_diff$temp_niche[abun_diff$species == species]
+  
+  # Compute the contribution: slope * thermal niche
+  contributions_diff[species] <- slopes_diff[[species]] * niche_value
+}
+
+# Sum of contributions
+slope_sum_diff <- sum(contributions_diff)
+
+
+
+# Data for plotting
+# Pull out species names and species slopes into their own lists
+species_contribution_diff <- unlist(contributions_diff)
+species_names_diff <- names(contributions_diff)
+species_slopes_diff <- unlist(slopes_diff)
+# Create a data frame for plotting
+data_for_plot_diff <- data.frame(
+  species = c(species_names_diff),
+  contribution = c(species_contribution_diff),
+  slope = c(species_slopes_diff)
+)
+# Merge with niche data
+data_for_plot_diff <- left_join(data_for_plot_diff, niche_est_phace, by = c("species"))
+# Remove data whose absolute value for slope is < 0.0002
+data_for_plot_diff <- data_for_plot_diff[abs(data_for_plot_diff$contribution) > 0.002, ]
+
+
+
+# Warming treatment effect over time
+# This slope matches the calculated slope & sum of contributions
+phace_scatter2 <- ggscatter(CTI_diff_df, x = "year", y = "CTI_diff", 
+          add = "reg.line", conf.int = T, 
+          cor.coef = F, cor.method = "pearson",
+          xlab = "Year", ylab = "CTI (warmed - ambient)",title="PHACE") +
+  stat_regline_equation(
+    aes(label =  paste(after_stat(eq.label), ..adj.rr.label.., sep = "~~~~"))
+  )
+
+
+
+# Bar plot
+# Which species contribute to the treatment effect?
+p2 <- ggplot(data_for_plot_diff, aes(x = reorder(species, -abs(contribution)), y = contribution, fill = temp_niche)) +
+  geom_bar(stat = "identity") +
+  xlab("Species") +
+  ylab("Contribution to CTI") +
+  scale_fill_gradientn(colors = c("blue", "orangered"), 
+                       name = "Species temperature (°C)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_cartesian(xlim = c(0.5, length(unique(data_for_plot$species)) + 0.5)) +
+  annotate("segment",
+           x = 0.5, xend = 0.5,
+           y = 0, yend = slope_CTI_diff,
+           arrow = arrow(type = "closed", length = unit(0.2, "inches")),
+           color = "red") +
+  theme(legend.text = element_text(size = 14),
+        legend.title = element_text(size=14),
+        axis.text = element_text(size=14),
+        axis.title = element_text(size=14)) +
+   geom_segment(aes(x = Inf, y = -Inf, xend = Inf, yend = -Inf, color = "Slope of CTI"),
+                 arrow = arrow(type = "closed", length = unit(0.2, "inches")),
+                 linetype = "solid", size = 0.5, show.legend = TRUE) +
+  guides(color = guide_legend(override.aes = list(linetype = "solid", size = 1, color = "red", alpha = 1))) +
+  scale_color_manual(name = NULL, values = "red", labels = "Slope of CTI")
+
+ggarrange(phace_scatter2,p2,
+          widths = c(0.5,1.5))
+```
+
+### The same species that contributed to CTI, but now looking at their changes in abundance over time
+
+```{r,warning=F,message=F,fig.width = 13, fig.height = 6}
+# species abundance over time
+ggplot(data_for_abun_plot, aes(x = year, y = rel_abun, color = temp_niche)) +
+  geom_smooth(method="lm") +
+  scale_color_gradientn(colors = c("blue", "orangered"), 
+                       name = "Species temperature (°C)") +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "PHACE",
+       x = "Year",
+       y = "Relative abundance") +
+  facet_wrap(~reorder(species, -abs(contribution)), scales = "free_y")
+```
+
+### Contribution to CTI vs. the species temperature niche index
+
+```{r,message=F,warning=F,fig.width = 13, fig.height = 6}
+# Point plot
+ggplot(data_for_plot, aes(x = contribution, y = temp_niche, color = temp_niche)) +
+    geom_vline(xintercept = 0, size = 0.2, linetype = "solid", color = "black") + # Bold line at x = 0
+    geom_hline(yintercept = median(data_for_plot$temp_niche, na.rm = TRUE), size = 0.2, linetype = "solid", color = "black") + # Bold median line
+    geom_point(size=3) +
+    stat_ellipse(level = 0.95, aes(group = 1), color = "black") + # Add an ellipse
+    xlab("Contribution to CTI") +
+    ylab("Species temperature (°C)") +
+    scale_color_gradientn(colors = c("blue", "orangered"), name = "Species temperature (°C)") +
+    theme_classic() +
+    theme(legend.position = "none",
+          axis.text = element_text(size=14),
+          axis.title = element_text(size=14))
+```
+
+## Plant traits
+
+### Plant trait values as a function of the species' thermal niche (Trait data from TRY)
+
+```{r,warning=F,message=F,fig.width = 13, fig.height = 6}
+##### Fig: traits vs. temp niche
+# make a dataframe containing all species and their temp niches
+tera_niche_filt <- niche_est_tera %>%
+  select(species,temp_niche) %>%
+  distinct()
+jrgce_niche_filt <- niche_est_jrgce %>%
+  select(species,temp_niche) %>%
+  distinct()
+phace_niche_filt <- niche_est_phace %>%
+  select(species,temp_niche) %>%
+  distinct()
+b4_cfc_niche_filt <- niche_est_b4 %>%
+  filter(site == "CFC") %>%
+  select(species,temp_niche) %>%
+  distinct()
+b4_hwrc_niche_filt <- niche_est_b4 %>%
+  filter(site == "HWRC") %>%
+  select(species,temp_niche) %>%
+  distinct()
+ok_niche_filt <- niche_est_ok %>%
+  select(species,temp_niche) %>%
+  distinct()
+
+# Combine all species and temp niches into one dataframe
+all_niche <- rbind(tera_niche_filt,jrgce_niche_filt,phace_niche_filt,b4_cfc_niche_filt,b4_hwrc_niche_filt,ok_niche_filt)
+
+# Renaming species to match the names found in Try
+all_niche$species[all_niche$species == "Agropyron repens"] <- "Elymus repens"
+all_niche$species[all_niche$species == "Lysimachia arvensis"] <- "Anagallis arvensis"
+all_niche$species[all_niche$species == "Stipa pulchra"] <- "Nassella pulchra"
+all_niche$species[all_niche$species == "Andropogon gerardi"] <- "Andropogon gerardii"
+all_niche$species[all_niche$species == "Koeleria cristata"] <- "Koeleria macrantha"
+all_niche$species[all_niche$species == "Festuca perennis"] <- "Lolium perenne"
+all_niche$species[all_niche$species == "Taraxia ovata"] <- "Camissonia ovata"
+all_niche$species[all_niche$species == "Festuca bromoides"] <- "Vulpia bromoides"
+all_niche$species[all_niche$species == "Logfia gallica"] <- "Filago gallica"
+all_niche$species[all_niche$species == "Pascopyrum smithii"] <- "Elymus smithii"
+all_niche$species[all_niche$species == "Hesperostipa comata"] <- "Stipa comata"   
+all_niche$species[all_niche$species == "Picradeniopsis oppositifolia"] <- "Bahia oppositifolia"
+all_niche$species[all_niche$species == "Heterotheca villosa"] <- "Chrysopsis villosa"
+all_niche$species[all_niche$species == "Cryptantha thyrsiflora"] <- "Oreocarya thyrsiflora"
+all_niche$species[all_niche$species == "Cryptantha cinerea"] <- "Oreocarya suffruticosa"
+all_niche$species[all_niche$species == "Draba reptans"] <- "Tomostima reptans"
+all_niche$species[all_niche$species == "Machaeranthera pinnatifida"] <- "Xanthisma spinulosum"
+all_niche$species[all_niche$species == "Lesquerella montana"] <- "Physaria montana"
+all_niche$species[all_niche$species == "Machaeranthera canescens"] <- "Dieteria canescens"
+all_niche$species[all_niche$species == "Salsola tragus"] <- "Kali tragus"
+all_niche$species[all_niche$species == "Populus tremouloides"] <- "Populus tremuloides"
+all_niche$species[all_niche$species == "Calylophus serrulatus"] <- "Oenothera serrulata"
+all_niche$species[all_niche$species == "Coreopsis grandiflora"] <- "Bidens sweetiana"
+all_niche$species[all_niche$species == "Dichanthelium oligosanthes"] <- "Panicum oligosanthes"
+all_niche$species[all_niche$species == "Gaura parviflora"] <- "Oenothera curtiflora"
+all_niche$species[all_niche$species == "Hedyotis nigricans"] <- "Stenaria nigricans"
+all_niche$species[all_niche$species == "Psoralidium tenuiflorum"] <- "Pediomelum tenuiflorum"
+all_niche$species[all_niche$species == "Solidago ludiviciana"] <- "Solidago ludoviciana"
+all_niche$species[all_niche$species == "Stenosiphon linifolius"] <- "Oenothera glaucifolia"
+all_niche$species[all_niche$species == "Symphyotrichum ericoides "] <- "Symphyotrichum ericoides"
+all_niche$species[all_niche$species == "Amphiachyris dracunculoides"] <- "Gutierrezia dracunculoides"
+all_niche$species[all_niche$species == "Diodia teres"] <- "Hexasepalum teres"
+all_niche$species[all_niche$species == "Stipa tenuissima"] <- "Nassella tenuissima"
+all_niche$species[all_niche$species == "Rubus calycinoides"] <- "Rubus rolfei"
+all_niche$species[all_niche$species == "Rubus pentalobus"] <- "Rubus rolfei"
+all_niche$species[all_niche$species == "Ruellia hirta"] <- "Strobilanthes glutinosus"
+all_niche$species[all_niche$species == "solidago drummondii"] <- "Solidago drummondii"
+all_niche$species[all_niche$species == "Symphyotrichum ontarionsis"] <- "Symphyotrichum ontarionis"
+all_niche$species[all_niche$species == "Haplopappus ciliatus"] <- "Grindelia ciliata"
+all_niche$species[all_niche$species == "Heterotheca latifolia"] <- "Heterotheca subaxillaris"
+all_niche$species[all_niche$species == "Muhlenbergia capillaris "] <- "Muhlenbergia capillaris"
+all_niche$species[all_niche$species == "Setaria glauca"] <- "Pennisetum glaucum"
+all_niche$species[all_niche$species == "Ambrosia trida"] <- "Ambrosia trifida"
+all_niche$species[all_niche$species == "Diodia ocymifolia"] <- "Spermacoce ocymifolia"
+all_niche$species[all_niche$species == "Grindelia papposa"] <- "Grindelia ciliata"
+all_niche$species[all_niche$species == "Tragia cannabina"] <- "Tragia plukenetii"
+all_niche$species[all_niche$species == "Trifolium purpureum "] <- "Trifolium purpureum"
+all_niche$species[all_niche$species == "Melilotus alba"] <- "Trigonella alba"
+all_niche$species[all_niche$species == "Coreopsis tinctoria"] <- "Bidens tinctoria"
+
+# Combine all species niche data with trait data
+# rename AccSpeciesName column in traits dataframe
+colnames(traits)[1] <- "species"
+traits_niche <- left_join(all_niche,traits, by="species")
+traits_niche <- traits_niche %>%
+  filter(!is.na(TraitID))
+
+# Fixing long trait names
+traits_niche$TraitName[traits_niche$TraitName == "Leaf dry mass per leaf fresh mass (leaf dry matter content, LDMC)"] <- "LDMC"
+traits_niche$TraitName[traits_niche$TraitName == "Fine root length per fine root dry mass (specific fine root length, SRL)"] <- "Specific fine root length"
+traits_niche$TraitName[traits_niche$TraitName == "Root length per root dry mass (specific root length, SRL)"] <- "Specific root length"
+traits_niche$TraitName[traits_niche$TraitName == "Plant biomass and allometry: Fine root length per plant"] <- "Fine root length"
+traits_niche$TraitName[traits_niche$TraitName == "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or excluded"] <- "SLA"
+traits_niche$TraitName[traits_niche$TraitName == "Coarse root length per coarse root dry mass (specific coarse root length, SRL)"] <- "Specific coarse root length"
+traits_niche$TraitName[traits_niche$TraitName == "Plant biomass and allometry: Coarse root length per plant"] <- "Coarse root length"
+
+# Removing some high outliers and traits with little data
+traits_niche_rem <- traits_niche %>%
+  filter(TraitName == "Plant height vegetative") %>%
+  filter(mean_trait_val < 400)
+traits_niche_rem2 <- traits_niche %>%
+  filter(TraitName == "Specific fine root length") %>%
+  filter(mean_trait_val < 8000)
+rest_of_data <- traits_niche %>%
+  filter(!(TraitName == "Plant height vegetative" |
+             TraitName == "Specific fine root length"))
+combined_data <- bind_rows(traits_niche_rem, traits_niche_rem2, rest_of_data)
+combined_data <- combined_data %>%
+  filter(!(TraitName == "Fine root length" |
+             TraitName == "Coarse root length" |
+             TraitName == "Specific coarse root length" |
+             TraitName == "Dispersal syndrome")) %>%
+  mutate(mean_trait_val_log = log(mean_trait_val))
+
+# Make a function to select a given trait name and plot it against temp niche
+trait_niche_plot <- function(data,trait){
+  plot_data <- data %>%
+    filter(TraitID == trait)
+  
+  trait_name <- plot_data$TraitName[1]
+  
+  ggplot(plot_data, aes(x = temp_niche, y = mean_trait_val_log)) +
+    geom_point() +
+    geom_smooth() +
+    labs(title = trait_name, x = "Temperature niche (°C)", y = "Log(trait value)") +
+    theme_minimal()
+}
+#trait_niche_plot(traits_niche_rem,3106)
+
+# Initialize a list to store plots
+plots_list <- list()
+
+# Check unique TraitID values
+unique_trait_ids <- unique(combined_data$TraitID)
+
+# Generate plots and store them in the list
+for (trait in unique_trait_ids) {
+  # Ensure `trait` is always a single entity
+  if (length(trait) == 1) {
+    # Assuming trait_niche_plot returns a plot
+    p <- trait_niche_plot(combined_data, trait)
+    plots_list[[as.character(trait)]] <- p  # Convert to character to avoid unintended issues with numeric indices
+  } else {
+    message("Warning: Encountered unexpected multi-length trait identifier.")
+  }
+}
+
+# Arrange all plots in a grid
+grid.arrange(grobs = plots_list)
+```
+
+### An interactive plot that shows the species name for the niche x trait value plot
+
+```{r,warning=F,message=F}
+# Interactive plot
+combined_data_plotly <- combined_data %>%
+  filter(TraitName == "Leaf thickness")
+plot_ly(data=combined_data_plotly, x = ~temp_niche, y = ~mean_trait_val_log,
+        type="scatter",mode="markers",color=~species)
+
+# Generate a list of all unique trait names
+trait_names <- unique(combined_data$TraitName)
+
+# Create a master plot without specific initial data
+p <- plot_ly(type = 'scatter', mode = 'markers')
+
+# Add a trace for each (trait, species) combination
+for (i in seq_along(trait_names)) {
+  trait_data <- combined_data[combined_data$TraitName == trait_names[i], ]
+  species_names <- unique(trait_data$species)
+  
+  for (species in species_names) {
+    species_data <- trait_data[trait_data$species == species, ]
+    
+    p <- add_trace(p,
+                   data = species_data,
+                   x = ~temp_niche,
+                   y = ~mean_trait_val,
+                   name = species,
+                   text = ~paste("Species:", species),  # Custom hover text
+                   hoverinfo = "text",  # Ensure that only custom text is displayed
+                   colors = "Dark2",
+                   visible = i == 1  # Show only the first trait initially
+    )
+  }
+}
+
+# Add the dropdown to switch visibility between traces
+p <- layout(p,
+            updatemenus = list(
+              list(
+                type = 'dropdown',
+                active = 0,  # Initial active trait (0-indexed)
+                buttons = lapply(seq_along(trait_names), function(i) {
+                  list(
+                    label = trait_names[i],
+                    method = "update",
+                    args = list(
+                      list(visible = as.logical(rep(seq_along(trait_names) == i, each = length(species_names)))),
+                      list(title = paste("Mean Trait Value for", trait_names[i]))  # Update the plot title based on the selected trait
+                    )
+                  )
+                })
+              )
+            ),
+            xaxis = list(title = "Temperature Niche"),
+            yaxis = list(title = "Mean Trait Value")
+)
+
+p
+```
