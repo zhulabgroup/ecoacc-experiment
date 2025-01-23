@@ -12,9 +12,10 @@ library(terra)
 library(rgbif)
 library(CoordinateCleaner)
 library(maps)
+library(spThin)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data)
 
 # Read in data
@@ -115,6 +116,11 @@ distb_occ <- function(data,spp){
           axis.text.y = element_text(size=14))
 }
 distb_occ(GBIF_species,"Allium textile")
+
+
+# Accounting for spatial autocorrelation
+thinned_gbif <- thin(gbif_phace,lat.col="decimalLatitude",long.col="decimalLongitude",
+     spec.col="species",thin.par=5,rep=1)
 
 
 # Upload data
