@@ -11,7 +11,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data)
 
 # Load in data
@@ -32,9 +32,9 @@ niche_est <- chelsa_data %>%
   group_by(species) %>%
   mutate(temp_niche = median(mean_annual_temp)) %>%
   mutate(precip_niche = median(mean_annual_precip)) %>%
-  dplyr::select(-c(X,ID,ID.1,CHELSA_bio1_1981.2010_V.2.1,CHELSA_bio12_1981.2010_V.2.1))
+  dplyr::select(-c(ID,ID.1,CHELSA_bio1_1981.2010_V.2.1,CHELSA_bio12_1981.2010_V.2.1))
 
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
 write.csv(niche_est,paste(path_out,'phace_niche.csv'),row.names=F)

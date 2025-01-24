@@ -15,7 +15,7 @@ library(maps)
 library(spThin)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data)
 
 # Read in data
@@ -119,13 +119,45 @@ distb_occ(GBIF_species,"Allium textile")
 
 
 # Accounting for spatial autocorrelation
-thinned_gbif <- thin(gbif_phace,lat.col="decimalLatitude",long.col="decimalLongitude",
-     spec.col="species",thin.par=5,rep=1)
+# Split the dataset by species
+species_list <- split(GBIF_species, GBIF_species$species)
 
+# Initialize a list to store results
+thinned_results <- list()
+
+# Loop through each species and apply thinning
+for (species_name in names(species_list)) {
+  cat("Processing species:", species_name, "\n")
+  
+  species_data <- species_list[[species_name]]
+  
+  # Thin data for the current species
+  thinned_species <- thin(
+    loc.data = species_data,
+    lat.col = "decimalLatitude",
+    long.col = "decimalLongitude",
+    spec.col = "species",
+    thin.par = 1,   # Minimum distance between points in kilometers
+    reps = 1,        # Number of times to repeat the thinning
+    locs.thinned.list.return = TRUE,
+    write.files = FALSE,
+    write.log.file = FALSE
+  )
+  
+  # Add a species column to the thinned data and store in the list
+  thinned_data <- thinned_species[[1]]
+  thinned_data$species <- species_name
+  thinned_results[[species_name]] <- thinned_data
+}
+
+# Combine all thinned data frames into one data frame
+thinned_results_df <- do.call(rbind, thinned_results)
+row.names(thinned_results_df) <- NULL
 
 # Upload data
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
 write.csv(gbif_data_1000,paste(path_out,'GBIF_phace.csv'))
+write.csv(thinned_results_df,paste(path_out,'GBIF_thinned_phace.csv'))
 
 
 

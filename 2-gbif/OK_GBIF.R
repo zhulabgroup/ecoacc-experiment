@@ -161,6 +161,45 @@ distb_occ <- function(data,spp){
 distb_occ(GBIF_species5,"Croton monanthogynus")
 
 
+# Accounting for spatial autocorrelation
+# Split the dataset by species
+species_list <- split(GBIF_species, GBIF_species$species)
+species_list <- species_list[-1]
+
+# Initialize a list to store results
+thinned_results <- list()
+
+# Loop through each species and apply thinning
+for (species_name in names(species_list)) {
+  cat("Processing species:", species_name, "\n")
+  
+  species_data <- species_list[[species_name]]
+  
+  # Thin data for the current species
+  thinned_species <- thin(
+    loc.data = species_data,
+    lat.col = "decimalLatitude",
+    long.col = "decimalLongitude",
+    spec.col = "species",
+    thin.par = 1,   # Minimum distance between points in kilometers
+    reps = 1,        # Number of times to repeat the thinning
+    locs.thinned.list.return = TRUE,
+    write.files = FALSE,
+    write.log.file = FALSE
+  )
+  
+  # Add a species column to the thinned data and store in the list
+  thinned_data <- thinned_species[[1]]
+  thinned_data$species <- species_name
+  thinned_results[[species_name]] <- thinned_data
+}
+
+# Combine all thinned data frames into one data frame
+thinned_results_df <- do.call(rbind, thinned_results)
+row.names(thinned_results_df) <- NULL
+
+
+
 # Upload data
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/OK/"
 write.csv(GBIF_species1,paste(path_out,'GBIF_ok_species1.csv')) # these intermediate files were moved to archive
@@ -169,4 +208,5 @@ write.csv(GBIF_species3,paste(path_out,'GBIF_ok_species3.csv'))
 write.csv(GBIF_species4,paste(path_out,'GBIF_ok_species4.csv'))
 write.csv(GBIF_species5,paste(path_out,'GBIF_ok_species5.csv'))
 write.csv(GBIF_species,paste(path_out,'GBIF_ok.csv'), row.names=F)
+write.csv(thinned_results_df,paste(path_out,'GBIF_thinned_ok.csv'), row.names=F)
 

@@ -12,6 +12,7 @@ library(terra)
 library(rgbif)
 library(CoordinateCleaner)
 library(maps)
+library(spThin)
 
 # Set path to turbo to get data
 path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/B4Warmed/"
@@ -110,9 +111,54 @@ distb_occ(gbif_spp_cfc,"Abies balsamea")
 distb_occ(gbif_spp_hwrc,"Abies balsamea")
 
 
+
+# Accounting for spatial autocorrelation
+# Split the dataset by species
+species_list_cfc <- split(gbif_spp_cfc, gbif_spp_cfc$species)
+species_list_hwrc <- split(gbif_spp_hwrc, gbif_spp_hwrc$species)
+
+# Initialize a list to store results
+thinned_results_cfc <- list()
+thinned_results_hwrc <- list()
+
+# Loop through each species and apply thinning
+for (species_name in names(species_list_hwrc)) {
+  cat("Processing species:", species_name, "\n")
+  
+  species_data <- species_list_hwrc[[species_name]]
+  
+  # Thin data for the current species
+  thinned_species <- thin(
+    loc.data = species_data,
+    lat.col = "decimalLatitude",
+    long.col = "decimalLongitude",
+    spec.col = "species",
+    thin.par = 1,   # Minimum distance between points in kilometers
+    reps = 1,        # Number of times to repeat the thinning
+    locs.thinned.list.return = TRUE,
+    write.files = FALSE,
+    write.log.file = FALSE
+  )
+  
+  # Add a species column to the thinned data and store in the list
+  thinned_data <- thinned_species[[1]]
+  thinned_data$species <- species_name
+  thinned_results_hwrc[[species_name]] <- thinned_data
+}
+
+# Combine all thinned data frames into one data frame
+thinned_results_cfc_df <- do.call(rbind, thinned_results_cfc)
+row.names(thinned_results_cfc_df) <- NULL
+
+thinned_results_hwrc_df <- do.call(rbind, thinned_results_hwrc)
+row.names(thinned_results_hwrc_df) <- NULL
+
+
 # Upload data
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/B4Warmed/"
 write.csv(gbif_spp_cfc,paste(path_out,'GBIF_b4warmed_cfc.csv'))
 write.csv(gbif_spp_hwrc,paste(path_out,'GBIF_b4warmed_hwrc.csv'))
+write.csv(thinned_results_cfc_df,paste(path_out,'GBIF_thinned_b4warmed_cfc.csv'))
+write.csv(thinned_results_hwrc_df,paste(path_out,'GBIF_thinned_b4warmed_hwrc.csv'))
 
 

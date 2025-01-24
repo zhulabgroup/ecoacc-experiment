@@ -113,9 +113,50 @@ distb_occ <- function(data,spp){
 }
 distb_occ(gbif_data_1000,"Avena fatua")
 
+
+
+# Accounting for spatial autocorrelation
+# Split the dataset by species
+species_list <- split(gbif_data_1000, gbif_data_1000$species)
+
+# Initialize a list to store results
+thinned_results <- list()
+
+# Loop through each species and apply thinning
+for (species_name in names(species_list)) {
+  cat("Processing species:", species_name, "\n")
+  
+  species_data <- species_list[[species_name]]
+  
+  # Thin data for the current species
+  thinned_species <- thin(
+    loc.data = species_data,
+    lat.col = "decimalLatitude",
+    long.col = "decimalLongitude",
+    spec.col = "species",
+    thin.par = 1,   # Minimum distance between points in kilometers
+    reps = 1,        # Number of times to repeat the thinning
+    locs.thinned.list.return = TRUE,
+    write.files = FALSE,
+    write.log.file = FALSE
+  )
+  
+  # Add a species column to the thinned data and store in the list
+  thinned_data <- thinned_species[[1]]
+  thinned_data$species <- species_name
+  thinned_results[[species_name]] <- thinned_data
+}
+
+# Combine all thinned data frames into one data frame
+thinned_results_df <- do.call(rbind, thinned_results)
+row.names(thinned_results_df) <- NULL
+
+
+
 # Upload data
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
 write.csv(gbif_data_1000,paste(path_out,'GBIF_jrgce.csv'))
+write.csv(thinned_results_df,paste(path_out,'GBIF_thinned_jrgce.csv'))
 
 
 

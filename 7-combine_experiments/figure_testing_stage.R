@@ -21,7 +21,7 @@ growth_life <- read.csv(" exp_species_growth_lifecycle.csv")
 traits <- read.csv(" exp_species_traits.csv")
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data)
 # Load in data
 CTI_sens_teracon <- read.csv(" CTI_sens_teracon.csv")
@@ -31,7 +31,7 @@ NPP_teracon <- read.csv(" eco_response_teracon.csv")
 NPP_overall_teracon <- read.csv(" eco_response_overall_teracon.csv")
 CTI_CPI_teracon <- read.csv(" CTI_CPI_teracon.csv")
 niche_est_tera <- read.csv(" teracon_niche.csv")
-gbif_tera <- read.csv(" GBIF_teracon.csv")
+gbif_tera <- read.csv(" GBIF_thinned_teracon.csv")
 # Set path to turbo to get data; data for no bluestem
 path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/data_for_testing/"
 setwd(path_data)
@@ -47,22 +47,20 @@ NPP_teracon_noblueplots <- read.csv(" eco_response_teracon_noblueplots.csv")
 NPP_overall_teracon_noblueplots <- read.csv(" eco_response_overall_teracon_noblueplots.csv")
 
 # Set path to data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
 setwd(path_data)
 # Load in data
 CTI_sens_jrgce <- read.csv(" CTI_sens_jrgce.csv")
 CTI_jrgce <- read.csv(" CTI_jrgce.csv")
 jrgce <- read.csv(" jrgce_clean.csv")
-jrgce <- jrgce %>%
-  mutate(temp_treatment = if_else(str_detect(treatment, "T"), "warmed", "ambient"))
 NPP_jrgce <- read.csv(" eco_response_jrgce.csv")
 NPP_overall_jrgce <- read.csv(" eco_response_overall_jrgce.csv")
 CTI_CPI_jrgce <- read.csv(" CTI_CPI_jrgce.csv")
 niche_est_jrgce <- read.csv(" jrgce_niche.csv")
-gbif_jrgce <- read.csv(" GBIF_jrgce.csv")
+gbif_jrgce <- read.csv(" GBIF_thinned_jrgce.csv")
 
 # Set path to data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data)
 # Load in data
 CTI_sens_phace <- read.csv(" CTI_sens_phace.csv")
@@ -72,10 +70,10 @@ NPP_phace <- read.csv(" eco_response_phace.csv")
 NPP_overall_phace <- read.csv(" eco_response_overall_phace.csv")
 CTI_CPI_phace <- read.csv(" CTI_CPI_phace.csv")
 niche_est_phace <- read.csv(" phace_niche.csv")
-gbif_phace <- read.csv(" GBIF_phace.csv")
+gbif_phace <- read.csv(" GBIF_thinned_phace.csv")
 
 # Set path to data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/B4Warmed/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/B4Warmed/"
 setwd(path_data)
 # Load in data
 CTI_sens_b4 <- read.csv(" CTI_sens_b4warmed.csv")
@@ -85,9 +83,11 @@ NPP_b4 <- read.csv(" eco_response_b4warmed.csv")
 NPP_overall_b4 <- read.csv(" eco_response_overall_b4warmed.csv")
 CTI_CPI_b4 <- read.csv(" CTI_CPI_b4warmed.csv")
 niche_est_b4 <- read.csv(" b4warmed_niche.csv")
+gbif_cfc <- read.csv(" GBIF_thinned_b4warmed_cfc.csv")
+gbif_hwrc <- read.csv(" GBIF_thinned_b4warmed_hwrc.csv")
 
 # Set path to data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/OK/"
 setwd(path_data)
 # Load in data
 CTI_sens_ok <- read.csv(" CTI_sens_ok.csv")
@@ -97,6 +97,7 @@ NPP_ok <- read.csv(" eco_response_ok.csv")
 NPP_overall_ok <- read.csv(" eco_response_overall_ok.csv")
 CTI_CPI_ok <- read.csv(" CTI_CPI_ok.csv")
 niche_est_ok <- read.csv(" ok_niche.csv")
+gbif_ok <- read.csv(" GBIF_thinned_ok.csv")
 
 
 
@@ -117,7 +118,7 @@ distb_occ <- function(data,spp){
     ) +
     geom_point(
       data = spp_data,
-      aes(decimalLongitude, decimalLatitude),
+      aes(Longitude, Latitude),
       alpha = 0.7,
       color = "red",
       size=2
@@ -130,9 +131,12 @@ distb_occ <- function(data,spp){
           axis.text.y = element_text(size=14))
 }
 # Plot occurrence maps for abundant species in each experiment
-distb_occ(gbif_tera,"Andropogon gerardi")
+distb_occ(gbif_tera,"Achillea millefolium")
 distb_occ(gbif_jrgce,"Festuca bromoides")
 distb_occ(gbif_phace,"Elymus smithii")
+distb_occ(gbif_cfc,"Acer saccharum")
+distb_occ(gbif_hwrc,"Acer saccharum")
+distb_occ(gbif_ok,"Achillea millefolium")
 
 
 

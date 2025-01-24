@@ -14,7 +14,7 @@ library(raster)
 path_data_gbif = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data_gbif)
 # Read in data
-gbif_data <- read.csv(" GBIF_phace.csv")
+gbif_data <- read.csv(" GBIF_thinned_phace.csv")
 # Set path to chelsa data
 path_data_chelsa = "/nfs/turbo/seas-zhukai/datasets/climate/CHELSA/climatology/"
 setwd(path_data_chelsa)
@@ -24,9 +24,9 @@ chelsa_bio12_data <- raster("CHELSA_bio12_1981-2010_V.2.1.tif")
 
 # Extracting lat/long from GBIF data
 gbif_coords <- gbif_data %>%
-  dplyr::select(decimalLatitude,decimalLongitude) %>%
-  rename(latitude = decimalLatitude) %>%
-  rename(longitude = decimalLongitude) %>%
+  dplyr::select(Latitude,Longitude) %>%
+  rename(latitude = Latitude) %>%
+  rename(longitude = Longitude) %>%
   relocate(longitude)
 coordinates(gbif_coords)<-c("longitude", "latitude")
 
@@ -48,11 +48,11 @@ chelsa_bio12_ex_trans <- chelsa_bio12_ex %>%
 
 # Merging occurrence data with chelsa data
 gbif_spp_occ <- gbif_data %>%
-  dplyr::select(species,decimalLatitude,decimalLongitude) %>%
-  rename(latitude = decimalLatitude) %>%
-  rename(longitude = decimalLongitude)
+  dplyr::select(species,Latitude,Longitude) %>%
+  rename(latitude = Latitude) %>%
+  rename(longitude = Longitude)
 chelsa_gbif <- cbind(gbif_spp_occ, chelsa_bio1_ex_trans, chelsa_bio12_ex_trans)
 
 # Upload data
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
-write.csv(chelsa_gbif,paste(path_out,'CHELSA_phace.csv'))
+write.csv(chelsa_gbif,paste(path_out,'CHELSA_phace.csv'),row.names=F)

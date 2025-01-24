@@ -12,7 +12,7 @@ library(lmerTest)
 library(emmeans)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data)
 # Load in data
 niche_est <- read.csv(" phace_niche.csv")
@@ -27,14 +27,14 @@ full_abun_data <- left_join(phace, niche_est, by = "species")
 
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/datasets/climate/IEM/Monthly_temps/"
+path_data = "/nfs/turbo/seas-zhukai/datasets/climate/IEM/Monthly_temps/"
 setwd(path_data)
 # Load in data
 iem <- read.csv("iem_PHACE_monthly_temps.csv")
 iem <- iem %>%
   rename(year = X) %>%
   mutate(MAT = (ANN-32)*5/9) %>%
-  select(year, MAT)
+  dplyr::select(year, MAT)
 iem$year <- as.integer(iem$year)
 
 # Merging with PHACE data
@@ -57,7 +57,7 @@ CTI <- full_abun_data %>%
           CTI_var = sum(rel_abun * (temp_niche - CTI)^2) / sum(rel_abun),
           CTI_sd = sqrt(CTI_var),
           CTI_skew = sum(rel_abun * (temp_niche - CTI)^3) / (sum(rel_abun) * CTI_sd^3),
-          CTI_kurt = sum(rel_abun * (temp_niche - CTI)^4) / (sum(rel_abun) * CTI_sd^4) - 3,
+          CTI_kurt = sum(rel_abun * (temp_niche - CTI)^4) / (sum(rel_abun) * CTI_sd^4),
           disequilib = CTI - MAT) %>%
   distinct()
 
@@ -81,7 +81,7 @@ CTI_CPI <- full_abun_data %>%
 
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
 write.csv(CTI,paste(path_out,'CTI_phace.csv'))
 write.csv(CTI_sens,paste(path_out,'CTI_sens_phace.csv'))
 write.csv(CTI_CPI,paste(path_out,'CTI_CPI_phace.csv'))
