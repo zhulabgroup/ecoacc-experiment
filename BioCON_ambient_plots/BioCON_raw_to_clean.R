@@ -11,8 +11,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/TeRaCON"
-path_home = "/home/kcdobson"
+path_data = "/Volumes/seas-zhukai/datasets/vegetation/TeRaCON"
 setwd(path_data)
 
 # Read in data
@@ -62,16 +61,9 @@ biocon_long <- biocon_long %>%
 biocon_amb <- biocon_long %>%
   filter(CountOfSpecies > 1) %>%
   filter(CountOfGroup > 1) %>%
-  filter(Experiment == "M") %>%
-  filter(co2_treatment == "Camb" &
-           n_treatment == "Namb") %>%
-  filter(water_treatment == "H2Oamb" |
-           water_treatment == "") %>%
-  filter(temp_treatment == "HTamb" |
-           temp_treatment == "") %>%
-  filter(!(is.na(percent_cover)))
+  filter(Experiment == "M")
 
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
 write.csv(biocon_amb,paste(path_out,'biocon_clean.csv'))

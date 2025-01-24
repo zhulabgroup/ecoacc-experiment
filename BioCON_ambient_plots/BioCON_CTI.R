@@ -13,43 +13,52 @@ library(lmerTest)
 library(emmeans)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data)
 
 # Load in data
-niche_est <- read.csv(" niche_estimate_teracon_limited.csv") # using ecoregion 8 niche estimates
+niche_est <- read.csv(" teracon_niche.csv") # using ecoregion 8 niche estimates
 niche_est <- niche_est %>%
   dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
   distinct()
 biocon <- read.csv(" biocon_clean.csv")
+teracon <- read.csv(" teracon_clean.csv")
 
 # Combining biocon abundance data with niche estimate data
 full_abun_data <- left_join(biocon, niche_est, by = "species")
 full_abun_data <- full_abun_data %>%
   filter(!is.na(percent_cover)) %>%
   filter(!is.na(temp_niche)) %>%
-  filter(!is.na(precip_niche))
+  filter(!is.na(precip_niche)) %>%
+  mutate(temp_treatment = if_else(str_detect(temp_treatment, "elv"), "warmed", "ambient"))
+
+# Subsetting to plots used in TeRaCON
+teracon_plots <- unique(teracon$plot)
+biocon_plots <- full_abun_data %>%
+  filter(plot %in% teracon_plots)
 
 
 ### All plots
 # Calculating CTI
-CTI <- full_abun_data %>%
+CTI <- biocon_plots %>%
   filter(Season == "August") %>%
-  group_by(year,plot) %>%
+  group_by(year,plot,temp_treatment) %>%
   reframe(CTI = sum(percent_cover * temp_niche) / sum(percent_cover)) %>%
   distinct()
 
+# Upload data
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+write.csv(CTI,paste(path_out,'CTI_biocon.csv'),row.names=F)
+
 # Plot CTI
-ggplot(CTI, aes(x = year, y = CTI)) +
-  geom_jitter(alpha = 0.2) +  # Add jittered points
-  geom_line(data = biocon[!is.na(biocon$mean_C_temp_summer),], aes(x = year,y = (mean_C_temp_summer))) +
-  stat_summary(fun = mean,
-               fun.min = mean,
-               fun.max = mean,
-               geom = "crossbar",
-               width = 0.4,
-               color="red") +
-  theme_minimal()
+ggplot(CTI, aes(x = year, y = CTI, color=temp_treatment)) +
+  geom_vline(xintercept = 2012, linetype = "dashed") +
+  geom_smooth() +
+  labs(x = "Year", y = "CTI") +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw()
 
 
 # Models
