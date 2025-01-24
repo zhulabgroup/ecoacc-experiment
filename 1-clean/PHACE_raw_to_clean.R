@@ -38,12 +38,12 @@ phace_abun$species <- gsub("\\.", " ", phace_abun$species)
 # Subsetting data to begin in 2007 when the warming treatment began & removing spp w/ only a genus
 phace_rel_abun <- phace_abun %>%
   filter(year >= 2007) %>%
-  select(year,plot,co2_treatment,temp_treatment,species,rel_abun)
+  select(year,plot,temp_treatment,species,rel_abun)
 
 # Selecting biomass data
 phace_biomass <- phace_abun %>%
   filter(year >= 2007) %>%
-  select(year,plot,co2_treatment,temp_treatment,species,total_biomass)
+  select(year,plot,temp_treatment,species,total_biomass)
 
 
 # Upload data

@@ -10,17 +10,14 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_abun_data = "/nfs/turbo/seas-zhukai/proj-grassland-cfp/intermediate/observation-experiment/final-community/"
-path_bio_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/JRGCE/JRGCE Harvest1 AGB/"
-path_meta_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/JRGCE/"
-path_temp_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/JRGCE/"
-path_home = "/home/kcdobson"
-setwd(path_temp_data)
-
+path_abun_data = "/Volumes/seas-zhukai/proj-grassland-cfp/intermediate/observation-experiment/final-community/"
+setwd(path_abun_data)
 # Read in data
 jrgce_abun_data <- read.csv("jrgce.csv")
-jrgce_meta_data <- read.csv("JRGCE treatments 1998_2014 plus single code for all treatments.csv")
-jrgce_temp_data <- read.csv("JRGCE environmental summary for MIDPOINT, H1, H1, DOY 308_126.csv")
+
+# Set path to turbo to get data
+path_bio_data = "/Volumes/seas-zhukai/datasets/vegetation/JRGCE/JRGCE Harvest1 AGB/"
+setwd(path_bio_data)
 # Read in all biomass data files at once
 temp = list.files(pattern="\\.csv$")
 for (i in 1:length(temp)) {
@@ -31,6 +28,14 @@ for (i in 1:length(temp)) {
   data$Year <- year
   assign(var_name, data)
 }
+
+# Set path to turbo to get data
+path_meta_data = "/Volumes/seas-zhukai/datasets/vegetation/JRGCE/"
+setwd(path_meta_data)
+# Read in data
+jrgce_meta_data <- read.csv("JRGCE treatments 1998_2014 plus single code for all treatments.csv")
+jrgce_temp_data <- read.csv("JRGCE environmental summary for MIDPOINT, H1, H1, DOY 308_126.csv")
+
 # Fixing data to match before merging all files
 X2006 <- X2006[,c(1:10,13)]
 colnames(X2014)[which(names(X2014) == "Species")] <- "name_during_sort"
@@ -63,6 +68,7 @@ jrgce_bio_data <- jrgce_bio_data %>%
 # Fixing column nmes
 colnames(jrgce_bio_data)[which(names(jrgce_bio_data) == "mass_gm2")] <- "ab_biomass"
 colnames(jrgce_bio_data)[which(names(jrgce_bio_data) == "treatmentsummary")] <- "treatment"
+colnames(jrgce_bio_data)[which(names(jrgce_bio_data) == "species_or_other.name")] <- "species"
 colnames(jrgce_abun_data)[which(names(jrgce_abun_data) == "abund")] <- "percent_cover"
 colnames(jrgce_abun_data)[which(names(jrgce_abun_data) == "treat")] <- "treatment"
 
@@ -76,10 +82,23 @@ colnames(jrgce_temp_filtered)[which(names(jrgce_temp_filtered) == "harvest_year"
 jrgce_abun_data <- left_join(jrgce_abun_data, jrgce_temp_filtered, by="year")
 jrgce_bio_data <- left_join(jrgce_bio_data, jrgce_temp_filtered, by="year")
 
+# Fixing treatment names
+jrgce_abun_data <- jrgce_abun_data %>%
+  mutate(temp_treatment = if_else(str_detect(treatment, "T"), "warmed", "ambient")) %>%
+  select(year,plot,species,percent_cover,temp_treatment) %>%
+  filter(!(year == 1998))
+jrgce_bio_data <- jrgce_bio_data %>%
+  mutate(temp_treatment = if_else(str_detect(treatment, "H"), "warmed", "ambient")) %>%
+  select(year,plot,species,ab_biomass,temp_treatment) %>%
+  filter(!(year == 1998))
+
+
+
+
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
-write.csv(jrgce_abun_data,paste(path_out,'jrgce_clean.csv'))
-write.csv(jrgce_bio_data,paste(path_out,'jrgce_ecosystem_dat_clean.csv'))
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+write.csv(jrgce_abun_data,paste(path_out,'jrgce_clean.csv'),row.names=F)
+write.csv(jrgce_bio_data,paste(path_out,'jrgce_ecosystem_dat_clean.csv'),row.names=F)
 
 
 

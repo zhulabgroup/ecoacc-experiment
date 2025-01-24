@@ -88,7 +88,7 @@ colnames(ok_anpp) <- c("year", "plot", "temp_treatment", "ab_biomass")
 
 # Upload data
 path_out = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
-write.csv(ok_rel_spp,paste(path_out,'ok_clean.csv'))
-write.csv(ok_anpp,paste(path_out,'ok_ecosystem_dat_clean.csv'))
+write.csv(ok_rel_spp,paste(path_out,'ok_clean.csv'),row.names=F)
+write.csv(ok_anpp,paste(path_out,'ok_ecosystem_dat_clean.csv'),row.names=F)
 
 

@@ -18,8 +18,8 @@ teracon_data <- read.csv("teracon harvest file for Kara Dobson_241021.csv")
 
 # Selecting columns to keep
 colnames(teracon_data)
-teracon_data_sub <- teracon_data[,c(1:9,11,27,109:125)] # for % cover
-teracon_data_sub_eco <- teracon_data[,c(1:9,11,27,55,68:69,74,76,78,80,82,84)] # for ecosystem response
+teracon_data_sub <- teracon_data[,c(2:3,5,11,27,109:125)] # for % cover
+teracon_data_sub_eco <- teracon_data[,c(2:3,5,11,27,55,68:69,74,76,78,80,82,84)] # for ecosystem response
 
 # Removing first test row
 teracon_data_sub <- teracon_data_sub[2:1153,]
@@ -27,7 +27,7 @@ teracon_data_sub_eco <- teracon_data_sub_eco[2:1153,]
 
 # Wide to long for just percent cover values
 teracon_data_long <- teracon_data_sub %>%
-  pivot_longer(cols = -c(Sampling.., year, Season, Ring, Plot, CO2.Treatment, Nitrogen.Treatment, C.and.N.treatment, Water.Treatment, Temp.Treatment,Mean.Amb.May.June.July.Temp..F.),
+  pivot_longer(cols = -c(year, Season, Plot, Temp.Treatment,Mean.Amb.May.June.July.Temp..F.),
                names_to = "Species", values_to = "Percent_cover")
 
 # Fixing species names
@@ -55,18 +55,10 @@ teracon_data_long <- teracon_data_long %>%
   rename(plot = Plot) %>%
   rename(species = Species) %>%
   rename(percent_cover = Percent_cover) %>%
-  rename(temp_treatment = Temp.Treatment) %>%
-  rename(water_treatment = Water.Treatment) %>%
-  rename(n_treatment = Nitrogen.Treatment) %>%
-  rename(cn_treatment = C.and.N.treatment) %>%
-  rename(co2_treatment = CO2.Treatment)
+  rename(temp_treatment = Temp.Treatment)
 teracon_data_sub_eco <- teracon_data_sub_eco %>%
   rename(plot = Plot) %>%
   rename(temp_treatment = Temp.Treatment) %>%
-  rename(water_treatment = Water.Treatment) %>%
-  rename(n_treatment = Nitrogen.Treatment) %>%
-  rename(cn_treatment = C.and.N.treatment) %>%
-  rename(co2_treatment = CO2.Treatment) %>%
   rename(ab_biomass = AbovegroundTotal.Biomass..g.m.2.) %>%
   rename(bl_biomass = Total.root.biomass.0.20..g.m.2.) %>%
   rename(total_biomass = Total.Biomass) %>%
@@ -77,10 +69,22 @@ teracon_data_sub_eco <- teracon_data_sub_eco %>%
   rename(ab_n = Aboveground.N..total....g.m.2.) %>%
   rename(ab_c = Aboveground.Carbon...) %>%
   mutate(biomass_plus_root = ab_biomass+root_ingrowth)
+
+
+# Selecting August as the season and fixing treatment names
+teracon_data_long2 <- teracon_data_long %>%
+  filter(Season == "August") %>%
+  mutate(temp_treatment = if_else(str_detect(temp_treatment, "elv"), "warmed", "ambient")) %>%
+  select(year,plot,temp_treatment,species,percent_cover)
+teracon_data_sub_eco2 <- teracon_data_sub_eco %>%
+  filter(Season == "August") %>%
+  mutate(temp_treatment = if_else(str_detect(temp_treatment, "elv"), "warmed", "ambient")) %>%
+  select(year,plot,temp_treatment,ab_biomass,bl_biomass,total_biomass,root_ingrowth,total_n,bl_n,bl_c,ab_n,ab_c,biomass_plus_root)
+
   
 
 # Upload data
 path_out = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
-write.csv(teracon_data_long,paste(path_out,'teracon_clean.csv'))
-write.csv(teracon_data_sub_eco,paste(path_out,'teracon_ecosystem_dat_clean.csv'))
+write.csv(teracon_data_long2,paste(path_out,'teracon_clean.csv'))
+write.csv(teracon_data_sub_eco2,paste(path_out,'teracon_ecosystem_dat_clean.csv'))
 

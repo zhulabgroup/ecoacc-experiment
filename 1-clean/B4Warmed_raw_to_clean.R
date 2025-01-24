@@ -10,7 +10,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/B4Warmed/"
+path_data = "/Volumes/seas-zhukai/datasets/vegetation/B4Warmed/"
 setwd(path_data)
 
 # Read in data
@@ -47,23 +47,31 @@ b4_abun <- b4_named %>%
   ungroup %>%
   mutate(rel_abun = species_biomass/total_biomass) 
 
-# Total biomass only
-b4_biomass <- b4_abun[,-c(7,8,10)]
-b4_biomass <- b4_biomass %>%
-  distinct()
+# Selecting only plots with open canopy and subsetting to wanted columns for each site
+b4_cfc_abun <- b4_abun %>%
+  filter(canopy_condition == "Open") %>%
+  filter(site == "CFC") %>%
+  select(year,plot,temp_treatment,species,rel_abun)
+b4_cfc_biomass <- b4_abun %>%
+  filter(canopy_condition == "Open") %>%
+  filter(site == "CFC") %>%
+  rename(ab_biomass = species_biomass) %>%
+  select(year,plot,temp_treatment,species,ab_biomass)
+b4_hwrc_abun <- b4_abun %>%
+  filter(canopy_condition == "Open") %>%
+  filter(site == "HWRC") %>%
+  select(year,plot,temp_treatment,species,rel_abun)
+b4_hwrc_biomass <- b4_abun %>%
+  filter(canopy_condition == "Open") %>%
+  filter(site == "HWRC") %>%
+  rename(ab_biomass = species_biomass) %>%
+  select(year,plot,temp_treatment,species,ab_biomass)
 
-# Selecting only plots with open canopy
-b4_abun <- b4_abun %>%
-  filter(canopy_condition == "Open")
-b4_biomass <- b4_biomass %>%
-  filter(canopy_condition == "Open")
-
-test <- b4_abun %>%
-  group_by(year,plot,site) %>%
-  summarize(total_rel_abun = sum(rel_abun))
 
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/B4Warmed/"
-write.csv(b4_abun,paste(path_out,'b4warmed_clean.csv'), row.names=F)
-write.csv(b4_biomass,paste(path_out,'b4warmed_ecosystem_dat_clean.csv'), row.names=F)
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/B4Warmed/"
+write.csv(b4_cfc_abun,paste(path_out,'b4warmed_cfc_clean.csv'), row.names=F)
+write.csv(b4_hwrc_abun,paste(path_out,'b4warmed_hwrc_clean.csv'), row.names=F)
+write.csv(b4_cfc_biomass,paste(path_out,'b4warmed_cfc_ecosystem_dat_clean.csv'), row.names=F)
+write.csv(b4_hwrc_biomass,paste(path_out,'b4warmed_hwrc_ecosystem_dat_clean.csv'), row.names=F)
