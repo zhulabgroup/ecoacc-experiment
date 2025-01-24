@@ -18,16 +18,10 @@ path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/B4Warmed/"
 setwd(path_data)
 
 # Read in data
-b4_data <- read.csv(" b4warmed_clean.csv")
+b4_cfc <- read.csv(" b4warmed_cfc_clean.csv")
+b4_hwrc <- read.csv(" b4warmed_hwrc_clean.csv")
 
 # Making a list of the species in our experimental data set for GBIF occurrences
-# Separate lists for the CFC and HWRC sites
-b4_cfc <- b4_data %>%
-  filter(site == "CFC") %>%
-  filter(!is.na(species))
-b4_hwrc <- b4_data %>%
-  filter(site == "HWRC") %>%
-  filter(!is.na(species))
 species_list_cfc <- unique(b4_cfc$species)
 species_list_hwrc <- unique(b4_hwrc$species)
 
