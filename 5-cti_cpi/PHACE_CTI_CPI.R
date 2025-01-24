@@ -14,7 +14,6 @@ library(emmeans)
 # Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
 setwd(path_data)
-
 # Load in data
 niche_est <- read.csv(" phace_niche.csv")
 niche_est <- niche_est %>%
@@ -25,14 +24,41 @@ phace <- read.csv(" phace_clean.csv")
 # Combining phace abundance data with niche estimate data
 full_abun_data <- left_join(phace, niche_est, by = "species")
 
+
+
+# Set path to turbo to get data
+path_data = "/Volumes/seas-zhukai/datasets/climate/IEM/Monthly_temps/"
+setwd(path_data)
+# Load in data
+iem <- read.csv("iem_PHACE_monthly_temps.csv")
+iem <- iem %>%
+  rename(year = X) %>%
+  mutate(MAT = (ANN-32)*5/9) %>%
+  select(year, MAT)
+iem$year <- as.integer(iem$year)
+
+# Merging with PHACE data
+full_abun_data <- left_join(full_abun_data, iem, by = "year")
+
+# Coding MAT from warmed plots to be 1.5 hotter in the dataframe
+full_abun_data$MAT <- ifelse(
+  full_abun_data$temp_treatment == "warmed",
+  full_abun_data$MAT + 1.5,
+  full_abun_data$MAT
+)
+
+
+
+### Calculations
 # Calculating CTI
 CTI <- full_abun_data %>%
-  group_by(year,plot,temp_treatment) %>%
+  group_by(year,plot,temp_treatment,MAT) %>%
   reframe(CTI = sum(rel_abun * temp_niche) / sum(rel_abun),
           CTI_var = sum(rel_abun * (temp_niche - CTI)^2) / sum(rel_abun),
           CTI_sd = sqrt(CTI_var),
           CTI_skew = sum(rel_abun * (temp_niche - CTI)^3) / (sum(rel_abun) * CTI_sd^3),
-          CTI_kurt = sum(rel_abun * (temp_niche - CTI)^4) / (sum(rel_abun) * CTI_sd^4) - 3) %>%
+          CTI_kurt = sum(rel_abun * (temp_niche - CTI)^4) / (sum(rel_abun) * CTI_sd^4) - 3,
+          disequilib = CTI - MAT) %>%
   distinct()
 
 # Calculating CTI sensitivity (warmed - ambient)
@@ -51,6 +77,8 @@ CTI_CPI <- full_abun_data %>%
   pivot_wider(names_from = temp_treatment,
               values_from = c(CTI, CPI),
               names_sep = "_")
+
+
 
 # Upload data
 path_out = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"

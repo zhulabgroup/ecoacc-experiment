@@ -19,7 +19,6 @@ eco_teracon <- read.csv(" teracon_ecosystem_dat_clean.csv")
 # Filter data to August (harvest) and calculate the mean ecosystem response vars for each year + treatment
 # Then, calculating 'sensitivity' as warmed-ambient each year for that var
 eco_grouped <- eco_teracon %>%
-  filter(Season == "August") %>%
   group_by(year,temp_treatment) %>%
   reframe(mean_ab_bio = mean(ab_biomass),
           mean_bl_bio = mean(bl_biomass),
@@ -34,11 +33,10 @@ eco_grouped <- eco_teracon %>%
                         mean_total_n, mean_bl_c, mean_bl_n,
                         mean_ab_c,mean_ab_n), names_to = "variable", values_to = "value") %>%
   pivot_wider(names_from = temp_treatment, values_from = value) %>%
-  mutate(sensitivity = HTelv - HTamb) %>%
+  mutate(sensitivity = warmed - ambient) %>%
   dplyr::select(year, variable, sensitivity)
 
 eco_grouped_overall <- eco_teracon %>%
-  filter(Season == "August") %>%
   group_by(year,temp_treatment) %>%
   reframe(mean_ab_bio = mean(ab_biomass),
           mean_bl_bio = mean(bl_biomass),
@@ -59,7 +57,7 @@ summary(eco_mod)
 
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
 write.csv(eco_grouped,paste(path_out,'eco_response_teracon.csv'))
 write.csv(eco_grouped_overall,paste(path_out,'eco_response_overall_teracon.csv'))
 

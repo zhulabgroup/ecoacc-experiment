@@ -28,9 +28,6 @@ full_abun_data <- full_abun_data %>%
   filter(!is.na(percent_cover)) %>%
   filter(!is.na(temp_niche)) %>%
   filter(!is.na(precip_niche))
-full_abun_data <- full_abun_data %>%
-  mutate(temp_treatment = if_else(str_detect(treatment, "T"), "warmed", "ambient")) %>%
-  mutate(water_treatment = if_else(str_detect(treatment, "P"), "precip", "ambient"))
 
 # Calculating CTI
 CTI <- full_abun_data %>%
