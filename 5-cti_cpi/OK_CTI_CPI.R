@@ -12,7 +12,7 @@ library(lmerTest)
 library(emmeans)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/OK/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
 setwd(path_data)
 
 # Load in data
@@ -70,7 +70,7 @@ CTI_CPI <- full_abun_data %>%
 
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/OK/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
 write.csv(CTI,paste(path_out,'CTI_ok.csv'))
 write.csv(CTI_sens,paste(path_out,'CTI_sens_ok.csv'))
 write.csv(CTI_CPI,paste(path_out,'CTI_CPI_ok.csv'))

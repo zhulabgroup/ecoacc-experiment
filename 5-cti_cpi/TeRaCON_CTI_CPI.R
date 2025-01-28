@@ -28,8 +28,6 @@ full_abun_data <- full_abun_data %>%
   filter(!is.na(percent_cover)) %>%
   filter(!is.na(temp_niche)) %>%
   filter(!is.na(precip_niche))
-full_abun_no_andro <- full_abun_data %>%
-  filter(!(species == "Andropogon gerardi"))
 
 
 
@@ -72,10 +70,9 @@ CTI_CPI <- full_abun_data %>%
 
 
 
-
 # Upload data
 path_out = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
-write.csv(CTI,paste(path_out,'CTI_teracon.csv'))
-write.csv(CTI_sens,paste(path_out,'CTI_sens_teracon.csv'))
-write.csv(CTI_CPI,paste(path_out,'CTI_CPI_teracon.csv'))
+write.csv(CTI,paste(path_out,'CTI_teracon.csv'),row.names=F)
+write.csv(CTI_sens,paste(path_out,'CTI_sens_teracon.csv'),row.names=F)
+write.csv(CTI_CPI,paste(path_out,'CTI_CPI_teracon.csv'),row.names=F)
 

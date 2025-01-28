@@ -31,7 +31,7 @@ full_abun_data <- full_abun_data %>%
 
 # Calculating CTI
 CTI <- full_abun_data %>%
-  group_by(year,plot,mean_C_temp_summer,temp_treatment) %>%
+  group_by(year,plot,temp_treatment) %>%
   reframe(CTI = sum(percent_cover * temp_niche) / sum(percent_cover),
           CTI_var = sum(percent_cover * (temp_niche - CTI)^2) / sum(percent_cover),
           CTI_sd = sqrt(CTI_var),
@@ -41,15 +41,15 @@ CTI <- full_abun_data %>%
 
 # Calculating CTI sensitivity (warmed - ambient)
 CTI_sens <- CTI %>%
-  dplyr::select(year,plot,mean_C_temp_summer,temp_treatment,CTI) %>%
-  group_by(year, mean_C_temp_summer,temp_treatment) %>%
+  dplyr::select(year,plot,temp_treatment,CTI) %>%
+  group_by(year, temp_treatment) %>%
   summarize(mean_cti = mean(CTI)) %>%
   pivot_wider(names_from = temp_treatment, values_from = mean_cti) %>%
   mutate(sensitivity = warmed - ambient)
 
 # Calculating CPI
 CPI <- full_abun_data %>%
-  group_by(year,plot,water_treatment) %>%
+  group_by(year,plot,temp_treatment) %>%
   reframe(CPI = sum(percent_cover * precip_niche) / sum(percent_cover),
           CPI_var = sum(percent_cover * (precip_niche - CPI)^2) / sum(percent_cover),
           CPI_sd = sqrt(CPI_var),

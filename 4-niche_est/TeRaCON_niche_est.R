@@ -11,7 +11,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
 setwd(path_data)
 
 # Load in data
@@ -35,24 +35,10 @@ niche_est <- chelsa_data %>%
   dplyr::select(-c(mean_annual_temp,mean_annual_precip,latitude,longitude)) %>%
   distinct()
 
-# Function to plot all species occurrences w/ median niche estimate
-plot_species_with_centroids <- function(data, species_name) {
-  # Filter data for selected species
-  species_data <- data %>%
-    filter(species == species_name)
-  
-  ggplot(species_data, aes(x = mean_annual_temp, y = mean_annual_precip)) +
-    geom_point() +
-    geom_point(aes(x = temp_niche, y = precip_niche),  colour = "yellow", size = 4) + 
-    theme_classic() +
-    labs(title = species_name,
-         x = "Mean Annual Temperature",
-         y = "Mean Annual Precipitation")
-}
-plot_species_with_centroids(niche_est, "Asclepias tuberosa")
+
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
-write.csv(niche_est,paste(path_out,'niche_estimate_teracon.csv'),row.names=F)
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+write.csv(niche_est,paste(path_out,'teracon_niche.csv'),row.names=F)
 #write.csv(niche_est,paste(path_out,'niche_estimate_6month_teracon_limited.csv'),row.names=F)
 #write.csv(niche_est,paste(path_out,'niche_estimate_teracon_limited.csv'),row.names=F)

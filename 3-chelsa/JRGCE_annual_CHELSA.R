@@ -11,12 +11,12 @@ library(tidyverse)
 library(raster)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
 setwd(path_data)
 # Load in data
-jrgce <- read.csv(" GBIF_jrgce.csv")
+jrgce <- read.csv(" GBIF_thinned_jrgce.csv")
 # Set path to chelsa data
-path_data_chelsa = "/nfs/turbo/seas-zhukai/datasets/climate/CHELSA/climatology/"
+path_data_chelsa = "/Volumes/seas-zhukai/datasets/climate/CHELSA/climatology/"
 setwd(path_data_chelsa)
 # Read in data
 chelsa_bio1_data <- raster("CHELSA_bio1_1981-2010_V.2.1.tif")
@@ -24,9 +24,9 @@ chelsa_bio12_data <- raster("CHELSA_bio12_1981-2010_V.2.1.tif")
 
 # Extracting lat/long from GBIF data
 gbif_coords <- jrgce %>%
-  dplyr::select(decimalLatitude,decimalLongitude) %>%
-  rename(latitude = decimalLatitude) %>%
-  rename(longitude = decimalLongitude) %>%
+  dplyr::select(Latitude,Longitude) %>%
+  rename(latitude = Latitude) %>%
+  rename(longitude = Longitude) %>%
   relocate(longitude)
 coordinates(gbif_coords)<-c("longitude", "latitude")
 
@@ -48,11 +48,11 @@ chelsa_bio12_trans <- chelsa_bio12 %>%
 
 # Merging occurrence data with chelsa data
 gbif_spp_occ <- jrgce %>%
-  dplyr::select(species,decimalLatitude,decimalLongitude) %>%
-  rename(latitude = decimalLatitude) %>%
-  rename(longitude = decimalLongitude)
+  dplyr::select(species,Latitude,Longitude) %>%
+  rename(latitude = Latitude) %>%
+  rename(longitude = Longitude)
 chelsa_gbif <- cbind(gbif_spp_occ, chelsa_bio1_trans, chelsa_bio12_trans)
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
 write.csv(chelsa_gbif,paste(path_out,'CHELSA_jrgce.csv'))
