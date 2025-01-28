@@ -15,6 +15,7 @@ setwd(path_data)
 
 # Read in data
 phace_data <- read.csv("PHACE biomass by species for Kara.csv", fileEncoding = "Latin1")
+temp_data <- read.csv("dbo_tblHourlyThermocouple.csv")
 
 # Wide to long for biomass values for relative abundance calculation
 phace_data_long <- phace_data %>%
