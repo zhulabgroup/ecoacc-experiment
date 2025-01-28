@@ -10,13 +10,15 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/datasets/vegetation/PHACE"
+path_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/PHACE"
 setwd(path_data)
 
 # Read in data
 phace_data <- read.csv("PHACE biomass by species for Kara.csv", fileEncoding = "Latin1")
 temp_data <- read.csv("dbo_tblHourlyThermocouple.csv")
 
+
+### Cleaning abundance/biomass data
 # Wide to long for biomass values for relative abundance calculation
 phace_data_long <- phace_data %>%
   pivot_longer(cols = -c(YEAR,PLOT,COLOR,REP,BLOCK,CO2,carbon.dioxide,TEMP,temperature,Treatment,Aboveground.biomass..g.per.m2.),
@@ -47,7 +49,29 @@ phace_biomass <- phace_abun %>%
   select(year,plot,temp_treatment,species,total_biomass)
 
 
-# Upload data
+
+### Cleaning temp data
+# Making data column a date
+temp_data$SampDate2 <- as.Date(temp_data$SampDate, format = "%m/%d/%y")
+
+# Remove error values and selecting DST 1 (temps at 10cm above soil surface)
+temp_data <- temp_data %>%
+  filter(!(TempC == -9999)) %>%
+  filter(DST_Code == 1)
+
+# Pulling out each year and month
+temp_data$year <- format(temp_data$SampDate2,format="%Y")
+temp_data$month <- format(temp_data$SampDate2,format="%m")
+temp_data$year_month <- format(temp_data$SampDate2,format="%Y-%m")
+
+# Average temperature per treatment, per year
+# Note: 2006 starts in July (not Jan), and 2013 ends in June (not Dec)
+temp_avg <- temp_data %>%
+  group_by(TreatmentCode,year) %>%
+  summarize(mean_temp = mean(TempC))
+
+
+### Upload data
 path_out = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
 write.csv(phace_rel_abun,paste(path_out,'phace_clean.csv'), row.names=F)
 write.csv(phace_biomass,paste(path_out,'phace_ecosystem_dat_clean.csv'), row.names=F)

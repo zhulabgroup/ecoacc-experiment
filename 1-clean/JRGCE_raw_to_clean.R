@@ -10,13 +10,16 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_abun_data = "/Volumes/seas-zhukai/proj-grassland-cfp/intermediate/observation-experiment/final-community/"
+path_abun_data = "/nfs/turbo/seas-zhukai/proj-grassland2/cfp/"
 setwd(path_abun_data)
 # Read in data
-jrgce_abun_data <- read.csv("jrgce.csv")
+load("dat_community.rda")
+exp <- dat_community[[2]]
+jrgce_abun_data <- exp %>%
+  filter(site == 'jrgce')
 
 # Set path to turbo to get data
-path_bio_data = "/Volumes/seas-zhukai/datasets/vegetation/JRGCE/JRGCE Harvest1 AGB/"
+path_bio_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/JRGCE/JRGCE Harvest1 AGB/"
 setwd(path_bio_data)
 # Read in all biomass data files at once
 temp = list.files(pattern="\\.csv$")
@@ -30,7 +33,7 @@ for (i in 1:length(temp)) {
 }
 
 # Set path to turbo to get data
-path_meta_data = "/Volumes/seas-zhukai/datasets/vegetation/JRGCE/"
+path_meta_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/JRGCE/"
 setwd(path_meta_data)
 # Read in data
 jrgce_meta_data <- read.csv("JRGCE treatments 1998_2014 plus single code for all treatments.csv")
@@ -85,7 +88,7 @@ jrgce_bio_data <- left_join(jrgce_bio_data, jrgce_temp_filtered, by="year")
 # Fixing treatment names
 jrgce_abun_data <- jrgce_abun_data %>%
   mutate(temp_treatment = if_else(str_detect(treatment, "T"), "warmed", "ambient")) %>%
-  select(year,plot,species,percent_cover,temp_treatment) %>%
+  select(year,plot,species,percent_cover,temp_treatment,mean_C_temp_summer) %>%
   filter(!(year == 1998))
 jrgce_bio_data <- jrgce_bio_data %>%
   mutate(temp_treatment = if_else(str_detect(treatment, "H"), "warmed", "ambient")) %>%
@@ -96,7 +99,7 @@ jrgce_bio_data <- jrgce_bio_data %>%
 
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
 write.csv(jrgce_abun_data,paste(path_out,'jrgce_clean.csv'),row.names=F)
 write.csv(jrgce_bio_data,paste(path_out,'jrgce_ecosystem_dat_clean.csv'),row.names=F)
 

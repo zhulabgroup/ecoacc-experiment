@@ -10,7 +10,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/datasets/vegetation/TeRaCON"
+path_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/TeRaCON"
 setwd(path_data)
 
 # Read in data
@@ -75,7 +75,7 @@ teracon_data_sub_eco <- teracon_data_sub_eco %>%
 teracon_data_long2 <- teracon_data_long %>%
   filter(Season == "August") %>%
   mutate(temp_treatment = if_else(str_detect(temp_treatment, "elv"), "warmed", "ambient")) %>%
-  select(year,plot,temp_treatment,species,percent_cover)
+  select(year,plot,temp_treatment,species,percent_cover,mean_C_temp_summer)
 teracon_data_sub_eco2 <- teracon_data_sub_eco %>%
   filter(Season == "August") %>%
   mutate(temp_treatment = if_else(str_detect(temp_treatment, "elv"), "warmed", "ambient")) %>%
@@ -84,7 +84,7 @@ teracon_data_sub_eco2 <- teracon_data_sub_eco %>%
   
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
 write.csv(teracon_data_long2,paste(path_out,'teracon_clean.csv'))
 write.csv(teracon_data_sub_eco2,paste(path_out,'teracon_ecosystem_dat_clean.csv'))
 
