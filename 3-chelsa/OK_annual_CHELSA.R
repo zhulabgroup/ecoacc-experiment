@@ -11,12 +11,12 @@ library(tidyverse)
 library(raster)
 
 # Set path to turbo to get data
-path_data_gbif = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
+path_data_gbif = "/nfs/turbo/seas-zhukai/proj-ecoacc/OK/"
 setwd(path_data_gbif)
 # Read in data
 gbif_data <- read.csv(" GBIF_thinned_ok.csv")
 # Set path to chelsa data
-path_data_chelsa = "/Volumes/seas-zhukai/datasets/climate/CHELSA/climatology/"
+path_data_chelsa = "/nfs/turbo/seas-zhukai/datasets/climate/CHELSA/climatology/"
 setwd(path_data_chelsa)
 # Read in data
 chelsa_bio1_data <- raster("CHELSA_bio1_1981-2010_V.2.1.tif")
@@ -54,5 +54,5 @@ gbif_spp_occ <- gbif_data %>%
 chelsa_gbif <- cbind(gbif_spp_occ, chelsa_bio1_ex_trans, chelsa_bio12_ex_trans)
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/OK/"
 write.csv(chelsa_gbif,paste(path_out,'CHELSA_ok.csv'))

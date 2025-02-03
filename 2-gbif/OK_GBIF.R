@@ -12,9 +12,10 @@ library(terra)
 library(rgbif)
 library(CoordinateCleaner)
 library(maps)
+library(spThin)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/OK/"
 setwd(path_data)
 
 # Read in data
@@ -96,6 +97,7 @@ GBIF_species2 <- do.call(rbind.data.frame, spp_occurrences2)
 GBIF_species3 <- do.call(rbind.data.frame, spp_occurrences3)
 GBIF_species4 <- do.call(rbind.data.frame, spp_occurrences4)
 GBIF_species5 <- do.call(rbind.data.frame, spp_occurrences5)
+GBIF_species6 <- do.call(rbind.data.frame, spp_occurrences6)
 
 # Merging into one file
 gbif1 <- read.csv(" GBIF_ok_species1.csv")
@@ -104,10 +106,11 @@ gbif3 <- read.csv(" GBIF_ok_species3.csv")
 gbif4 <- read.csv(" GBIF_ok_species4.csv")
 gbif5 <- read.csv(" GBIF_ok_species5.csv")
 
-GBIF_species <- rbind(gbif1,gbif2,gbif3,gbif4,gbif5)
+GBIF_species6$X <- NA
+GBIF_species <- rbind(gbif1,gbif2,gbif3,gbif4,gbif5,GBIF_species6)
 
 # Fixing species names to match the raw data
-GBIF_species$species[GBIF_species$species == "Ambrosia trifida"] <- "Ambrosia trida" # fixing spp name to match phace
+GBIF_species$species[GBIF_species$species == "Ambrosia trifida"] <- "Ambrosia trida"
 GBIF_species$species[GBIF_species$species == "Andropogon gerardi"] <- "Andropogon gerardii"
 GBIF_species$species[GBIF_species$species == "Oenothera serrulata"] <- "Calylophus serrulatus"
 GBIF_species$species[GBIF_species$species == "Erigeron canadensis"] <- "Conyza canadensis"
@@ -116,7 +119,7 @@ GBIF_species$species[GBIF_species$species == "Hexasepalum teres"] <- "Diodia ter
 GBIF_species$species[GBIF_species$species == "Oenothera curtiflora"] <- "Gaura parviflora"
 GBIF_species$species[grepl("Grindelia papposa", GBIF_species$scientificName)] <- "Grindelia papposa"
 GBIF_species$species[grepl("Haplopappus ciliatus", GBIF_species$scientificName)] <- "Haplopappus ciliatus"
-GBIF_species$species[GBIF_species$species == "Stenaria nigricans"] <- "Hedyotis nigricans"
+GBIF_species$species[grepl("Hedyotis nigricans", GBIF_species$scientificName)] <- "Hedyotis nigricans"
 GBIF_species$species[GBIF_species$species == "Heterotheca subaxillaris"] <- "Heterotheca latifolia"
 GBIF_species$species[GBIF_species$species == "Melilotus officinalis"] <- "Melilotus alba"
 GBIF_species$species[GBIF_species$species == "Mimosa quadrivalvis"] <- "Mimosa nuttallii"
