@@ -14,7 +14,7 @@ library(CoordinateCleaner)
 library(maps)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/OK/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
 setwd(path_data)
 
 # Read in data
@@ -37,6 +37,7 @@ species_list2 <- species_list[37:65]
 species_list3 <- species_list[68:100] # note: Rubus calycinoides and Rubus pentalobus (66 and 67) don't run
 species_list4 <- species_list[101:110]
 species_list5 <- species_list[c(111:118,120)] # note: 119 (Plantago asiatica), 121 (Tragia cannabina) and 122 (Trifolium purpureum) don't run
+species_list6 <- c("Bromus japonicus","Dactylis glomerata","Apocynum cannabinum","Stenaria nigricans") # Selecting spp not found in original meta-data
 
 # 1000 km around experiment location
 bbox_1000 <- c(-109, 26, -87, 44)
@@ -87,6 +88,7 @@ spp_occurrences2 <- occurrences(species_list2, bbox_1000)
 spp_occurrences3 <- occurrences(species_list3, bbox_1000)
 spp_occurrences4 <- occurrences(species_list4, bbox_1000)
 spp_occurrences5 <- occurrences(species_list5, bbox_1000)
+spp_occurrences6 <- occurrences(species_list6, bbox_1000)
 
 # Pulling lat and long from GBIF
 GBIF_species1 <- do.call(rbind.data.frame, spp_occurrences1)
