@@ -10,7 +10,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_abun_data = "/nfs/turbo/seas-zhukai/proj-grassland2/cfp/"
+path_abun_data = "/Volumes/seas-zhukai/proj-grassland2/cfp/"
 setwd(path_abun_data)
 # Read in data
 load("dat_community.rda")
@@ -19,7 +19,7 @@ jrgce_abun_data <- exp %>%
   filter(site == 'jrgce')
 
 # Set path to turbo to get data
-path_bio_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/JRGCE/JRGCE Harvest1 AGB/"
+path_bio_data = "/Volumes/seas-zhukai/datasets/vegetation/JRGCE/JRGCE Harvest1 AGB/"
 setwd(path_bio_data)
 # Read in all biomass data files at once
 temp = list.files(pattern="\\.csv$")
@@ -33,7 +33,7 @@ for (i in 1:length(temp)) {
 }
 
 # Set path to turbo to get data
-path_meta_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/JRGCE/"
+path_meta_data = "/Volumes/seas-zhukai/datasets/vegetation/JRGCE/"
 setwd(path_meta_data)
 # Read in data
 jrgce_meta_data <- read.csv("JRGCE treatments 1998_2014 plus single code for all treatments.csv")
@@ -96,11 +96,28 @@ jrgce_bio_data <- jrgce_bio_data %>%
   filter(!(year == 1998))
 
 
+# Calculating relative abundance from percent cover
+rel_abun_calc <- function(df) {
+  df %>%
+    filter(!(species == "Avena DUMMY" | # remove dummy spp and spp with no temp niches
+               species == "Festuca DUMMY" |
+               species == "Stipa pulchra" |
+               species == "Festuca perennis")) %>%
+    group_by(year, plot) %>%
+    mutate(total_cover = sum(percent_cover,na.rm=T)) %>%
+    mutate(rel_abun = percent_cover / total_cover) %>%
+    filter(!is.na(rel_abun) & rel_abun != "NaN") %>%
+    ungroup() %>%
+    dplyr::select(year,plot,species,temp_treatment,mean_C_temp_summer,rel_abun)
+}
+rel_abun_jrgce <- rel_abun_calc(jrgce_abun_data)
+
+
 
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
-write.csv(jrgce_abun_data,paste(path_out,'jrgce_clean.csv'),row.names=F)
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+write.csv(rel_abun_jrgce,paste(path_out,'jrgce_clean.csv'),row.names=F)
 write.csv(jrgce_bio_data,paste(path_out,'jrgce_ecosystem_dat_clean.csv'),row.names=F)
 
 

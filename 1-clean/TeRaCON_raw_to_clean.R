@@ -10,7 +10,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/TeRaCON"
+path_data = "/Volumes/seas-zhukai/datasets/vegetation/TeRaCON"
 setwd(path_data)
 
 # Read in data
@@ -81,10 +81,27 @@ teracon_data_sub_eco2 <- teracon_data_sub_eco %>%
   mutate(temp_treatment = if_else(str_detect(temp_treatment, "elv"), "warmed", "ambient")) %>%
   select(year,plot,temp_treatment,ab_biomass,bl_biomass,total_biomass,root_ingrowth,total_n,bl_n,bl_c,ab_n,ab_c,biomass_plus_root)
 
+
+
+# Calculating relative abundance from percent cover
+rel_abun_calc <- function(df) {
+  df %>%
+    filter(!(species == "Total Planted Species" | # removing non-spp and spp without niche values
+               species == "Petalostemum villosum")) %>%
+    mutate(percent_cover = if_else(is.na(percent_cover), 0, percent_cover)) %>%
+    group_by(year, plot) %>%
+    mutate(total_cover = sum(percent_cover,na.rm=T)) %>%
+    mutate(rel_abun = percent_cover / total_cover) %>%
+    filter(!is.na(rel_abun) & rel_abun != "NaN") %>%
+    ungroup() %>%
+    dplyr::select(year,plot,species,temp_treatment,mean_C_temp_summer,rel_abun)
+}
+rel_abun_tera <- rel_abun_calc(teracon_data_long2)
+
   
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
-write.csv(teracon_data_long2,paste(path_out,'teracon_clean.csv'))
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+write.csv(rel_abun_tera,paste(path_out,'teracon_clean.csv'),row.names=F)
 write.csv(teracon_data_sub_eco2,paste(path_out,'teracon_ecosystem_dat_clean.csv'))
 

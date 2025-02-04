@@ -60,10 +60,18 @@ ok_rel_abun$species <- gsub("Dio ocy", "DO", ok_rel_abun$species)
 ok_rel_abun$species <- gsub("Cha fac", "Cha fas", ok_rel_abun$species)
 ok_rel_abun$species <- gsub("Cha fac", "Cha fas", ok_rel_abun$species)
 # What about the species that are not in the metadata?
+species_list_abun <- unique(ok_rel_abun$species)
+species_list_meta <- unique(ok_meta$Abbreviation)
+diff <- setdiff(species_list_abun, species_list_meta)
 
 # Merge abundance data with meta data by species code
-ok_rel_spp <- ok_rel_abun %>%
-  left_join(ok_meta, by = c("species" = "Abbreviation"))
+ok_rel_spp <- left_join(ok_rel_abun, ok_meta, by = c("species" = "Abbreviation"))
+
+# Manually naming species not found in meta data
+ok_rel_spp$Lartin.name[ok_rel_spp$species == "Bro jap"] <- "Bromus japonicus"
+ok_rel_spp$Lartin.name[ok_rel_spp$species == "Dac glo"] <- "Dactylis glomerata"
+ok_rel_spp$Lartin.name[ok_rel_spp$species == "Apo can"] <- "Apocynum cannabinum"
+ok_rel_spp$Lartin.name[ok_rel_spp$species == "Ste nig"] <- "Stenaria nigricans"
 
 # Selecting columns
 ok_rel_spp <- ok_rel_spp %>%

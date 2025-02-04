@@ -25,7 +25,7 @@ teracon <- read.csv(" teracon_clean.csv")
 # Combining teracon abundance data with niche estimate data
 full_abun_data <- left_join(teracon, niche_est, by = "species")
 full_abun_data <- full_abun_data %>%
-  filter(!is.na(percent_cover)) %>%
+  filter(!is.na(rel_abun)) %>%
   filter(!is.na(temp_niche)) %>%
   filter(!is.na(precip_niche))
 
@@ -35,11 +35,11 @@ full_abun_data <- full_abun_data %>%
 # Calculating CTI & disequilibrium
 CTI <- full_abun_data %>%
   group_by(year,plot,temp_treatment) %>%
-  reframe(CTI = sum(percent_cover * temp_niche) / sum(percent_cover),
-          CTI_var = sum(percent_cover * (temp_niche - CTI)^2) / sum(percent_cover),
+  reframe(CTI = sum(rel_abun * temp_niche) / sum(rel_abun),
+          CTI_var = sum(rel_abun * (temp_niche - CTI)^2) / sum(rel_abun),
           CTI_sd = sqrt(CTI_var),
-          CTI_skew = sum(percent_cover * (temp_niche - CTI)^3) / (sum(percent_cover) * CTI_sd^3),
-          CTI_kurt = sum(percent_cover * (temp_niche - CTI)^4) / (sum(percent_cover) * CTI_sd^4) - 3) %>%
+          CTI_skew = sum(rel_abun * (temp_niche - CTI)^3) / (sum(rel_abun) * CTI_sd^3),
+          CTI_kurt = sum(rel_abun * (temp_niche - CTI)^4) / (sum(rel_abun) * CTI_sd^4) - 3) %>%
   distinct()
 
 # Calculating CTI sensitivity (warmed - ambient)
@@ -53,17 +53,17 @@ CTI_sens <- CTI %>%
 # Calculating CPI
 CPI <- full_abun_data %>%
   group_by(year,plot,temp_treatment) %>%
-  reframe(CPI = sum(percent_cover * precip_niche) / sum(percent_cover),
-          CPI_var = sum(percent_cover * (precip_niche - CPI)^2) / sum(percent_cover),
+  reframe(CPI = sum(rel_abun * precip_niche) / sum(rel_abun),
+          CPI_var = sum(rel_abun * (precip_niche - CPI)^2) / sum(rel_abun),
           CPI_sd = sqrt(CPI_var),
-          CPI_skew = sum(percent_cover * (precip_niche - CPI)^3) / (sum(percent_cover) * CPI_sd^3),
-          CPI_kurt = sum(percent_cover * (precip_niche - CPI)^4) / (sum(percent_cover) * CPI_sd^4) - 3)
+          CPI_skew = sum(rel_abun * (precip_niche - CPI)^3) / (sum(rel_abun) * CPI_sd^3),
+          CPI_kurt = sum(rel_abun * (precip_niche - CPI)^4) / (sum(rel_abun) * CPI_sd^4) - 3)
 
 # CTI and CPI combined
 CTI_CPI <- full_abun_data %>%
   group_by(year,temp_treatment) %>%
-  reframe(CPI = sum(percent_cover * precip_niche) / sum(percent_cover),
-          CTI = sum(percent_cover * temp_niche) / sum(percent_cover)) %>%
+  reframe(CPI = sum(rel_abun * precip_niche) / sum(rel_abun),
+          CTI = sum(rel_abun * temp_niche) / sum(rel_abun)) %>%
   pivot_wider(names_from = temp_treatment,
               values_from = c(CTI, CPI),
               names_sep = "_")
