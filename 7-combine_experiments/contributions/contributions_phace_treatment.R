@@ -26,11 +26,34 @@ phace <- read.csv(" phace_clean.csv")
 full_abun_data_phace <- left_join(phace, niche_est_phace, by = "species")
 
 
+# Calculating baseline CTI to use for measure of center 
+calculate_initial_CTI <- function(data) {
+  # Calculate the baseline CTI for the initial year
+  initial_year <- min(data$year)
+  
+  # Calculate CTI baseline
+  initial_cti <- data %>%
+    filter(year == initial_year) %>%
+    group_by(plot) %>%
+    summarise(
+      cti_baseline = sum(rel_abun * temp_niche) / sum(rel_abun)
+    )
+  
+  return(initial_cti)
+}
+cti_initial <- calculate_initial_CTI(full_abun_data_phace)
+
+# Merging with abundance data and centering the niche values
+full_abun_data_phace <- left_join(full_abun_data_phace, cti_initial, by = "plot")
+full_abun_data_phace <- full_abun_data_phace %>%
+  mutate(temp_niche_center = temp_niche - cti_baseline)
+
+
 
 # Calculating CTI
 CTI <- full_abun_data_phace %>%
   group_by(year,temp_treatment) %>%
-  reframe(CTI = sum(rel_abun * temp_niche) / sum(rel_abun)) %>%
+  reframe(CTI = sum(rel_abun * temp_niche_center) / sum(rel_abun)) %>%
   distinct() %>%
   group_by(year,temp_treatment) %>%
   summarize(mean_cti = mean(CTI)) %>%
@@ -43,7 +66,10 @@ abun <- full_abun_data_phace %>%
   summarize(rel_abun_avg = mean(rel_abun)) %>%
   pivot_wider(names_from = temp_treatment, values_from = rel_abun_avg) %>%
   mutate(rel_abun_diff = warmed - ambient)
-abun <- left_join(abun, niche_est_phace, by = "species")
+niche_center <- full_abun_data_phace %>%
+  group_by(species) %>%
+  summarize(mean_niche = mean(temp_niche_center))
+abun <- left_join(abun, niche_center, by = "species")
 
 
 # Compute linear slopes using covariance and variance
@@ -80,7 +106,7 @@ names(contributions) <- names(slopes)
 # Calculate the contribution for each species
 for (species in names(slopes)) {
   # Find the thermal niche for the current species
-  niche_value <- abun$temp_niche[abun$species == species]
+  niche_value <- abun$mean_niche[abun$species == species]
   
   # Compute the contribution: slope * thermal niche
   contributions[species] <- slopes[[species]] * niche_value
@@ -112,24 +138,6 @@ writeLines(unlist(output_strings))
 
 
 
-# Initialize a vector or list to store contributions
-contributions <- numeric(length(slopes))
-names(contributions) <- names(slopes)
-
-# Calculate the contribution for each species
-for (species in names(slopes)) {
-  # Find the thermal niche for the current species
-  niche_value <- abun$temp_niche[abun$species == species]
-  
-  # Compute the contribution: slope * thermal niche
-  contributions[species] <- slopes[[species]] * niche_value
-}
-
-# Sum of contributions
-slope_sum <- sum(contributions)
-
-
-
 # Data for plotting
 # Pull out species names and species slopes into their own lists
 species_contribution <- unlist(contributions)
@@ -142,7 +150,7 @@ data_for_plot <- data.frame(
   slope = c(species_slopes)
 )
 # Merge with niche data
-data_for_plot <- left_join(data_for_plot, niche_est_phace, by = c("species"))
+data_for_plot <- left_join(data_for_plot,niche_center, by = c("species"))
 # Remove data whose absolute value for slope is < 0.0002
 data_for_plot <- data_for_plot[abs(data_for_plot$contribution) > 0.002, ]
 
@@ -190,18 +198,27 @@ p + geom_segment(aes(x = Inf, y = -Inf, xend = Inf, yend = -Inf, color = "Slope 
 
 
 # Point plot
-ggplot(data_for_plot, aes(x = contribution, y = temp_niche, color = temp_niche)) +
-  geom_vline(xintercept = 0, size = 0.2, linetype = "solid", color = "black") + # Bold line at x = 0
-  geom_hline(yintercept = median(data_for_plot$temp_niche, na.rm = TRUE), size = 0.2, linetype = "solid", color = "black") + # Bold median line
-  geom_point(size=3) +
-  stat_ellipse(level = 0.95, aes(group = 1), color = "black") + # Add an ellipse
+point <- ggplot(data_for_plot, aes(x=contribution, y = reorder(species, abs(contribution)), color=mean_niche)) +
+  geom_segment(aes(x = 0, xend = slope, 
+                   y = reorder(species, abs(contribution)), 
+                   yend = reorder(species, abs(contribution))),
+               arrow = arrow(type = "closed", length = unit(0.075, "inches")),
+               color = "red") +
+  geom_vline(xintercept = 0, linetype = "solid") +
+  geom_vline(xintercept = slope_CTI, linetype = "dashed") +
+  #geom_errorbar(aes(xmin = contribution-var_contribution_center, xmax = contribution_center+var_contribution_center), 
+  #             width =0.9, color = "black") +
+  geom_point(shape = 20, size = 5, position = position_dodge(width = 0.9)) +
+  scale_color_gradientn(colors = c("blue", "orangered"), 
+                        name = "Species temperature (°C)") +
   xlab("Contribution to CTI") +
-  ylab("Species temperature (°C)") +
-  scale_color_gradientn(colors = c("blue", "orangered"), name = "Species temperature (°C)") +
+  ylab("Species") +
   theme_classic() +
-  theme(legend.position = "none",
-        axis.text = element_text(size=14),
-        axis.title = element_text(size=14))
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 14),
+        axis.title = element_text(size=14,face="bold"),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 12,face="bold"))
 
 
 

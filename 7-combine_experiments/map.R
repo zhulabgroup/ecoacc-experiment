@@ -23,7 +23,7 @@ locations <- tibble(
 )
 
 png("map.png", units="in", width=10, height=6, res=300)
-ggplot() +
+plot <- ggplot() +
   geom_polygon(data = us_map, aes(x = long, y = lat, group = group), fill = "lightgray", color = "black") +
   geom_point(data = locations, aes(x = long, y = lat, color = Experiment), size = 4) +
   coord_fixed(1.3) +
@@ -34,5 +34,11 @@ ggplot() +
         axis.text = element_text(size=14),
         axis.title = element_text(size=14))
 dev.off()
+
+
+
+# Export Rdata for plot
+path_out = "/Volumes/seas-zhukai/proj-ecoacc/data_for_plots/"
+saveRDS(plot, paste(path_out,'map.rds'))
   
 
