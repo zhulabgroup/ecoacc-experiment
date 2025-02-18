@@ -12,7 +12,7 @@ library(lmerTest)
 library(emmeans)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/B4Warmed/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/B4Warmed/"
 setwd(path_data)
 
 # Load in data
@@ -41,6 +41,57 @@ full_abun_data_hwrc <- full_abun_data_hwrc %>%
   filter(!is.na(temp_niche)) %>%
   filter(!is.na(precip_niche))
 
+
+
+# Set path to turbo to get data
+path_data = "/Volumes/seas-zhukai/datasets/climate/IEM/Monthly_temps/"
+setwd(path_data)
+# Load in data
+iem_cfc <- read.csv("iem_B4Warmed_CFC_monthly_temps.csv")
+iem_hwrc <- read.csv("iem_B4Warmed_HWRC_monthly_temps.csv")
+iem_cfc <- iem_cfc %>%
+  rename(year = X) %>%
+  mutate(MAT = (ANN-32)*5/9) %>%
+  dplyr::select(year, MAT)
+iem_hwrc <- iem_hwrc %>%
+  rename(year = X) %>%
+  mutate(MAT = (ANN-32)*5/9) %>%
+  dplyr::select(year, MAT)
+iem_cfc$year <- as.integer(iem_cfc$year)
+iem_hwrc$year <- as.integer(iem_hwrc$year)
+
+# Merging with PHACE data
+full_abun_data_cfc <- left_join(full_abun_data_cfc, iem_cfc, by = "year")
+full_abun_data_hwrc <- left_join(full_abun_data_hwrc, iem_hwrc, by = "year")
+
+# Coding MAT from warmed plots to be hotter
+# 1.7 and 3.4 warming levels, warmed for 8 months of the year
+1.7/1.5 # Add 1.13 to MAT (12/8 = 1.5)
+3.4/1.5 # Add 2.27 to MAT (12/8 = 1.5)
+full_abun_data_cfc$MAT <- ifelse(
+  full_abun_data_cfc$temp_treatment == "1.7",
+  full_abun_data_cfc$MAT + 1.13,
+  full_abun_data_cfc$MAT
+)
+full_abun_data_cfc$MAT <- ifelse(
+  full_abun_data_cfc$temp_treatment == "3.4",
+  full_abun_data_cfc$MAT + 2.27,
+  full_abun_data_cfc$MAT
+)
+full_abun_data_hwrc$MAT <- ifelse(
+  full_abun_data_hwrc$temp_treatment == "1.7",
+  full_abun_data_hwrc$MAT + 1.13,
+  full_abun_data_hwrc$MAT
+)
+full_abun_data_hwrc$MAT <- ifelse(
+  full_abun_data_hwrc$temp_treatment == "3.4",
+  full_abun_data_hwrc$MAT + 2.27,
+  full_abun_data_hwrc$MAT
+)
+
+
+
+
 # Calculating CTI
 CTI_cfc <- full_abun_data_cfc %>%
   group_by(year,plot,temp_treatment) %>%
@@ -48,7 +99,8 @@ CTI_cfc <- full_abun_data_cfc %>%
           CTI_var = sum(rel_abun * (temp_niche - CTI)^2) / sum(rel_abun),
           CTI_sd = sqrt(CTI_var),
           CTI_skew = sum(rel_abun * (temp_niche - CTI)^3) / (sum(rel_abun) * CTI_sd^3),
-          CTI_kurt = sum(rel_abun * (temp_niche - CTI)^4) / (sum(rel_abun) * CTI_sd^4) - 3) %>%
+          CTI_kurt = sum(rel_abun * (temp_niche - CTI)^4) / (sum(rel_abun) * CTI_sd^4) - 3,
+          disequilib = CTI - MAT) %>%
   distinct()
 CTI_hwrc <- full_abun_data_hwrc %>%
   group_by(year,plot,temp_treatment) %>%
@@ -56,7 +108,8 @@ CTI_hwrc <- full_abun_data_hwrc %>%
           CTI_var = sum(rel_abun * (temp_niche - CTI)^2) / sum(rel_abun),
           CTI_sd = sqrt(CTI_var),
           CTI_skew = sum(rel_abun * (temp_niche - CTI)^3) / (sum(rel_abun) * CTI_sd^3),
-          CTI_kurt = sum(rel_abun * (temp_niche - CTI)^4) / (sum(rel_abun) * CTI_sd^4) - 3) %>%
+          CTI_kurt = sum(rel_abun * (temp_niche - CTI)^4) / (sum(rel_abun) * CTI_sd^4) - 3,
+          disequilib = CTI - MAT) %>%
   distinct()
 
 

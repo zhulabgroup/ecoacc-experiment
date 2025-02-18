@@ -11,7 +11,7 @@ library(tidyverse)
 library(lmerTest)
 library(emmeans)
 
-# Set path to turbo to get data
+### Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
 setwd(path_data)
 
@@ -28,14 +28,50 @@ full_abun_data <- full_abun_data %>%
   filter(!is.na(temp_niche)) %>%
   filter(!is.na(precip_niche))
 
+
+
+### Set path to turbo to get data
+path_data = "/Volumes/seas-zhukai/datasets/climate/IEM/Monthly_temps/"
+setwd(path_data)
+# Load in data
+iem <- read.csv("iem_JRGCE_monthly_temps.csv")
+iem <- iem %>%
+  rename(year = X) %>%
+  mutate(MAT = (ANN-32)*5/9) %>%
+  dplyr::select(year, MAT)
+iem$year <- as.integer(iem$year)
+
+# Merging with PHACE data
+full_abun_data <- left_join(full_abun_data, iem, by = "year")
+
+# Coding MAT from warmed plots to be hotter
+full_abun_data$MAT <- ifelse(
+  full_abun_data$temp_treatment == "warmed" & full_abun_data$year >= 1999 & full_abun_data$year <= 2002,
+  full_abun_data$MAT + 1,
+  full_abun_data$MAT
+)
+full_abun_data$MAT <- ifelse(
+  full_abun_data$temp_treatment == "warmed" & full_abun_data$year >= 2003 & full_abun_data$year <= 2009,
+  full_abun_data$MAT + 1.5,
+  full_abun_data$MAT
+)
+full_abun_data$MAT <- ifelse(
+  full_abun_data$temp_treatment == "warmed" & full_abun_data$year >= 2010 & full_abun_data$year <= 2014,
+  full_abun_data$MAT + 2,
+  full_abun_data$MAT
+)
+
+
+
 # Calculating CTI
 CTI <- full_abun_data %>%
-  group_by(year,plot,temp_treatment) %>%
+  group_by(year,plot,temp_treatment,MAT) %>%
   reframe(CTI = sum(rel_abun * temp_niche) / sum(rel_abun),
           CTI_var = sum(rel_abun * (temp_niche - CTI)^2) / sum(rel_abun),
           CTI_sd = sqrt(CTI_var),
           CTI_skew = sum(rel_abun * (temp_niche - CTI)^3) / (sum(rel_abun) * CTI_sd^3),
-          CTI_kurt = sum(rel_abun * (temp_niche - CTI)^4) / (sum(rel_abun) * CTI_sd^4) - 3) %>%
+          CTI_kurt = sum(rel_abun * (temp_niche - CTI)^4) / (sum(rel_abun) * CTI_sd^4) - 3,
+          disequilib = CTI - MAT) %>%
   distinct()
 
 # Calculating CTI sensitivity (warmed - ambient)

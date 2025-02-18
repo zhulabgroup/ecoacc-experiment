@@ -32,6 +32,31 @@ full_abun_data <- full_abun_data %>% # removing spp w/o niche information
   filter(!is.na(temp_niche)) %>%
   filter(!is.na(precip_niche))
 
+
+
+### Set path to turbo to get data
+path_data = "/Volumes/seas-zhukai/datasets/climate/IEM/Monthly_temps/"
+setwd(path_data)
+# Load in data
+iem <- read.csv("iem_OK_monthly_temps.csv")
+iem <- iem %>%
+  rename(year = X) %>%
+  mutate(MAT = (ANN-32)*5/9) %>%
+  dplyr::select(year, MAT)
+iem$year <- as.integer(iem$year)
+
+# Merging with PHACE data
+full_abun_data <- left_join(full_abun_data, iem, by = "year")
+
+# Coding MAT from warmed plots to be hotter
+full_abun_data$MAT <- ifelse(
+  full_abun_data$temp_treatment == "warmed",
+  full_abun_data$MAT + 1.1,
+  full_abun_data$MAT
+)
+
+
+
 # Calculating CTI
 CTI <- full_abun_data %>%
   group_by(year,plot,temp_treatment) %>%
@@ -39,7 +64,8 @@ CTI <- full_abun_data %>%
           CTI_var = sum(rel_abun * (temp_niche - CTI)^2) / sum(rel_abun),
           CTI_sd = sqrt(CTI_var),
           CTI_skew = sum(rel_abun * (temp_niche - CTI)^3) / (sum(rel_abun) * CTI_sd^3),
-          CTI_kurt = sum(rel_abun * (temp_niche - CTI)^4) / (sum(rel_abun) * CTI_sd^4) - 3) %>%
+          CTI_kurt = sum(rel_abun * (temp_niche - CTI)^4) / (sum(rel_abun) * CTI_sd^4) - 3,
+          disequilib = CTI - MAT) %>%
   distinct()
 
 # Calculating CTI sensitivity (warmed - ambient)
