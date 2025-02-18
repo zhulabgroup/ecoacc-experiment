@@ -20,7 +20,7 @@ library(viridis)
 
 
 ### Set path to turbo to get teracon & biocon data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 setwd(path_data)
 # Load in data
 CTI_sens_teracon <- read.csv(" CTI_sens_teracon.csv")
@@ -33,7 +33,7 @@ niche_est_tera <- read.csv(" teracon_niche.csv")
 biocon <- read.csv(" CTI_biocon.csv")
 
 ### Set path to jrgce data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 setwd(path_data)
 # Load in data
 CTI_sens_jrgce <- read.csv(" CTI_sens_jrgce.csv")
@@ -45,7 +45,7 @@ CTI_CPI_jrgce <- read.csv(" CTI_CPI_jrgce.csv")
 niche_est_jrgce <- read.csv(" jrgce_niche.csv")
 
 ### Set path to phace data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 setwd(path_data)
 # Load in data
 CTI_sens_phace <- read.csv(" CTI_sens_phace.csv")
@@ -57,7 +57,7 @@ CTI_CPI_phace <- read.csv(" CTI_CPI_phace.csv")
 niche_est_phace <- read.csv(" phace_niche.csv")
 
 ### Set path to b4warmed data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/B4Warmed/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/B4Warmed/"
 setwd(path_data)
 # Load in data
 CTI_sens_b4_cfc <- read.csv(" CTI_sens_b4warmed_cfc.csv")
@@ -67,6 +67,7 @@ NPP_b4_cfc <- read.csv(" eco_response_b4warmed_cfc.csv")
 NPP_overall_b4_cfc <- read.csv(" eco_response_overall_b4warmed_cfc.csv")
 CTI_CPI_b4_cfc <- read.csv(" CTI_CPI_b4warmed_cfc.csv")
 niche_est_b4_cfc <- read.csv(" b4warmed_cfc_niche.csv")
+
 CTI_sens_b4_hwrc <- read.csv(" CTI_sens_b4warmed_hwrc.csv")
 CTI_b4_hwrc <- read.csv(" CTI_b4warmed_hwrc.csv")
 b4_hwrc <- read.csv(" b4warmed_hwrc_clean.csv")
@@ -76,7 +77,7 @@ CTI_CPI_b4_hwrc <- read.csv(" CTI_CPI_b4warmed_hwrc.csv")
 niche_est_b4_hwrc <- read.csv(" b4warmed_hwrc_niche.csv")
 
 ### Set path to oklahoma data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/OK/"
 setwd(path_data)
 # Load in data
 CTI_sens_ok <- read.csv(" CTI_sens_ok.csv")
@@ -89,41 +90,67 @@ niche_est_ok <- read.csv(" ok_niche.csv")
 
 
 
-##### Saving figure outputs #####
+### Temperature niche histograms
+niche_est_tera <- niche_est_tera %>%
+  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
+  distinct()
+# Combining teracon abundance data with niche estimate data
+full_abun_tera <- left_join(tera, niche_est_tera, by = "species")
+# Data for one year and plot
+full_abun_tera <- full_abun_tera %>%
+  filter(year == 2012 & plot == 7)
+tera_niche_hist <- ggplot(niche_est_tera, aes(x = niche)) +
+  geom_histogram(bins = 20, fill = "blue", alpha = 0.5) +
+  labs(x = "Temperature Niche", y = "Frequency", title = "TeRaCON") +
+  theme_bw()
+
+
+
+
 ### CTI sensitivity figures
 CTI_sens_tera_plot <- ggplot(CTI_sens_teracon, aes(x = year, y = sensitivity)) +
-  geom_smooth() +
-  labs(x = "Year", y = "TeRaCON") +
-  scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  geom_jitter(alpha=0.2) +
+  geom_smooth(method='lm',color="black") +
+  labs(x = "Year", y = "CTI\n(Warmed - Ambient)") +
+  #scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
   theme_bw()
 
 CTI_sens_jrgce_plot <- ggplot(CTI_sens_jrgce, aes(x = year, y = sensitivity)) +
-  geom_smooth() +
-  labs(x = "Year", y = "JRGCE", title="CTI (Warmed - Ambient)") +
-  scale_x_continuous(breaks = seq(1998, 2014, by = 3)) +
+  geom_jitter(alpha=0.2) +
+  geom_smooth(method='lm',color="black") +
+  labs(x = "Year", y = "CTI\n(Warmed - Ambient)") +
+  #scale_x_continuous(breaks = seq(1998, 2014, by = 3)) +
   theme_bw()
 
 CTI_sens_phace_plot <- ggplot(CTI_sens_phace, aes(x = year, y = sensitivity)) +
-  geom_smooth() +
-  labs(x = "Year", y = "PHACE") +
-  scale_x_continuous(breaks = seq(2007, 2013)) +
+  geom_jitter(alpha=0.2) +
+  geom_smooth(method='lm',color="black") +
+  labs(x = "Year", y = "CTI\n(Warmed - Ambient)") +
+  #scale_x_continuous(breaks = seq(2007, 2013)) +
   theme_bw()
 
-CTI_sens_b4_cfc_plot <- ggplot(CTI_sens_b4_cfc, aes(x = year, y = sensitivity_high_temp)) +
-  geom_smooth() +
-  labs(x = "Year", y = "B4Warmed CFC") +
-  scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
+CTI_sens_b4_cfc_rem <- CTI_sens_b4_cfc %>%
+  filter(year != 2021)
+CTI_sens_b4_cfc_plot <- ggplot(CTI_sens_b4_cfc_rem, aes(x = year, y = sensitivity_high_temp)) +
+  geom_jitter(alpha=0.2) +
+  geom_smooth(method='lm',color="black") +
+  labs(x = "Year", y = "CTI\n(Warmed - Ambient)") +
+  #scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
   theme_bw()
 
-CTI_sens_b4_hwrc_plot <- ggplot(CTI_sens_b4_hwrc, aes(x = year, y = sensitivity_high_temp)) +
-  geom_smooth() +
-  labs(x = "Year", y = "B4Warmed HWRC") +
-  scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
+CTI_sens_b4_hwrc_rem <- CTI_sens_b4_hwrc %>%
+  filter(year != 2021)
+CTI_sens_b4_hwrc_plot <- ggplot(CTI_sens_b4_hwrc_rem, aes(x = year, y = sensitivity_high_temp)) +
+  geom_jitter(alpha=0.2) +
+  geom_smooth(method='lm',color="black") +
+  labs(x = "Year", y = "CTI\n(Warmed - Ambient)") +
+  #scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
   theme_bw()
 
 CTI_sens_ok_plot <- ggplot(CTI_sens_ok, aes(x = year, y = sensitivity)) +
-  geom_smooth() +
-  labs(x = "Year", y = "Oklahoma") +
+  geom_jitter(alpha=0.2) +
+  geom_smooth(method='lm',color="black") +
+  labs(x = "Year", y = "CTI\n(Warmed - Ambient)") +
   #scale_x_continuous(breaks = seq(2007, 2013)) +
   theme_bw()
 
@@ -131,71 +158,200 @@ CTI_sens_ok_plot <- ggplot(CTI_sens_ok, aes(x = year, y = sensitivity)) +
 
 ### CTI figures
 CTI_tera_plot <- ggplot(CTI_teracon, aes(x = year, y = CTI, color = temp_treatment)) +
-  #geom_jitter(alpha=0.2) +
-  geom_smooth() +
-  labs(x = "Year", y = "CTI", title="TeRaCON") +
-  scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  geom_point(position = position_jitterdodge(),alpha = 0.2) +
+  geom_smooth(method="lm") +
+  labs(x = "Year", y = "TeRaCON\nCTI") +
+  #scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
   scale_color_manual(name = "Treatment",
                      labels = c("Ambient","Warmed"),
                      values = c("blue","red")) +
+  theme_bw()
+
+CTI_box_tera <- ggplot(CTI_teracon, aes(x = year, y = CTI, group = interaction(year, temp_treatment), color = temp_treatment, fill=temp_treatment)) +
+  geom_boxplot(alpha=0.2, color="grey70") +
+  geom_smooth(method="lm",aes(group=temp_treatment)) +
+  labs(x = "Year", y = "TeRaCON\nCTI") +
+  #scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Warmed"),
+                    values = c("blue","red")) +
   theme_bw() +
   theme(legend.position = "none")
 
 CTI_jrgce_plot <- ggplot(CTI_jrgce, aes(x = year, y = CTI, color = temp_treatment)) +
-  #geom_jitter(alpha=0.2) +
-  geom_smooth() +
-  labs(x = "Year", y = "CTI",title="JRGCE") +
-  scale_x_continuous(breaks = seq(1998, 2014, by = 3)) +
+  geom_point(position = position_jitterdodge(),alpha = 0.1) +
+  geom_smooth(method="lm") +
+  labs(x = "Year", y = "JRGCE\nCTI") +
+  #scale_x_continuous(breaks = seq(1998, 2014, by = 3)) +
   scale_color_manual(name = "Treatment",
                      labels = c("Ambient","Warmed"),
                      values = c("blue","red")) +
+  theme_bw()
+
+CTI_box_jrgce <- ggplot(CTI_jrgce, aes(x = year, y = CTI, group = interaction(year, temp_treatment), color = temp_treatment, fill=temp_treatment)) +
+  geom_boxplot(alpha=0.2, color="grey70") +
+  geom_smooth(method="lm",aes(group=temp_treatment)) +
+  labs(x = "Year", y = "JRGCE\nCTI") +
+  #scale_x_continuous(breaks = seq(1998, 2014, by = 3)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Warmed"),
+                    values = c("blue","red")) +
   theme_bw() +
   theme(legend.position = "none")
 
 CTI_phace_plot <- ggplot(CTI_phace, aes(x = year, y = CTI, color = temp_treatment)) +
-  #geom_jitter(alpha=0.2) +
-  geom_smooth() +
-  labs(x = "Year", y = "CTI",title="PHACE") +
-  scale_x_continuous(breaks = seq(2007, 2013)) +
-  scale_color_manual(name = "Treatment",
-                     labels = c("Ambient","Warmed"),
-                     values = c("blue","red")) +
-  theme_bw() +
-  theme(legend.position = "none")
-
-CTI_b4_cfc_plot <- ggplot(CTI_b4_cfc, aes(x = year, y = CTI, color = temp_treatment)) +
-  #geom_jitter(alpha=0.2) +
-  geom_smooth() +
-  labs(x = "Year", y = "CTI",title="B4Warmed CFC") +
-  scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
-  scale_color_manual(name = "Treatment",
-                     breaks=c("amb","1.7","3.4"),
-                     labels = c("Ambient","Intermediate","Warmed"),
-                     values = c("blue","orange","red")) +
-  theme_bw()
-
-CTI_b4_hwrc_plot <- ggplot(CTI_b4_hwrc, aes(x = year, y = CTI, color = temp_treatment)) +
-  # geom_jitter(alpha=0.2) +
-  geom_smooth() +
-  labs(x = "Year", y = "CTI",title="B4Warmed HWRC") +
-  scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
-  scale_color_manual(name = "Treatment",
-                     breaks=c("amb","1.7","3.4"),
-                     labels = c("Ambient","Intermediate","Warmed"),
-                     values = c("blue","orange","red")) +
-  theme_bw()
-
-CTI_ok_plot <- ggplot(CTI_ok, aes(x = year, y = CTI, color = temp_treatment)) +
-  #geom_jitter(alpha=0.2) +
-  geom_smooth() +
-  labs(x = "Year", y = "CTI",title="Oklahoma") +
+  geom_point(position = position_jitterdodge(),alpha = 0.2) +
+  geom_smooth(method="lm") +
+  labs(x = "Year", y = "PHACE\nCTI") +
   #scale_x_continuous(breaks = seq(2007, 2013)) +
   scale_color_manual(name = "Treatment",
                      labels = c("Ambient","Warmed"),
                      values = c("blue","red")) +
+  theme_bw()
+
+CTI_box_phace <- ggplot(CTI_phace, aes(x = year, y = CTI, group = interaction(year, temp_treatment), color = temp_treatment, fill=temp_treatment)) +
+  geom_boxplot(alpha=0.2, color="grey70") +
+  geom_smooth(method="lm",aes(group=temp_treatment)) +
+  labs(x = "Year", y = "PHACE\nCTI") +
+  # scale_x_continuous(breaks = seq(2007, 2013)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Warmed"),
+                    values = c("blue","red")) +
   theme_bw() +
   theme(legend.position = "none")
 
+CTI_b4_cfc_rem <- CTI_b4_cfc %>%
+  filter(year != 2021) %>%
+  filter(temp_treatment != "1.7")
+CTI_b4_cfc_plot <- ggplot(CTI_b4_cfc_rem, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_point(position = position_jitterdodge(),alpha = 0.2) +
+  geom_smooth(method="lm") +
+  labs(x = "Year", y = "B4WarmED CFC\nCTI") +
+  #scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
+  scale_color_manual(name = "Treatment",
+                     breaks=c("amb","3.4"),
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw() 
+
+CTI_box_cfc <- ggplot(CTI_b4_cfc, aes(x = year, y = CTI, group = interaction(year, temp_treatment), color = temp_treatment, fill=temp_treatment)) +
+  geom_boxplot(alpha=0.2, color="grey70") +
+  geom_smooth(method="lm",aes(group=temp_treatment)) +
+  labs(x = "Year", y = "B4WarmED CFC\nCTI") +
+  # scale_x_continuous(breaks = seq(2007, 2013)) +
+  scale_color_manual(name = "Treatment",
+                     breaks=c("amb","1.7","3.4"),
+                     labels = c("Ambient","Intermediate","Warmed"),
+                     values = c("blue","orange","red")) +
+  scale_fill_manual(name = "Treatment",
+                     breaks=c("amb","1.7","3.4"),
+                     labels = c("Ambient","Intermediate","Warmed"),
+                     values = c("blue","orange","red")) +
+  theme_bw() +
+  theme(legend.position = "none")
+
+CTI_b4_hwrc_rem <- CTI_b4_hwrc %>%
+  filter(year != 2021) %>%
+  filter(temp_treatment != "1.7")
+CTI_b4_hwrc_plot <- ggplot(CTI_b4_hwrc_rem, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_point(position = position_jitterdodge(),alpha = 0.2) +
+  geom_smooth(method="lm") +
+  labs(x = "Year", y = "B4WarmED HWRC\nCTI") +
+  #scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
+  scale_color_manual(name = "Treatment",
+                     breaks=c("amb","3.4"),
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw()
+
+CTI_box_hwrc <- ggplot(CTI_b4_hwrc, aes(x = year, y = CTI, group = interaction(year, temp_treatment), color = temp_treatment, fill=temp_treatment)) +
+  geom_boxplot(alpha=0.2, color="grey70") +
+  geom_smooth(method="lm",aes(group=temp_treatment)) +
+  labs(x = "Year", y = "B4WarmED HWRC\nCTI") +
+  # scale_x_continuous(breaks = seq(2007, 2013)) +
+  scale_color_manual(name = "Treatment",
+                     breaks=c("amb","1.7","3.4"),
+                     labels = c("Ambient","Intermediate","Warmed"),
+                     values = c("blue","orange","red")) +
+  scale_fill_manual(name = "Treatment",
+                    breaks=c("amb","1.7","3.4"),
+                    labels = c("Ambient","Intermediate","Warmed"),
+                    values = c("blue","orange","red")) +
+  theme_bw() +
+  theme(legend.position = "none")
+
+CTI_ok_plot <- ggplot(CTI_ok, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_point(position = position_jitterdodge(),alpha = 0.2) +
+  geom_smooth(method="lm") +
+  labs(x = "Year", y = "Oklahoma\nCTI") +
+  #scale_x_continuous(breaks = seq(2007, 2013)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw()
+
+CTI_box_ok <- ggplot(CTI_ok, aes(x = year, y = CTI, group = interaction(year, temp_treatment), color = temp_treatment, fill=temp_treatment)) +
+  geom_boxplot(alpha=0.2, color="grey70") +
+  geom_smooth(method="lm",aes(group=temp_treatment)) +
+  labs(x = "Year", y = "Oklahoma\nCTI") +
+  # scale_x_continuous(breaks = seq(2007, 2013)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Warmed"),
+                    values = c("blue","red")) +
+  theme_bw() +
+  theme(legend.position = "none")
+
+
+
+### Disequilibrium figures
+dis_phace_plot <- ggplot(CTI_phace, aes(x = year, y = disequilib, color = temp_treatment)) +
+  #geom_jitter(alpha=0.2) +
+  geom_smooth() +
+  labs(x = "Year", y = "CTI - MAT",title="PHACE") +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw() +
+  theme(legend.position = "none")
+dis_jrgce_plot <- ggplot(CTI_jrgce, aes(x = year, y = disequilib, color = temp_treatment)) +
+  #geom_jitter(alpha=0.2) +
+  geom_smooth() +
+  labs(x = "Year", y = "CTI - MAT",title="JRGCE") +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw() +
+  theme(legend.position = "none")
+dis_ok_plot <- ggplot(CTI_ok, aes(x = year, y = disequilib, color = temp_treatment)) +
+  #geom_jitter(alpha=0.2) +
+  geom_smooth() +
+  labs(x = "Year", y = "CTI - MAT",title="Oklahoma") +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw() +
+  theme(legend.position = "none")
+dis_teracon_plot <- ggplot(CTI_teracon, aes(x = year, y = disequilib, color = temp_treatment)) +
+  #geom_jitter(alpha=0.2) +
+  geom_smooth() +
+  labs(x = "Year", y = "CTI - MAT",title="TeRaCON") +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw() +
+  theme(legend.position = "none")
 
 
 ### Biomass figures
@@ -262,6 +418,30 @@ CTI_temp_jrgce_plot <- ggplot(CTI_jrgce, aes(x = year, y = CTI, color = temp_tre
                      labels = c("Ambient","Warmed"),
                      values = c("blue","red")) +
   theme_bw() +
+  theme(legend.position = "none")
+
+
+
+### Biomass vs MAT
+# JRGCE
+MAT_jrgce <- CTI_jrgce %>%
+  select(year,temp_treatment,MAT) %>%
+  distinct()
+NPP_MAT_jrgce <- left_join(NPP_overall_jrgce, MAT_jrgce,by=c("year","temp_treatment"))
+jrgce_scatter <- ggscatter(NPP_MAT_jrgce, x = "MAT", y = "mean_ab_bio", 
+                           add = "reg.line", conf.int = TRUE, 
+                           cor.coef = TRUE, cor.method = "pearson",
+                           xlab = "MAT", ylab = "Biomass",title="JRGCE")
+jrgce_scatter_col <- ggscatter(NPP_MAT_jrgce, x = "MAT", y = "mean_ab_bio", 
+                               color="temp_treatment",add = "reg.line", conf.int = TRUE, 
+                               cor.coef = FALSE, cor.method = "pearson",
+                               xlab = "MAT", ylab = "Biomass",title="JRGCE") +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Warmed"),
+                    values = c("blue","red")) +
   theme(legend.position = "none")
 
 
@@ -392,6 +572,135 @@ ok_scatter_col <- ggscatter(NPP_CTI_ok, x = "mean_CTI", y = "mean_ab_bio",
 
 
 
+### Biomass vs disequilibrium
+# PHACE
+CTI_yearly_avg_dis_phace <- CTI_phace %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_dis = mean(disequilib))
+NPP_CTI_dis_phace <- left_join(CTI_yearly_avg_dis_phace, NPP_overall_phace, by=c("year","temp_treatment"))
+phace_dis <- ggscatter(NPP_CTI_dis_phace, x = "mean_dis", y = "mean_ab_bio", 
+                           add = "reg.line", conf.int = TRUE, 
+                           cor.coef = TRUE, cor.method = "pearson",
+                           xlab = "CTI - MAT", ylab = "Biomass",title="PHACE")
+phace_dis_col <- ggscatter(NPP_CTI_dis_phace, x = "mean_dis", y = "mean_ab_bio", 
+                               color="temp_treatment",add = "reg.line", conf.int = TRUE, 
+                               cor.coef = FALSE, cor.method = "pearson",
+                               xlab = "CTI - MAT", ylab = "Biomass",title="PHACE") +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Warmed"),
+                    values = c("blue","red")) +
+  theme(legend.position = "none")
+
+# JRGCE
+CTI_yearly_avg_dis_jrgce <- CTI_jrgce %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_dis = mean(disequilib))
+NPP_CTI_dis_jrgce <- left_join(CTI_yearly_avg_dis_jrgce, NPP_overall_jrgce, by=c("year","temp_treatment"))
+jrgce_dis <- ggscatter(NPP_CTI_dis_jrgce, x = "mean_dis", y = "mean_ab_bio", 
+                           add = "reg.line", conf.int = TRUE, 
+                           cor.coef = TRUE, cor.method = "pearson",
+                           xlab = "CTI - MAT", ylab = "Biomass",title="JRGCE")
+jrgce_dis_col <- ggscatter(NPP_CTI_dis_jrgce, x = "mean_dis", y = "mean_ab_bio", 
+                               color="temp_treatment",add = "reg.line", conf.int = TRUE, 
+                               cor.coef = FALSE, cor.method = "pearson",
+                               xlab = "CTI - MAT", ylab = "Biomass",title="JRGCE") +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Warmed"),
+                    values = c("blue","red")) +
+  theme(legend.position = "none")
+
+# CFC
+CTI_yearly_avg_dis_cfc <- CTI_b4_cfc %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_dis = mean(disequilib))
+NPP_CTI_dis_cfc <- left_join(CTI_yearly_avg_dis_cfc, NPP_overall_b4_cfc, by=c("year","temp_treatment"))
+cfc_dis <- ggscatter(NPP_CTI_dis_cfc, x = "mean_dis", y = "mean_ab_bio", 
+                       add = "reg.line", conf.int = TRUE, 
+                       cor.coef = TRUE, cor.method = "pearson",
+                       xlab = "CTI - MAT", ylab = "Biomass",title="cfc")
+cfc_dis_col <- ggscatter(NPP_CTI_dis_cfc, x = "mean_dis", y = "mean_ab_bio", 
+                           color="temp_treatment",add = "reg.line", conf.int = TRUE, 
+                           cor.coef = FALSE, cor.method = "pearson",
+                           xlab = "CTI - MAT", ylab = "Biomass",title="CFC") +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Intermediate","Warmed","Ambient"),
+                     values = c("orange","red","blue")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Intermediate","Warmed","Ambient"),
+                    values = c("orange","red","blue")) +
+  theme(legend.position = "none")
+
+# hwrc
+CTI_yearly_avg_dis_hwrc <- CTI_b4_hwrc %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_dis = mean(disequilib))
+NPP_CTI_dis_hwrc <- left_join(CTI_yearly_avg_dis_hwrc, NPP_overall_b4_hwrc, by=c("year","temp_treatment"))
+hwrc_dis <- ggscatter(NPP_CTI_dis_hwrc, x = "mean_dis", y = "mean_ab_bio", 
+                     add = "reg.line", conf.int = TRUE, 
+                     cor.coef = TRUE, cor.method = "pearson",
+                     xlab = "CTI - MAT", ylab = "Biomass",title="hwrc")
+hwrc_dis_col <- ggscatter(NPP_CTI_dis_hwrc, x = "mean_dis", y = "mean_ab_bio", 
+                         color="temp_treatment",add = "reg.line", conf.int = TRUE, 
+                         cor.coef = FALSE, cor.method = "pearson",
+                         xlab = "CTI - MAT", ylab = "Biomass",title="HWRC") +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Intermediate","Warmed","Ambient"),
+                     values = c("orange","red","blue")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Intermediate","Warmed","Ambient"),
+                    values = c("orange","red","blue")) +
+  theme(legend.position = "none")
+
+# OK
+CTI_yearly_avg_dis_ok <- CTI_ok %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_dis = mean(disequilib))
+NPP_CTI_dis_ok <- left_join(CTI_yearly_avg_dis_ok, NPP_overall_ok, by=c("year","temp_treatment"))
+ok_dis <- ggscatter(NPP_CTI_dis_ok, x = "mean_dis", y = "mean_ab_bio", 
+                      add = "reg.line", conf.int = TRUE, 
+                      cor.coef = TRUE, cor.method = "pearson",
+                      xlab = "CTI - MAT", ylab = "Biomass",title="ok")
+ok_dis_col <- ggscatter(NPP_CTI_dis_ok, x = "mean_dis", y = "mean_ab_bio", 
+                          color="temp_treatment",add = "reg.line", conf.int = TRUE, 
+                          cor.coef = FALSE, cor.method = "pearson",
+                          xlab = "CTI - MAT", ylab = "Biomass",title="Oklahoma") +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Warmed"),
+                    values = c("blue","red")) +
+  theme(legend.position = "none")
+
+# tera
+CTI_yearly_avg_dis_teracon <- CTI_teracon %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_dis = mean(disequilib))
+NPP_CTI_dis_teracon <- left_join(CTI_yearly_avg_dis_teracon, NPP_overall_teracon, by=c("year","temp_treatment"))
+teracon_dis <- ggscatter(NPP_CTI_dis_teracon, x = "mean_dis", y = "mean_ab_bio", 
+                    add = "reg.line", conf.int = TRUE, 
+                    cor.coef = TRUE, cor.method = "pearson",
+                    xlab = "CTI - MAT", ylab = "Biomass",title="teracon")
+teracon_dis_col <- ggscatter(NPP_CTI_dis_teracon, x = "mean_dis", y = "mean_ab_bio", 
+                        color="temp_treatment",add = "reg.line", conf.int = TRUE, 
+                        cor.coef = FALSE, cor.method = "pearson",
+                        xlab = "CTI - MAT", ylab = "Biomass",title="TeRaCON") +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Warmed"),
+                    values = c("blue","red")) +
+  theme(legend.position = "none")
+
+
+
 ### Plotting arrow figs
 arrow_teracon <- ggplot(CTI_CPI_teracon) +
   geom_segment(aes(x = CTI_ambient, y = CPI_ambient, 
@@ -467,6 +776,28 @@ combined_CTI <- wrap_plots(CTI_jrgce_plot,CTI_phace_plot,CTI_tera_plot,
                        CTI_ok_plot,CTI_b4_cfc_plot,CTI_b4_hwrc_plot,
                        ncol = 3) + plot_layout(guides = "collect")
 
+### CTI and CTI warmed-ambient
+combined_sens <- ggarrange(CTI_jrgce_plot,CTI_sens_jrgce_plot,
+          CTI_phace_plot,CTI_sens_phace_plot,
+          CTI_tera_plot,CTI_sens_tera_plot,
+          CTI_ok_plot,CTI_sens_ok_plot,
+          CTI_b4_cfc_plot,CTI_sens_b4_cfc_plot,
+          CTI_b4_hwrc_plot,CTI_sens_b4_hwrc_plot,
+          ncol=2,nrow=6,common.legend = T,legend = "right",
+          align="hv")+
+  theme(plot.margin = margin(0.2,0.1,0.1,0.1,"cm")) 
+png("cti_sens.png", units="in", width=9, height=10, res=300)
+ggarrange(CTI_jrgce_plot,CTI_sens_jrgce_plot,
+          CTI_phace_plot,CTI_sens_phace_plot,
+          CTI_tera_plot,CTI_sens_tera_plot,
+          CTI_ok_plot,CTI_sens_ok_plot,
+          CTI_b4_cfc_plot,CTI_sens_b4_cfc_plot,
+          CTI_b4_hwrc_plot,CTI_sens_b4_hwrc_plot,
+          ncol=2,nrow=6,common.legend = T,legend = "right",
+          align="hv")+
+  theme(plot.margin = margin(0.2,0.1,0.1,0.1,"cm")) 
+dev.off()
+
 ### Long-term CTI plot for Biocon
 biocon_CTI <- ggplot(biocon, aes(x = year, y = CTI, color=temp_treatment)) +
   geom_vline(xintercept = 2012, linetype = "dashed") +
@@ -494,6 +825,11 @@ biomass_sens_CTI <- ggarrange2(CTI_sens_jrgce_plot,npp_jrgce_plot,
 biomass_CTI <- ggarrange(jrgce_scatter,phace_scatter,tera_scatter,ok_scatter,b4_scatter_cfc,b4_scatter_hwrc,
           ncol=3,nrow=2)
 
+### Merge biomass disequilibrium figs
+dis_scatter <- ggarrange(jrgce_dis_col,phace_dis_col,teracon_dis_col,
+                         ok_dis_col,cfc_dis_col,hwrc_dis_col,
+                         ncol=3,nrow=2)
+
 ### Merge scatterplots for cti vs. biomas across temp treatments
 biomass_treat_CTI <- wrap_plots(jrgce_scatter_col,phace_scatter_col,tera_scatter_col,
                         ok_scatter_col,b4_scatter_cfc_col,b4_scatter_hwrc_col,
@@ -505,11 +841,13 @@ arrows <- ggarrange(arrow_jrgce,arrow_phace,arrow_teracon,arrow_ok,arrow_b4_cfc,
 
 
 # Export Rdata for plot
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/data_for_plots/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/data_for_plots/"
 saveRDS(combined_CTI, paste(path_out,'cti.rds'))
+saveRDS(combined_sens, paste(path_out,'cti_sens.rds'))
 saveRDS(biocon_CTI, paste(path_out,'biocon_cti.rds'))
 saveRDS(temp_CTI, paste(path_out,'temperature_and_cti.rds'))
 saveRDS(biomass_sens_CTI, paste(path_out,'biomass_and_cti.rds'))
 saveRDS(biomass_CTI, paste(path_out,'biomass_vs_cti.rds'))
 saveRDS(biomass_treat_CTI, paste(path_out,'biomass_vs_cti_treatments.rds'))
 saveRDS(arrows, paste(path_out,'treatment_arrows.rds'))
+saveRDS(dis_scatter, paste(path_out,'biomass_vs_disequilib.rds'))

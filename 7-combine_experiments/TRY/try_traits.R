@@ -12,7 +12,7 @@ library(rtry)
 library(readr)
 
 # Set path to data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TRY_data/raw/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc/TRY_data/raw/"
 setwd(path_data)
 # Load in data
 try <- read_tsv("species_try_traits.txt",col_names = TRUE)

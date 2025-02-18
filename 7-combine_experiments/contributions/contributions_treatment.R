@@ -11,9 +11,12 @@
 ### Load packages
 library(tidyverse)
 library(stringr)
+library(ggpubr)
+library(ggtree)
+library(ggrepel)
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 setwd(path_data)
 # Load in data
 niche_est_phace <- read.csv(" phace_niche.csv")
@@ -23,7 +26,7 @@ niche_est_phace <- niche_est_phace %>%
 phace <- read.csv(" phace_clean.csv")
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 setwd(path_data)
 # Load in data
 niche_est_tera <- read.csv(" teracon_niche.csv")
@@ -33,7 +36,7 @@ niche_est_tera <- niche_est_tera %>%
 tera <- read.csv(" teracon_clean.csv")
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/B4Warmed/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/B4Warmed/"
 setwd(path_data)
 # Load in data
 niche_est_b4 <- read.csv(" b4warmed_niche.csv")
@@ -49,7 +52,7 @@ niche_est_hwrc <- niche_est_b4 %>%
   filter(site == "HWRC")
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/OK/"
 setwd(path_data)
 # Load in data
 niche_est_ok <- read.csv(" ok_niche.csv")
@@ -59,7 +62,7 @@ niche_est_ok <- niche_est_ok %>%
 ok <- read.csv(" ok_clean.csv")
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 setwd(path_data)
 # Load in data
 niche_est_jrgce <- read.csv(" jrgce_niche.csv")
@@ -69,35 +72,67 @@ niche_est_jrgce <- niche_est_jrgce %>%
 jrgce <- read.csv(" jrgce_clean.csv")
 
 
+### Set path to turbo to get data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/phylogenies/"
+setwd(path_data)
+# Load in data
+phylo_phace <- readRDS(" phace_phylo_tree.rds")
+phylo_jrgce <- readRDS(" jrgce_phylo_tree.rds")
+phylo_tera <- readRDS(" tera_phylo_tree.rds")
+phylo_ok <- readRDS(" ok_phylo_tree.rds")
+phylo_b4 <- readRDS(" b4_phylo_tree.rds")
+all_phylo <- readRDS(" all_species_phylo.rds")
+
+
+
+### Selecting each plot's treatment designation for each experiment
+phace_treat <- phace %>%
+  dplyr::select(plot, temp_treatment) %>%
+  distinct()
+tera_treat <- tera %>%
+  dplyr::select(plot, temp_treatment) %>%
+  distinct()
+b4_cfc_treat <- b4_cfc %>%
+  dplyr::select(plot, temp_treatment) %>%
+  distinct()
+b4_hwrc_treat <- b4_hwrc %>%
+  dplyr::select(plot, temp_treatment) %>%
+  distinct()
+ok_treat <- ok %>%
+  dplyr::select(plot, temp_treatment) %>%
+  distinct()
+jrgce_treat <- jrgce %>%
+  dplyr::select(year, plot, temp_treatment) %>% # some plots changed treatments over time; need to include year here
+  distinct()
+
 
 ### Making sure all years are present for all species
-# Note: add temp_treatment info in here
-phace <- phace %>%
+complete_phace <- phace %>%
   complete(species, year = 2007:2013,
            plot = c(22, 25, 12, 8, 14, 20, 30, 13, 1, 4, 26, 27, 11, 7, 3, 19, 21, 18, 9, 2),
            fill = list(rel_abun = 0))
-tera <- tera %>%
+complete_tera <- tera %>%
   complete(species, year = 2012:2023,
            plot = c(7, 11, 17, 21, 26, 34, 48, 50, 66, 84, 87, 92, 97, 106, 117, 119, 128, 131,
                     133, 149, 165, 166, 171, 177, 185, 186, 224, 226, 230, 232, 233, 243, 245,
                     264, 274, 278, 280, 282, 293, 299, 308, 320, 324, 341, 356, 357, 360, 361),
            fill = list(rel_abun = 0))
-b4_cfc <- b4_cfc %>%
+complete_b4_cfc <- b4_cfc %>%
   complete(species, year = 2008:2021,
            plot = c("D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "F1", "F2", "F3","F4",
                     "F5", "F6", "F7", "F8"),
            fill = list(rel_abun = 0))
-b4_hwrc <- b4_hwrc %>%
+complete_b4_hwrc <- b4_hwrc %>%
   complete(species, year = 2008:2021,
            plot = c("J1", "J2", "J3", "J4", "J5", "J6", "J7", "J8", "K1", "K2", "K3", "K4", "K5", "K6", "K7", "K8", "L1", "L2", "L3", "L4",
                     "L5", "L6", "L7", "L8"),
            fill = list(rel_abun = 0))
-ok <- ok %>%
+complete_ok <- ok %>%
   complete(species, year = 2000:2013,
            plot = c("UC1", "UC2", "UC3", "UC4", "UC5", "UC6", "UW1", "UW2", "UW3", "UW4", "UW5", "UW6", "CC1", "CC2", "CC3", "CC4", "CC5",
                     "CC6", "CW1", "CW2", "CW3", "CW4", "CW5", "CW6"),
            fill = list(rel_abun = 0))
-jrgce <- jrgce %>%
+complete_jrgce <- jrgce %>%
   complete(species, year = 1999:2014,
            plot = c(1, 10, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 11, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 12, 120,
                     121, 122, 123, 124, 125, 126, 127, 128, 129, 13, 131, 134, 136, 137, 139, 14, 142, 144, 15, 16, 17, 18, 19, 2, 20, 21,
@@ -106,7 +141,37 @@ jrgce <- jrgce %>%
                     79, 8, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 9, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99),
            fill = list(rel_abun = 0))
 
-# Merging niche lists into one
+
+
+### Merging with treatment info
+phace <- complete_phace %>%
+  left_join(phace_treat, by = "plot") %>%
+  dplyr::select(-temp_treatment.x) %>%
+  rename(temp_treatment = temp_treatment.y)
+tera <- complete_tera %>%
+  left_join(tera_treat, by = "plot") %>%
+  dplyr::select(-temp_treatment.x) %>%
+  rename(temp_treatment = temp_treatment.y)
+b4_cfc <- complete_b4_cfc %>%
+  left_join(b4_cfc_treat, by = "plot") %>%
+  dplyr::select(-temp_treatment.x) %>%
+  rename(temp_treatment = temp_treatment.y)
+b4_hwrc <- complete_b4_hwrc %>%
+  left_join(b4_hwrc_treat, by = "plot") %>%
+  dplyr::select(-temp_treatment.x) %>%
+  rename(temp_treatment = temp_treatment.y)
+ok <- complete_ok %>%
+  left_join(ok_treat, by = "plot") %>%
+  dplyr::select(-temp_treatment.x) %>%
+  rename(temp_treatment = temp_treatment.y)
+jrgce <- complete_jrgce %>%
+  left_join(jrgce_treat, by = c("year","plot")) %>%
+  dplyr::select(-temp_treatment.x) %>%
+  rename(temp_treatment = temp_treatment.y)
+
+
+
+### Merging niche lists into one
 niche_est_phace$site <- "PHACE"
 niche_est_tera$site <- "TeRaCON"
 niche_est_cfc$site <- "B4Warmed CFC"
@@ -115,7 +180,7 @@ niche_est_ok$site <- "Oklahoma"
 niche_est_jrgce$site <- "JRGCE"
 dat_niche <- rbind(niche_est_phace, niche_est_tera, niche_est_cfc, niche_est_hwrc, niche_est_ok, niche_est_jrgce)
 
-# Combining phace abundance data with niche estimate data
+# Combining abundance data with niche estimate data
 phace$site <- "PHACE"
 tera$site <- "TeRaCON"
 b4_cfc$site <- "B4Warmed CFC"
@@ -144,6 +209,7 @@ names(dataframes_list) <- c("PHACE","TeRaCON","B4Warmed CFC","B4Warmed HWRC","Ok
 
 
 ### Calculating relative abundance
+# Can probably remove this since all sites are rel abun already ?
 process_niche_data <- function(df) {
   df %>%
     filter(!is.na(temp_niche)) %>%
@@ -222,7 +288,7 @@ cti_results_center <- lapply(centered_list, calculate_CTI_center)
 ### Matching abundance data w/ CTI data
 abun_calc <- function(data) {
   data %>%
-    group_by(year, species, temp_treatment) %>%
+    group_by(site, year, species, temp_treatment) %>%
     summarize(rel_abun_avg = mean(rel_abun)) %>%
     pivot_wider(names_from = temp_treatment, values_from = rel_abun_avg) %>%
     mutate(rel_abun_diff = warmed - ambient)
@@ -232,14 +298,14 @@ abun_list <- lapply(centered_list, abun_calc)
 # Pull out niche data per species
 niche_list <- lapply(centered_list, function(df) {
   df %>%
-    select(species,temp_niche,temp_niche_center) %>%
+    dplyr::select(site, species,temp_niche,temp_niche_center) %>%
     group_by(species) %>%
     mutate(temp_niche_center = mean(temp_niche_center)) %>%
     distinct()
 })
 
 # Joining that with abun data
-final_list <- map2(abun_list, niche_list, ~ left_join(.x, .y, by = "species"))
+final_list <- map2(abun_list, niche_list, ~ left_join(.x, .y, by = c("site","species")))
 
 
 
@@ -371,7 +437,6 @@ for (i in seq_along(all_slopes)) {
 names(all_contributions) <- names(final_list)
 names(slope_sums) <- names(final_list)
 
-
 ## Using mean-centered values
 # Initialize a list to store the contributions for each dataframe
 all_contributions_center <- vector("list", length(all_slopes))
@@ -420,98 +485,151 @@ names(slope_sums) <- names(final_list)
 
 ### Variance contribution calculations
 ## Using raw temp niche values
-# Initialize a list to store the contributions for each dataframe
-all_var_contributions <- vector("list", length(all_variances))
-
-# Initialize a list to store the sum of contributions for each dataframe
-var_sums <- numeric(length(all_variances))
-
-# Iterate over each element in the all_variances list
-for (i in seq_along(all_variances)) {
+# Additional function to calculate the pairwise contributions
+calculate_pairwise_contributions <- function(abun_data, species1, species2, beta1, beta2, var_time) {
+  # Subset data for both species
+  data1 <- abun_data[abun_data$species == species1, ]
+  data2 <- abun_data[abun_data$species == species2, ]
   
-  # Extract variances for the current dataframe
-  vars <- all_variances[[i]]
+  # Calculate covariance of their relative abundance differences
+  shared_years <- intersect(data1$year, data2$year)
+  abun_diff1 <- data1$rel_abun_diff[data1$year %in% shared_years]
+  abun_diff2 <- data2$rel_abun_diff[data2$year %in% shared_years]
   
-  # Determine the corresponding dataframe
-  abun <- final_list[[i]]
+  cov_abun <- cov(abun_diff1, abun_diff2, use = "complete.obs")
   
-  # Initialize a vector to store contributions for this dataframe
-  var_contributions <- numeric(length(vars))
+  # Get the centered niche values
+  T1 <- unique(data1$temp_niche)
+  T2 <- unique(data2$temp_niche)
   
-  # Set the names of contributions to match the species names
-  names(var_contributions) <- names(vars)
+  # Calculate the pairwise contribution to variance
+  pairwise_contribution <- (T1 * T2 * (cov_abun / var_time - beta1 * beta2)) / (length(shared_years) - 2)
   
-  # Calculate the contribution for each species
-  for (species in names(vars)) {
-    
-    # Pulling out temp niche
-    niche_value <- abun$temp_niche[abun$species == species]
-    
-    # Calculating variance contribution
-    var_contributions[species] <- vars[[species]] * niche_value^2
-  }
-  
-  # Store the named vector of contributions in all_contributions
-  all_var_contributions[[i]] <- var_contributions
-  
-  # Sum of contributions for the current dataframe
-  var_sum <- sum(var_contributions, na.rm = TRUE)
-  
-  # Store the result in slope_sums
-  var_sums[i] <- var_sum
+  return(pairwise_contribution)
 }
 
-# Optionally, set names for the elements in all_contributions and slope_sums
-names(all_var_contributions) <- names(final_list)
-names(var_sums) <- names(final_list)
+# Calculating species contributions
+calculate_species_contributions <- function(all_variances, final_list) {
+  
+  all_var_contributions <- vector("list", length(all_variances))
+  var_sums <- numeric(length(all_variances))
+  
+  for (i in seq_along(all_variances)) {
+    vars <- all_variances[[i]]
+    abun <- final_list[[i]]
+    var_time <- var(abun$year)  # Calculate variance of time
+    var_contributions<- numeric(length(vars))
+    names(var_contributions) <- names(vars)
+    
+    # Calculate species contribution
+    for (species in names(vars)) {
+      niche_value <- abun$temp_niche[abun$species == species]
+      beta <- coef(lm(rel_abun_diff ~ year, data=abun[abun$species == species, ]))[2]
+      var_contributions[species] <- vars[[species]] * niche_value^2
+    }
+    
+    # Loop to add pairwise contributions
+    species_names <- names(vars)
+    for (j in 1:(length(species_names) - 1)) {
+      for (k in (j + 1):length(species_names)) {
+        species1 <- species_names[j]
+        species2 <- species_names[k]
+        beta1 <- coef(lm(rel_abun_diff ~ year, data=abun[abun$species == species1, ]))[2]
+        beta2 <- coef(lm(rel_abun_diff ~ year, data=abun[abun$species == species2, ]))[2]
+        pairwise_contribution <- calculate_pairwise_contributions(abun, species1, species2, beta1, beta2, var_time)
+        var_contributions[species1] <- var_contributions[species1] + pairwise_contribution
+        var_contributions[species2] <- var_contributions[species2] + pairwise_contribution
+      }
+    }
+    
+    all_var_contributions[[i]] <- var_contributions
+    var_sums[i] <- sum(var_contributions, na.rm = TRUE)
+  }
+  
+  names(all_var_contributions) <- names(final_list)
+  names(var_sums) <- names(final_list)
+  
+  return(list(all_var_contributions = all_var_contributions, var_sums = var_sums))
+}
+
+# Execute the function
+result <- calculate_species_contributions(all_variances, final_list)
+all_var_contributions <- result$all_var_contributions
+var_sums <- result$var_sums
 
 
 ## Using mean-centered niche values
-# Initialize a list to store the contributions for each dataframe
-all_var_contributions_center <- vector("list", length(all_variances))
-
-# Initialize a list to store the sum of contributions for each dataframe
-var_sums_center <- numeric(length(all_variances))
-
-# Iterate over each element in the all_variances list
-for (i in seq_along(all_variances)) {
+# Additional function to calculate the pairwise contributions
+calculate_pairwise_contributions_center <- function(abun_data, species1, species2, beta1, beta2, var_time) {
+  # Subset data for both species
+  data1 <- abun_data[abun_data$species == species1, ]
+  data2 <- abun_data[abun_data$species == species2, ]
   
-  # Extract variances for the current dataframe
-  vars_center <- all_variances[[i]]
+  # Calculate covariance of their relative abundance differences
+  shared_years <- intersect(data1$year, data2$year)
+  abun_diff1 <- data1$rel_abun_diff[data1$year %in% shared_years]
+  abun_diff2 <- data2$rel_abun_diff[data2$year %in% shared_years]
   
-  # Determine the corresponding dataframe
-  abun_center <- final_list[[i]]
+  cov_abun <- cov(abun_diff1, abun_diff2, use = "complete.obs")
   
-  # Initialize a vector to store contributions for this dataframe
-  var_contributions_center <- numeric(length(vars_center))
+  # Get the centered niche values
+  T1 <- unique(data1$temp_niche_center)
+  T2 <- unique(data2$temp_niche_center)
   
-  # Set the names of contributions to match the species names
-  names(var_contributions_center) <- names(vars_center)
+  # Calculate the pairwise contribution to variance
+  pairwise_contribution <- (T1 * T2 * (cov_abun / var_time - beta1 * beta2)) / (length(shared_years) - 2)
   
-  # Calculate the contribution for each species
-  for (species in names(vars_center)) {
-    
-    # Pulling out temp niche
-    niche_value_center <- abun_center$temp_niche_center[abun_center$species == species]
-    
-    # Calculating variance contribution
-    var_contributions_center[species] <- vars_center[[species]] * niche_value_center^2
-  }
-  
-  # Store the named vector of contributions in all_contributions
-  all_var_contributions_center[[i]] <- var_contributions_center
-  
-  # Sum of contributions for the current dataframe
-  var_sum_center <- sum(var_contributions_center, na.rm = TRUE)
-  
-  # Store the result in slope_sums
-  var_sums_center[i] <- var_sum_center
+  return(pairwise_contribution)
 }
 
-# Optionally, set names for the elements in all_contributions and slope_sums
-names(all_var_contributions_center) <- names(final_list)
-names(var_sums_center) <- names(final_list)
+# Calculating species contributions
+calculate_species_contributions_center <- function(all_variances, final_list) {
+  
+  all_var_contributions_center <- vector("list", length(all_variances))
+  var_sums_center <- numeric(length(all_variances))
+  
+  for (i in seq_along(all_variances)) {
+    vars_center <- all_variances[[i]]
+    abun_center <- final_list[[i]]
+    var_time <- var(abun_center$year)  # Calculate variance of time
+    var_contributions_center <- numeric(length(vars_center))
+    names(var_contributions_center) <- names(vars_center)
+    
+    # Calculate species contribution
+    for (species in names(vars_center)) {
+      niche_value_center <- abun_center$temp_niche_center[abun_center$species == species]
+      beta <- coef(lm(rel_abun_diff ~ year, data=abun_center[abun_center$species == species, ]))[2]
+      var_contributions_center[species] <- vars_center[[species]] * niche_value_center^2
+    }
+    
+    # Loop to add pairwise contributions
+    species_names <- names(vars_center)
+    for (j in 1:(length(species_names) - 1)) {
+      for (k in (j + 1):length(species_names)) {
+        species1 <- species_names[j]
+        species2 <- species_names[k]
+        beta1 <- coef(lm(rel_abun_diff ~ year, data=abun_center[abun_center$species == species1, ]))[2]
+        beta2 <- coef(lm(rel_abun_diff ~ year, data=abun_center[abun_center$species == species2, ]))[2]
+        pairwise_contribution <- calculate_pairwise_contributions_center(abun_center, species1, species2, beta1, beta2, var_time)
+        var_contributions_center[species1] <- var_contributions_center[species1] + pairwise_contribution
+        var_contributions_center[species2] <- var_contributions_center[species2] + pairwise_contribution
+      }
+    }
+    
+    all_var_contributions_center[[i]] <- var_contributions_center
+    var_sums_center[i] <- sum(var_contributions_center, na.rm = TRUE)
+  }
+  
+  names(all_var_contributions_center) <- names(final_list)
+  names(var_sums_center) <- names(final_list)
+  
+  return(list(all_var_contributions_center = all_var_contributions_center, var_sums_center = var_sums_center))
+}
 
+# Execute the function
+result_center <- calculate_species_contributions_center(all_variances, final_list)
+all_var_contributions_center <- result_center$all_var_contributions_center
+var_sums_center <- result_center$var_sums_center
 
 
 
@@ -548,5 +666,769 @@ output_strings_var <- c(output_strings_var, str_c("Sum of variance contributions
 
 # Print all output strings
 writeLines(unlist(output_strings_var))
+
+
+
+### Data for plotting
+## Contribution data
+# Initialize an empty data frame
+contribution_df <- data.frame()
+
+# Iterate through each element in all_contributions
+for (site_index in seq_along(all_contributions)) {
+  
+  # Extract the contributions and site name
+  contributions <- all_contributions[[site_index]]
+  var_contributions <- all_var_contributions[[site_index]]
+  site_name <- names(all_contributions)[site_index]
+  contributions_center <- all_contributions_center[[site_index]]
+  var_contributions_center <- all_var_contributions_center[[site_index]]
+  
+  # Create a temporary data frame for the current site
+  temp_df <- data.frame(
+    species = names(contributions),
+    contribution = contributions,
+    var = var_contributions,
+    contribution_center = contributions_center,
+    var_center = var_contributions_center,
+    site = site_name
+  )
+  
+  # Bind the temporary data frame to the main data frame
+  contribution_df <- rbind(contribution_df, temp_df)
+}
+
+## Combining each site with its species' centered niche values
+# Function to join only the "temp_niche_center" column from the list with the main dataframe
+join_site_data <- function(site_name, site_data, main_df) {
+  # Filter the main dataframe for the current site
+  site_main_df <- main_df %>% filter(site == site_name)
+  
+  # Select only the relevant columns from the site data
+  site_data <- site_data %>% dplyr::select(species, temp_niche_center, temp_niche)
+  
+  # Perform the join operation
+  joined_df <- left_join(site_main_df, site_data, by = "species")
+  
+  return(joined_df)
+}
+# Initialize an empty dataframe to store all results
+all_joined_df <- data.frame()
+
+## Iterate over each site and its corresponding data in 'final_list_center'
+# Mean temperature niche per species
+niche_list <- lapply(final_list, function(df) {
+  df %>%
+    dplyr::select(species,temp_niche,temp_niche_center) %>%
+    group_by(species) %>%
+    mutate(temp_niche_center = mean(temp_niche_center)) %>%
+    distinct()
+})
+
+# Joining that with plot data
+for (site_name in names(niche_list)) {
+  # Get the tibble for the current site
+  site_data <- niche_list[[site_name]]
+  
+  # Join with the main dataframe, including only the "temp_niche_center" column
+  joined_df <- join_site_data(site_name, site_data, contribution_df)
+  
+  # Bind the results together
+  all_joined_df <- bind_rows(all_joined_df, joined_df)
+}
+all_joined_df <- all_joined_df %>%
+  distinct()
+
+
+## Slope data
+# Convert all_slopes to a data frame
+all_slopes_df <- do.call(rbind, lapply(names(all_slopes), function(site) {
+  data.frame(site = site, 
+             species = names(all_slopes[[site]]), 
+             slope = unlist(all_slopes[[site]]),
+             stringsAsFactors = FALSE)
+}))
+
+# Merge data frames
+data_for_plot <- merge(all_joined_df, all_slopes_df, by = c("site", "species"), all.x = TRUE)
+
+## CTI slope
+# Convert slope_CTI to a dataframe for easier merging
+slope_CTI_df <- data.frame(
+  site = names(CTI_slope_list),
+  slope_CTI = unlist(CTI_slope_list)
+)
+
+# Merge the slope_CTI values with data_for_plot by site
+data_for_plot <- left_join(data_for_plot, slope_CTI_df, by = "site")
+
+# Fix spp name
+data_for_plot$species <- recode(data_for_plot$species, "solidago drummondii" = "Solidago drummondii")
+data_for_plot$species <- recode(data_for_plot$species, "Andropogon gerardi" = "Andropogon gerardii")
+
+# Relative contribution to CTI across species
+data_for_plot <- data_for_plot %>%
+  mutate(rel_cont = contribution_center / abs(slope_CTI))
+data_for_phylo_plot <- data_for_plot %>%
+  mutate(rel_cont = contribution_center / abs(slope_CTI)) %>%
+  group_by(species) %>%
+  summarize(rel_cont = mean(rel_cont),
+            temp_niche = mean(temp_niche))
+
+# Remove data whose absolute value for slope is < 0.0002
+#data_for_plot <- data_for_plot[abs(data_for_plot$contribution) > 0.002, ]
+
+
+
+
+### Point plot (mean-centered)
+# Function to plot data for a given site
+plot_site_contribution_center <- function(data, slope_data, site_name) {
+  # Filter data for the specified site
+  site_data <- data %>% filter(site == site_name)
+  
+  # Extract the slope_CTI for the site
+  site_slope_CTI <- slope_data %>% filter(site == site_name) %>% pull(slope_CTI)
+  
+  # Extract variance in CTI slope for the site
+  site_var_CTI <- CTI_variance_list[[site_name]]
+  
+  # Point plot for the specified site
+  p <- ggplot(site_data, aes(x = contribution_center, y = reorder(species, contribution_center), color = temp_niche_center)) +
+    geom_vline(xintercept = 0, linetype = "solid") +
+    geom_rect(aes(xmin = site_slope_CTI - site_var_CTI,
+                  xmax = site_slope_CTI + site_var_CTI,
+                  ymin = -Inf, ymax = Inf), 
+              alpha = 0.2, color = "grey", fill = "grey") +
+    geom_vline(xintercept = site_slope_CTI, linetype = "dashed") +
+    geom_segment(aes(x = 0, xend = slope, 
+                     y = reorder(species, abs(contribution_center)), 
+                     yend = reorder(species, abs(contribution_center))),
+                 arrow = arrow(type = "closed", length = unit(0.075, "inches")),
+                 color = "red") +
+    geom_errorbar(aes(xmin = contribution_center-var_center,
+                      xmax = contribution_center+var_center), 
+                  width =0, color = "black") +
+    geom_point(shape = 20, size = 5, position = position_dodge(width = 0.9)) +
+    scale_color_gradientn(colors = c("blue", "orangered"), 
+                          name = "Species temperature (°C)") +
+    ggtitle(site_name) +
+    xlab("Contribution to CTI") +
+    ylab("Species") +
+    theme_classic() +
+    theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 14),
+          axis.title = element_text(size=14,face="bold"),
+          legend.text = element_text(size = 12),
+          legend.title = element_text(size = 12,face="bold"))
+  
+  # Print the plot
+  print(p)
+}
+# Loop through each site and store the output plot
+# Initialize an empty list to store the plots
+plots_list_center <- list()
+
+for (site_name in unique(data_for_plot$site)) {
+  # Generate the plot for the current site
+  plot <- plot_site_contribution_center(data_for_plot, slope_CTI_df, site_name)
+  
+  # Store the plot in the list with the site name as the key
+  plots_list_center[[site_name]] <- plot
+}
+point_center_cfc <- plots_list_center[[1]]
+point_center_hwrc <- plots_list_center[[2]]
+point_center_jrgce <- plots_list_center[[3]]
+point_center_ok <- plots_list_center[[4]]
+point_center_phace <- plots_list_center[[5]]
+point_center_tera <- plots_list_center[[6]]
+
+
+
+### Scatter plot for mean-centered CTI
+# Define the plotting function
+scatter_func <- function(data, site_name) {
+  # Filter the data for the specified site
+  site_data <- data %>%
+    group_by(year,temp_treatment) %>%
+    reframe(CTI = sum(rel_abun * temp_niche_center) / sum(rel_abun)) %>%
+    distinct() %>%
+    group_by(year,temp_treatment) %>%
+    summarize(mean_cti = mean(CTI)) %>%
+    pivot_wider(names_from = temp_treatment, values_from = mean_cti) %>%
+    mutate(CTI_diff = warmed - ambient)
+  
+  # Scatter plot
+  p <- ggscatter(site_data, x = "year", y = "CTI_diff", 
+                 add = "reg.line", conf.int = TRUE, 
+                 cor.coef = FALSE, cor.method = "pearson",
+                 xlab = "Year", ylab = "CTI (warmed - ambient)",title=site_name) +
+    stat_regline_equation(
+      aes(label =  paste(after_stat(eq.label), ..adj.rr.label.., sep = "~~~~")))  
+  
+  # Return the plot
+  return(p)
+}
+# Initialize an overall list for all plots for convenience
+all_plots <- list()
+
+# Define a vector of dataset names corresponding to elements in `final_list`
+dataframe_names <- c("PHACE", "TeRaCOn", "B4Warmed CFC", "B4Warmed HWRC", "Oklahoma", "JRGCE")
+
+# Loop through each dataframe in final_list
+for (i in seq_along(centered_list)) {
+  data <- centered_list[[i]]
+  dataframe_name <- dataframe_names[i]
+  
+  # Loop through each site in the dataframe
+  for (site_name in unique(data$site)) {
+    # Generate the plot for the current site
+    site_plot <- scatter_func(data, site_name)
+    
+    # Create a descriptive plot name
+    plot_name <- paste0(site_name, "_plot")
+    
+    # Assign the plot to a variable in the global environment
+    assign(plot_name, site_plot)
+    
+    # If needed, store the plot in a general list for further use
+    all_plots[[plot_name]] <- site_plot
+  }
+}
+TeRaCON_plot
+PHACE_plot
+`B4Warmed CFC_plot`
+`B4Warmed HWRC_plot`
+Oklahoma_plot
+JRGCE_plot
+
+
+
+### Point plot w/ ellipse
+# Plotting thermal niche vs slope
+point_plot <- function(data, site_name) {
+  # Filter the data for the specified site
+  site_data <- data %>% filter(site == site_name)
+  
+  # Calculate the row indices for the top 5 absolute contribution_center values
+  top_contributors <- site_data %>%
+    mutate(abs_contribution_center = abs(contribution_center)) %>%
+    arrange(desc(abs_contribution_center)) %>%
+    slice(1:5)
+
+  # Plot
+  p <- ggplot(site_data, aes(x = temp_niche_center, y = slope, fill = contribution_center)) +
+    geom_vline(xintercept = 0, size = 0.2, linetype = "solid", color = "black") + # Bold line at x = 0
+    geom_hline(yintercept = 0, size = 0.2, linetype = "solid", color = "black") + # Bold median line
+    geom_point(shape=21,color="black",size=3) +
+    geom_label_repel(data = top_contributors,
+                    aes(label = species), 
+                    size = 3,
+                    box.padding = 0.5,          # Increase the padding around the box
+                    point.padding = 0.3,   
+                    fill = "white",             # Background color of the label
+                    color = "black",
+                    nudge_x = 0.1,          # Slightly nudge labels in the x-direction if needed
+                    nudge_y = 0.0001,          # Slightly nudge labels in the y-direction if needed
+                    segment.color = 'grey50') +
+    #stat_ellipse(level = 0.95, aes(group = 1), color = "black") + # Add an ellipse
+    ggtitle(site_name)+
+    xlab("Species temperature anomaly (°C)") +
+    ylab(expression(bold(Delta~Abundance))) +
+    scale_fill_gradient2(
+      low = "blue", mid = "white", high = "red", midpoint = 0,
+      name = "Species\ncontribution\nto CTI (°C)"
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 14),
+          axis.title = element_text(size=14,face="bold")) +
+    coord_cartesian(xlim = c(min(site_data$temp_niche_center) - 0.2, max(site_data$temp_niche_center) + 0.2),
+                    ylim = c(min(site_data$slope) - 0.001, max(site_data$slope) +0.001))
+  
+  
+  # Print the plot
+  print(p)
+}
+# Loop through each site and store the output plot
+# Initialize an empty list to store the plots
+plots_list_ellipse <- list()
+
+for (site_name in unique(data_for_plot$site)) {
+  # Generate the plot for the current site
+  plot <- point_plot(data_for_plot, site_name)
+  
+  # Store the plot in the list with the site name as the key
+  plots_list_ellipse[[site_name]] <- plot
+}
+point_ellipse_treat_cfc <- plots_list_ellipse[[1]]
+point_ellipse_treat_hwrc <- plots_list_ellipse[[2]]
+point_ellipse_treat_jrgce <- plots_list_ellipse[[3]]
+point_ellipse_treat_ok <- plots_list_ellipse[[4]]
+point_ellipse_treat_phace <- plots_list_ellipse[[5]]
+point_ellipse_treat_tera <- plots_list_ellipse[[6]]
+
+
+
+### Contour plot
+contour_plot <- function(data, site_name) {
+  # Filter the data for the specified site
+  site_data <- data %>% filter(site == site_name)
+  
+  # Pulling out ranges of temp niches and slopes
+  temp <- seq(min (site_data$temp_niche_center), max (site_data$temp_niche_center), length.out = 50)
+  slope <- seq(min (site_data$slope), max (site_data$slope), length.out = 50)
+  
+  # Merge data into dataframe
+  grid_df <- expand.grid(temp_anomaly = temp, abund_diff = slope)
+  grid_df <- grid_df %>%
+    mutate(spp_contrib = temp_anomaly*abund_diff)
+  
+  top_contributors <- site_data %>%
+    mutate(abs_contribution_center = abs(contribution_center)) %>%
+    arrange(desc(abs_contribution_center)) %>%
+    slice(1:5)
+  
+  # Plot
+  p <- ggplot(grid_df, aes(x = temp_anomaly, y = abund_diff)) +
+    geom_tile(aes(fill = spp_contrib)) + # Add tiles to represent the surface
+    geom_contour(aes(z = spp_contrib), color = "gray50") + # Specified contour lines
+    #metR::geom_text_contour(aes(z = spp_contrib), color = "black") + # Add contour labels
+    geom_point(data=site_data,aes(x=temp_niche_center,y=slope)) +
+    scale_fill_gradient2(
+      low = "blue", mid = "white", high = "red", midpoint = 0,
+      name = "Species\ncontribution\nto CTI (°C)"
+    ) +
+    geom_vline(xintercept = 0, color = "black", linetype = "dashed") +
+    geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
+    ggtitle(site_name) +
+    labs(
+      x = "Species temperature anomaly (°C)",
+      y = expression(bold(Delta~Abundance)),
+    ) +
+    geom_label_repel(data = top_contributors,
+                     aes(x = temp_niche_center, y = slope, label = species),
+                     size = 3,
+                     box.padding = 0.5,          # Increase the padding around the box
+                     point.padding = 0.3,   
+                     fill = "white",             # Background color of the label
+                     color = "black",
+                     nudge_x = 0.1,          # Slightly nudge labels in the x-direction if needed
+                     nudge_y = 0.0001,          # Slightly nudge labels in the y-direction if needed
+                     segment.color = 'grey50') +
+    theme_minimal() +
+    theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 14),
+          axis.title = element_text(size=14,face="bold")) +
+    coord_cartesian(expand = FALSE) # Ensure no expansion on axes
+  
+  
+  # Print the plot
+  print(p)
+}
+# Loop through each site and store the output plot
+# Initialize an empty list to store the plots
+plots_contours <- list()
+
+for (site_name in unique(data_for_plot$site)) {
+  # Generate the plot for the current site
+  plot <- contour_plot(data_for_plot, site_name)
+  
+  # Store the plot in the list with the site name as the key
+  plots_contours[[site_name]] <- plot
+}
+point_contours_treat_cfc <- plots_contours[[1]]
+point_contours_treat_hwrc <- plots_contours[[2]]
+point_contours_treat_jrgce <- plots_contours[[3]]
+point_contours_treat_ok <- plots_contours[[4]]
+point_contours_treat_phace <- plots_contours[[5]]
+point_contours_treat_tera <- plots_contours[[6]]
+
+
+
+### Contour plot - all species
+# If a species is present in >1 experiment, take the average
+data_for_plot2 <- data_for_plot %>%
+  dplyr::select(species,temp_niche_center,slope) %>%
+  group_by(species) %>%
+  mutate(temp_niche_center = mean(temp_niche_center),
+         slope = mean(slope),
+         contribution_center = temp_niche_center*slope) %>%
+  distinct()
+# Plotting all species onto the contour background
+contour_plot_all <- function(data) {
+  
+  # Pulling out ranges of temp niches and slopes
+  temp <- seq(min (data$temp_niche_center), max (data$temp_niche_center), length.out = 50)
+  slope <- seq(min (data$slope), max (data$slope), length.out = 50)
+  
+  # Merge data into dataframe
+  grid_df <- expand.grid(temp_anomaly = temp, abund_diff = slope)
+  grid_df <- grid_df %>%
+    mutate(spp_contrib = temp_anomaly*abund_diff)
+  
+  top_contributors <- data %>%
+    mutate(abs_contribution_center = abs(contribution_center)) %>%
+    arrange(desc(abs_contribution_center))
+  top_contributors <- top_contributors[1:10,]
+  
+  # Plot
+  p <- ggplot(grid_df, aes(x = temp_anomaly, y = abund_diff)) +
+    geom_tile(aes(fill = spp_contrib)) + # Add tiles to represent the surface
+    geom_contour(aes(z = spp_contrib), color = "gray50") + # Specified contour lines
+   # metR::geom_text_contour(aes(z = spp_contrib), color = "black") + # Add contour labels
+    geom_point(data=data,aes(x=temp_niche_center,y=slope),
+               size=2,alpha=0.6) +
+    scale_fill_gradient2(
+      low = "blue", mid = "white", high = "red", midpoint = 0,
+      name = "Relative\nspecies\ncontribution\nto CTI (°C)"
+    ) +
+    geom_label_repel(data = top_contributors,
+                     aes(x = temp_niche_center, y = slope, label = species),
+                     size = 3,
+                     box.padding = 0.5,          # Increase the padding around the box
+                     point.padding = 0.3,   
+                     fill = "white",             # Background color of the label
+                     color = "black",
+                     nudge_x = 0.1,          # Slightly nudge labels in the x-direction if needed
+                     nudge_y = 0.0001,          # Slightly nudge labels in the y-direction if needed
+                     segment.color = 'grey50') +
+    geom_vline(xintercept = 0, color = "black", linetype = "dashed") +
+    geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
+    labs(x = "Species temperature anomaly (°C)",
+         y = expression(bold(Delta~Abundance)),
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 14),
+          axis.title = element_text(size=14,face="bold")) +
+    coord_cartesian(expand = FALSE) # Ensure no expansion on axes
+  
+  
+  # Print the plot
+  print(p)
+}
+all_spp_contour <- contour_plot_all(data_for_plot)
+
+
+### Merging all spp contour with individual site contours
+a <-ggarrange(
+  all_spp_contour,
+  ggarrange(point_contours_treat_cfc, point_contours_treat_hwrc, point_contours_treat_ok,nrow = 3), 
+  ncol=2, widths=c(1.5, 0.8)
+)
+b <- ggarrange(point_contours_treat_jrgce, point_contours_treat_phace, point_contours_treat_tera,ncol = 3,
+               widths=c(1.05,1.05,1.1)) +
+  theme(plot.margin = margin(0.1,0,0.1,0.2,"cm")) 
+all_sites_contour <- ggarrange(a,b,
+          nrow=2,heights=c(1.7,0.6))
+# Save to computer
+png("spp_cont2.png", units="in", width=17, height=14, res=300)
+ggarrange(a,b,
+          nrow=2,heights=c(1.7,0.6))
+dev.off()
+
+
+
+
+### How many species per quadrant for contour plot?
+quad1 <- data_for_plot %>%
+  filter(slope > 0, temp_niche_center > 0)
+nrow(quad1)
+quad2 <- data_for_plot %>%
+  filter(slope > 0, temp_niche_center < 0)
+nrow(quad2)
+quad3 <- data_for_plot %>%
+  filter(slope < 0, temp_niche_center < 0)
+nrow(quad3)
+quad4 <- data_for_plot %>%
+  filter(slope < 0, temp_niche_center > 0)
+nrow(quad4)
+# Total sum of contributions
+sum_cont <- data_for_plot %>%
+  summarize(sum_value = sum(slope * temp_niche_center)) %>%
+  pull(sum_value)
+
+# Plotting all species onto the contour background, and including numbers from above
+contour_plot_all_vals <- function(data) {
+  
+  # Pulling out ranges of temp niches and slopes
+  temp <- seq(min (data$temp_niche_center), max (data$temp_niche_center), length.out = 50)
+  slope <- seq(min (data$slope), max (data$slope), length.out = 50)
+  
+  # Merge data into dataframe
+  grid_df <- expand.grid(temp_anomaly = temp, abund_diff = slope)
+  grid_df <- grid_df %>%
+    mutate(spp_contrib = temp_anomaly*abund_diff)
+  
+  # Plot
+  p <- ggplot(grid_df, aes(x = temp_anomaly, y = abund_diff)) +
+    geom_tile(aes(fill = spp_contrib)) + # Add tiles to represent the surface
+    geom_contour(aes(z = spp_contrib), color = "gray50") + # Specified contour lines
+    # metR::geom_text_contour(aes(z = spp_contrib), color = "black") + # Add contour labels
+    geom_point(data=data,aes(x=temp_niche_center,y=slope),
+               size=2,alpha=0.6) +
+    annotate("text", x = 4, y = 0.02, label = "67") +
+    annotate("text", x = -4, y = 0.02, label = "70") +
+    annotate("text", x = -4, y = -0.01, label = "83") +
+    annotate("text", x = 4, y = -0.01, label = "50") +
+    scale_fill_gradient2(
+      low = "blue", mid = "white", high = "red", midpoint = 0,
+      name = "Relative\nspecies\ncontribution\nto CTI (°C)"
+    ) +
+    geom_vline(xintercept = 0, color = "black", linetype = "dashed") +
+    geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
+    labs(x = "Species temperature anomaly (°C)",
+         y = expression(bold(Delta~Abundance)),
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 14),
+          axis.title = element_text(size=14,face="bold")) +
+    coord_cartesian(expand = FALSE) # Ensure no expansion on axes
+  
+  
+  # Print the plot
+  print(p)
+}
+all_spp_contour_vals <- contour_plot_all_vals(data_for_plot)
+
+
+
+### Phylo tree
+# Fixing species names
+phylo_plot <- function(data, slope_data, phylo, site_name) {
+  # Filter the data for the specified site
+  site_data <- data %>% filter(site == site_name)
+  
+  # Extract the slope_CTI for the site
+  site_slope_CTI <- slope_data %>% filter(site == site_name) %>% pull(slope_CTI)
+  
+  # Fixing species names
+  phylo$tip.label <- phylo$tip.label %>% gsub("_", " ", .)
+
+  # Adding padding to species name to right-align names
+  phylo2 <- data.frame(label = phylo$tip.label, 
+                     newlabel = label_pad(phylo$tip.label))
+
+  tree <- ggtree(phylo) %<+% phylo2 + xlim(NA, 5)
+
+  tree2 <- tree + geom_tiplab(aes(label=newlabel), 
+                            align=TRUE, family='mono',
+                            linetype = "dotted", linesize = .7) +
+    ggplot2::xlim(0, 220)
+
+  # Extracting the species name order from the tree
+  tip_order <- tree2$data %>% 
+  filter(isTip) %>% 
+  arrange(y) %>% 
+  pull(label)
+
+  # Point plot w/ tree
+  site_data$species_tree <- site_data$species
+
+  site_data$species_tree <- factor(site_data$species_tree, levels = tip_order)
+  
+  point_plot <- ggplot(site_data, aes(x=contribution_center, y = species_tree, color=temp_niche_center)) +
+    geom_vline(xintercept = 0, linetype = "solid") +
+    geom_vline(xintercept = site_slope_CTI, linetype = "dashed") +
+    geom_errorbar(aes(xmin = contribution_center-var_center,
+                      xmax = contribution_center+var_center), 
+                      width =0, color = "black") +
+    geom_point(shape = 20, size = 5, position = position_dodge(width = 0.9)) +
+    scale_color_gradientn(colors = c("blue", "orangered"), 
+                          name = "Species temperature (°C)") +
+    ggtitle(site_name) +
+    xlab("Contribution to CTI") +
+    ylab(NULL) +
+    theme_classic() +
+    theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_blank(),
+        axis.title = element_text(size=14,face="bold"),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 12,face="bold"),
+        panel.grid.major.y = element_line())
+  
+  joined <- ggarrange(tree2, point_plot, ncol = 2, align = "h")
+  
+  print(joined)
+}
+
+# Combined point and tree plot
+phylo_plot(data_for_plot, slope_CTI_df, phylo_jrgce, "JRGCE")
+
+
+
+# below not working?
+### Phylo tree (per site circular)
+# Fixing species names
+phylo_circ_plot <- function(data, phylo, site_name) {
+  # Filter the data for the specified site
+  site_data <- data %>% filter(site == site_name)
+  
+  phylo$tip.label <- phylo$tip.label %>% gsub("_", " ", .)
+  
+  tree_circ <- ggtree(phylo, layout = "circular") + theme_tree()  # Plot the tree
+  
+  # Extracting the species name order from the tree
+  order_circ <- tree_circ$data %>% 
+    filter(isTip) %>% 
+    arrange(y) %>% 
+    pull(label)
+  
+  site_data$species <- factor(site_data$species, levels = order_circ)
+  
+  # Plot the tree
+  circ_tree <- ggtree(phylo, layout = "circular") %<+% site_data +  # The '%<+%' operator merges data into ggtree
+    geom_tiplab(aes(color = contribution_center)) +  # Color by contribution_value
+    scale_color_continuous(low = "blue", high = "red", name = "Contribution Value") +
+    theme_tree()
+  
+  print(circ_tree)
+}
+
+# Plot
+phylo_circ_plot(data_for_plot, phylo_phace, "PHACE")
+
+
+
+### All species phylo tree
+# Fixing species names
+all_phylo$tip.label <- all_phylo$tip.label %>% gsub("_", " ", .)
+
+# Adding padding to species name to right-align names
+all_phylo2 <- data.frame(label = all_phylo$tip.label, 
+                     newlabel = label_pad(all_phylo$tip.label))
+
+all_tree <- ggtree(all_phylo) %<+% all_phylo2 + xlim(NA, 5)
+
+all_tree2 <- all_tree + geom_tiplab(aes(label=newlabel), 
+                            align=TRUE, family='mono',
+                            linetype = "dotted", linesize = .7) +
+  ggplot2::xlim(0, 550)
+
+# Extracting the species name order from the tree
+tip_order <- all_tree2$data %>% 
+  filter(isTip) %>% 
+  arrange(y) %>% 
+  pull(label)
+
+# Point plot w/ tree
+data_for_phylo_plot$species_tree <- data_for_phylo_plot$species
+
+data_for_phylo_plot$species_tree <- factor(data_for_phylo_plot$species_tree, levels = tip_order)
+
+point_plot <- ggplot(data_for_phylo_plot, aes(x=rel_cont, y = species_tree,color=temp_niche)) +
+  geom_vline(xintercept = 0, linetype = "solid") +
+  geom_point(shape = 20, size = 5, position = position_dodge(width = 0.9)) +
+  scale_color_gradientn(colors = c("blue", "red"), 
+                        name = "Species temperature (°C)") +
+  xlab("Relative contribution to CTI") +
+  ylab(NULL) +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_blank(),
+        axis.title = element_text(size=14,face="bold"),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 12,face="bold"),
+        panel.grid.major.y = element_line())
+
+#png("phylo.png", units="in", width=12, height=25, res=300)
+all_spp_phylo <- ggarrange(all_tree2, point_plot, ncol = 2, align = "h")
+#dev.off()
+
+
+
+### All spp phylo tree circular
+# Fixing species names
+all_phylo$tip.label <- all_phylo$tip.label %>% gsub("_", " ", .)
+
+all_tree_circ <- ggtree(all_phylo, layout = "circular") + theme_tree()  # Plot the tree
+
+# Extracting the species name order from the tree
+tip_order_circ <- all_tree_circ$data %>% 
+  filter(isTip) %>% 
+  arrange(y) %>% 
+  pull(label)
+
+data_for_phylo_plot$species <- factor(data_for_phylo_plot$species, levels = tip_order_circ)
+
+# Plot the tree
+circ_tree <- ggtree(all_phylo, layout = "circular") %<+% data_for_phylo_plot +  # The '%<+%' operator merges data into ggtree
+  geom_tiplab(aes(color = rel_cont)) +  # Color by contribution_value
+  scale_color_gradient2(
+    low = "blue", mid = "grey40", high = "red", midpoint = 0,
+    name = "Relative\nspecies\ncontribution\nto CTI (°C)"
+  ) +
+  #geom_hilight(node=454, fill="gold") + 
+  #geom_text(aes(label=node), hjust=-.3) +
+  theme_tree()
+
+
+
+### Boxplots
+boxplot_data <- data_for_plot
+boxplot_data$temp_designation <- NA
+boxplot_data$temp_designation[boxplot_data$temp_niche_center > 0 &
+                                boxplot_data$slope > 0] <- "Warm increasing"
+boxplot_data$temp_designation[boxplot_data$temp_niche_center > 0 &
+                                boxplot_data$slope < 0] <- "Warm decreasing"
+boxplot_data$temp_designation[boxplot_data$temp_niche_center < 0 &
+                                boxplot_data$slope > 0] <- "Cold increasing"
+boxplot_data$temp_designation[boxplot_data$temp_niche_center < 0 &
+                                boxplot_data$slope < 0] <- "Cold decreasing"
+boxplot_data$temp_designation[boxplot_data$slope == 0] <- NA
+# Boxplot for contributions based on temp designation
+ggplot(boxplot_data, aes(x = temp_designation, y = rel_cont)) +
+  geom_boxplot() +
+  xlab("Temperature designation") +
+  ylab("Contribution to CTI") +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 14),
+        axis.title = element_text(size=14,face="bold"),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 12,face="bold"))
+  
+
+
+### Export Rdata for plots
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/data_for_plots/"
+saveRDS(point_center_cfc, paste(path_out,'point_center_treat_cfc.rds'))
+saveRDS(point_center_hwrc, paste(path_out,'point_center_treat_hwrc.rds'))
+saveRDS(point_center_jrgce, paste(path_out,'point_center_treat_jrgce.rds'))
+saveRDS(point_center_ok, paste(path_out,'point_center_treat_ok.rds'))
+saveRDS(point_center_phace, paste(path_out,'point_center_treat_phace.rds'))
+saveRDS(point_center_tera, paste(path_out,'point_center_treat_tera.rds'))
+
+saveRDS(TeRaCON_plot, paste(path_out,'scatter_treat_tera.rds'))
+saveRDS(PHACE_plot, paste(path_out,'scatter_treat_phace.rds'))
+saveRDS(`B4Warmed CFC_plot`, paste(path_out,'scatter_treat_cfc.rds'))
+saveRDS(`B4Warmed HWRC_plot`, paste(path_out,'scatter_treat_hwrc.rds'))
+saveRDS(Oklahoma_plot, paste(path_out,'scatter_treat_ok.rds'))
+saveRDS(JRGCE_plot, paste(path_out,'scatter_treat_jrgce.rds'))
+
+saveRDS(point_ellipse_treat_cfc, paste(path_out,'point_ellipse_treat_cfc.rds'))
+saveRDS(point_ellipse_treat_hwrc, paste(path_out,'point_ellipse_treat_hwrc.rds'))
+saveRDS(point_ellipse_treat_jrgce, paste(path_out,'point_ellipse_treat_jrgce.rds'))
+saveRDS(point_ellipse_treat_ok, paste(path_out,'point_ellipse_treat_ok.rds'))
+saveRDS(point_ellipse_treat_phace, paste(path_out,'point_ellipse_treat_phace.rds'))
+saveRDS(point_ellipse_treat_tera, paste(path_out,'point_ellipse_treat_tera.rds'))
+
+saveRDS(point_contours_treat_cfc, paste(path_out,'point_contours_treat_cfc.rds'))
+saveRDS(point_contours_treat_hwrc, paste(path_out,'point_contours_treat_hwrc.rds'))
+saveRDS(point_contours_treat_jrgce, paste(path_out,'point_contours_treat_jrgce.rds'))
+saveRDS(point_contours_treat_ok, paste(path_out,'point_contours_treat_ok.rds'))
+saveRDS(point_contours_treat_phace, paste(path_out,'point_contours_treat_phace.rds'))
+saveRDS(point_contours_treat_tera, paste(path_out,'point_contours_treat_tera.rds'))
+
+saveRDS(all_spp_contour, paste(path_out,'point_contours_treat_all.rds'))
+saveRDS(all_spp_contour_vals, paste(path_out,'point_contours_treat_vals_all.rds'))
+saveRDS(all_sites_contour, paste(path_out,'all_sites_contour.rds'))
+
+saveRDS(phylo_plot_phace, paste(path_out,'phylo_plot_phace.rds'))
+saveRDS(all_spp_phylo, paste(path_out,'phylo_plot_all.rds'))
+saveRDS(circ_tree, paste(path_out,'phylo_plot_all_circ.rds'))
+
 
 

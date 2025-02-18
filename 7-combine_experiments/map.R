@@ -11,8 +11,34 @@ library(tidyverse)
 library(maps)
 library(mapdata)
 library(viridis)
+library(raster)
+library(ggmap)
+library(sf)
 
-# Load dviridisLite# Load data
+
+# Trying to get temp data mapped here; other map is below
+# Set path to chelsa data
+path_data_chelsa = "/Volumes/seas-zhukai/datasets/climate/CHELSA/climatology/"
+setwd(path_data_chelsa)
+# Read in data
+chelsa_bio1_data <- raster("CHELSA_bio1_1981-2010_V.2.1.tif")
+
+# Set path to chelsa data
+path_data = "/Volumes/seas-zhukai/datasets/boundary/NaturalEarth/ne_10m_land/"
+setwd(path_data)
+# Read in data
+bound <- read_sf("ne_10m_land.shp")
+
+data_masked <- mask(chelsa_bio1_data,bound) %>% # mask the unwanted areas
+  crop(bound) # crop to shape
+
+plot(data_masked) # the small picture
+
+
+
+
+
+# Load data
 us_map <- map_data("state")
 
 # List of locations for each experiment

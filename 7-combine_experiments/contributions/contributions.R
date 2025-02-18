@@ -71,7 +71,6 @@ jrgce <- read.csv(" jrgce_clean.csv")
 
 
 ### Making sure all years are present for all species
-# Note: add temp_treatment info in here
 phace <- phace %>%
   complete(species, year = 2007:2013,
            plot = c(22, 25, 12, 8, 14, 20, 30, 13, 1, 4, 26, 27, 11, 7, 3, 19, 21, 18, 9, 2),
