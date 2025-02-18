@@ -11,7 +11,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 setwd(path_data)
 
 # Load in data
@@ -20,6 +20,8 @@ chelsa_data <- read.csv(" CHELSA_teracon.csv") # "CHELSA_teracon_limited" in tur
 
 # Calculating the median temp and precip for each species
 chelsa_data$species[chelsa_data$species == "Elymus repens"] <- "Agropyron repens" # fixing spp name to match teracon
+chelsa_data$species[chelsa_data$species == "Andropogon gerardi"] <- "Andropogon gerardii" # fixing spp name to match teracon
+
 niche_est <- chelsa_data %>%
   mutate(species=replace_na(species, "Petalostemum villosum")) %>% # fixing spp name to match teracon
   group_by(species) %>%
@@ -27,7 +29,7 @@ niche_est <- chelsa_data %>%
   mutate(precip_niche = median(mean_annual_precip)) %>%
   dplyr::select(-c(X,ID,ID.1,CHELSA_bio1_1981.2010_V.2.1,CHELSA_bio12_1981.2010_V.2.1))
 # For the 6 month data
-niche_est <- chelsa_data %>%
+niche_est6 <- chelsa_data %>%
   mutate(species=replace_na(species, "Petalostemum villosum")) %>% # fixing spp name to match teracon
   group_by(species) %>%
   mutate(temp_niche = median(mean_annual_temp)) %>%
@@ -38,7 +40,7 @@ niche_est <- chelsa_data %>%
 
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 write.csv(niche_est,paste(path_out,'teracon_niche.csv'),row.names=F)
 #write.csv(niche_est,paste(path_out,'niche_estimate_6month_teracon_limited.csv'),row.names=F)
 #write.csv(niche_est,paste(path_out,'niche_estimate_teracon_limited.csv'),row.names=F)

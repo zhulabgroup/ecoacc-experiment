@@ -41,6 +41,8 @@ transform_species_name <- function(name) {
 
 # Apply the transformation to the Species column
 teracon_data_long$Species <- sapply(teracon_data_long$Species, transform_species_name)
+# Fixing species name
+teracon_data_long$Species[teracon_data_long$Species == "Andropogon gerardi"] <- "Andropogon gerardii"
 
 # Scaling temperature data from F to C
 teracon_data_long <- teracon_data_long %>%
@@ -101,7 +103,7 @@ rel_abun_tera <- rel_abun_calc(teracon_data_long2)
   
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 write.csv(rel_abun_tera,paste(path_out,'teracon_clean.csv'),row.names=F)
 write.csv(teracon_data_sub_eco2,paste(path_out,'teracon_ecosystem_dat_clean.csv'))
 
