@@ -209,7 +209,7 @@ names(dataframes_list) <- c("PHACE","TeRaCON","B4Warmed CFC","B4Warmed HWRC","Ok
 
 
 ### Calculating relative abundance
-# Can probably remove this since all sites are rel abun already ?
+# Re-accounting for completed data
 process_niche_data <- function(df) {
   df %>%
     filter(!is.na(temp_niche)) %>%
@@ -232,7 +232,6 @@ calculate_initial_CTI <- function(data) {
   initial_cti <- data %>%
     filter(!is.na(temp_niche)) %>%
     filter(year == initial_year) %>%
-    group_by(plot) %>%
     summarise(
       cti_baseline = sum(rel_abund * temp_niche) / sum(rel_abund)
     )
@@ -243,7 +242,7 @@ cti_initial <- lapply(rel_abun_list, calculate_initial_CTI)
 
 ## Merging abundance data with initial CTI
 merged_list <- Map(function(df1, df2) {
-  left_join(df1, df2, by = "plot")
+  merge(df1, df2)
 },
 rel_abun_list,
 cti_initial)
@@ -288,24 +287,12 @@ cti_results_center <- lapply(centered_list, calculate_CTI_center)
 ### Matching abundance data w/ CTI data
 abun_calc <- function(data) {
   data %>%
-    group_by(site, year, species, temp_treatment) %>%
+    group_by(site, year, species, temp_niche_center, temp_niche,temp_treatment) %>%
     summarize(rel_abun_avg = mean(rel_abun)) %>%
     pivot_wider(names_from = temp_treatment, values_from = rel_abun_avg) %>%
     mutate(rel_abun_diff = warmed - ambient)
 }
-abun_list <- lapply(centered_list, abun_calc)
-
-# Pull out niche data per species
-niche_list <- lapply(centered_list, function(df) {
-  df %>%
-    dplyr::select(site, species,temp_niche,temp_niche_center) %>%
-    group_by(species) %>%
-    mutate(temp_niche_center = mean(temp_niche_center)) %>%
-    distinct()
-})
-
-# Joining that with abun data
-final_list <- map2(abun_list, niche_list, ~ left_join(.x, .y, by = c("site","species")))
+final_list <- lapply(centered_list, abun_calc)
 
 
 
@@ -971,6 +958,24 @@ point_ellipse_treat_tera <- plots_list_ellipse[[6]]
 
 
 ### Contour plot
+# Determine top 3 contributors per site
+data_for_plot <- data_for_plot %>%
+  group_by(site) %>%
+  mutate(abs_contribution_center = abs(contribution_center)) %>%
+  arrange(desc(abs_contribution_center)) %>%
+  mutate(rank = row_number()) %>%
+  mutate(top_contributors = case_when(
+    rank == 1 ~ "top_1",
+    rank == 2 ~ "top_2",
+    rank == 3 ~ "top_3",
+    TRUE ~ "none"
+  )) %>%
+  select(-abs_contribution_center, -rank)
+# Saving top contributors to a dataframe
+#output <- data_for_plot %>%
+#  select(site,species,top_contributors)
+#path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/data_for_plots/"
+#write.csv(output, paste(path_out,"top_contributors.csv"), row.names = FALSE)
 contour_plot <- function(data, site_name) {
   # Filter the data for the specified site
   site_data <- data %>% filter(site == site_name)
@@ -984,27 +989,34 @@ contour_plot <- function(data, site_name) {
   grid_df <- grid_df %>%
     mutate(spp_contrib = temp_anomaly*abund_diff)
   
-  top_contributors <- site_data %>%
+  top_contributors <- site_data %>% 
     mutate(abs_contribution_center = abs(contribution_center)) %>%
     arrange(desc(abs_contribution_center)) %>%
-    slice(1:5)
+    slice(1:3)
   
   # Plot
   p <- ggplot(grid_df, aes(x = temp_anomaly, y = abund_diff)) +
     geom_tile(aes(fill = spp_contrib)) + # Add tiles to represent the surface
     geom_contour(aes(z = spp_contrib), color = "gray50") + # Specified contour lines
     #metR::geom_text_contour(aes(z = spp_contrib), color = "black") + # Add contour labels
-    geom_point(data=site_data,aes(x=temp_niche_center,y=slope)) +
+    geom_point(data=site_data,aes(x=temp_niche_center,y=slope,shape=top_contributors,alpha=top_contributors),size=3) +
+    scale_alpha_manual(name = "Top species\ncontributors",
+                       values = c("top_1" = 1, "top_2" = 1, "top_3" = 1, "none" = 0.4),
+                       labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
+    scale_shape_manual(name = "Top species\ncontributors",
+                       values = c("top_1" = 8, "top_2" = 18, "top_3" = 17, "none" = 20),
+                       labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
     scale_fill_gradient2(
       low = "blue", mid = "white", high = "red", midpoint = 0,
-      name = "Species\ncontribution\nto CTI (°C)"
+      name = expression("Species\ncontribution\nto CTI (°C)")
     ) +
     geom_vline(xintercept = 0, color = "black", linetype = "dashed") +
     geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
     ggtitle(site_name) +
     labs(
       x = "Species temperature anomaly (°C)",
-      y = expression(bold(Delta~Abundance)),
+      #y = expression(bold(atop(Delta~Abundance,(Delta~Warmed - Delta~Ambient)))),
+      y = expression(bold(Delta~Abundance (Delta~Warmed - Delta~Ambient)))
     ) +
     geom_label_repel(data = top_contributors,
                      aes(x = temp_niche_center, y = slope, label = species),
@@ -1037,12 +1049,12 @@ for (site_name in unique(data_for_plot$site)) {
   # Store the plot in the list with the site name as the key
   plots_contours[[site_name]] <- plot
 }
-point_contours_treat_cfc <- plots_contours[[1]]
-point_contours_treat_hwrc <- plots_contours[[2]]
+point_contours_treat_ok <- plots_contours[[1]]
+point_contours_treat_phace <- plots_contours[[2]]
 point_contours_treat_jrgce <- plots_contours[[3]]
-point_contours_treat_ok <- plots_contours[[4]]
-point_contours_treat_phace <- plots_contours[[5]]
-point_contours_treat_tera <- plots_contours[[6]]
+point_contours_treat_tera <- plots_contours[[4]]
+point_contours_treat_cfc<- plots_contours[[5]]
+point_contours_treat_hwrc <- plots_contours[[6]]
 
 
 
@@ -1081,7 +1093,7 @@ contour_plot_all <- function(data) {
                size=2,alpha=0.6) +
     scale_fill_gradient2(
       low = "blue", mid = "white", high = "red", midpoint = 0,
-      name = "Relative\nspecies\ncontribution\nto CTI (°C)"
+      name = "Species\ncontribution\nto CTI (°C)"
     ) +
     geom_label_repel(data = top_contributors,
                      aes(x = temp_niche_center, y = slope, label = species),
@@ -1264,7 +1276,9 @@ phylo_plot(data_for_plot, slope_CTI_df, phylo_jrgce, "JRGCE")
 # Fixing species names
 phylo_circ_plot <- function(data, phylo, site_name) {
   # Filter the data for the specified site
-  site_data <- data %>% filter(site == site_name)
+  site_data <- data %>%
+    filter(site == site_name) %>%
+    select(species, contribution_center)
   
   phylo$tip.label <- phylo$tip.label %>% gsub("_", " ", .)
   
@@ -1281,14 +1295,24 @@ phylo_circ_plot <- function(data, phylo, site_name) {
   # Plot the tree
   circ_tree <- ggtree(phylo, layout = "circular") %<+% site_data +  # The '%<+%' operator merges data into ggtree
     geom_tiplab(aes(color = contribution_center)) +  # Color by contribution_value
-    scale_color_continuous(low = "blue", high = "red", name = "Contribution Value") +
+    scale_color_gradient2(
+      low = "blue", mid = "grey40", high = "red", midpoint = 0,
+      name = "Species\ncontribution\nto CTI (°C)",
+      breaks=seq(min(site_data$contribution_center),max(site_data$contribution_center),
+                 (max(site_data$contribution_center)-min(site_data$contribution_center))/3)
+    ) +
     theme_tree()
   
   print(circ_tree)
 }
 
 # Plot
-phylo_circ_plot(data_for_plot, phylo_phace, "PHACE")
+phylo_plot_phace <- phylo_circ_plot(data_for_plot, phylo_phace, "PHACE")
+phylo_plot_cfc <- phylo_circ_plot(data_for_plot, phylo_b4, "B4Warmed CFC")
+phylo_plot_hwrc <- phylo_circ_plot(data_for_plot, phylo_b4, "B4Warmed HWRC")
+phylo_plot_tera <- phylo_circ_plot(data_for_plot, phylo_tera, "TeRaCON")
+phylo_plot_ok <- phylo_circ_plot(data_for_plot, phylo_ok, "Oklahoma")
+phylo_plot_jrgce <- phylo_circ_plot(data_for_plot, phylo_jrgce, "JRGCE")
 
 
 
@@ -1351,18 +1375,63 @@ tip_order_circ <- all_tree_circ$data %>%
   arrange(y) %>% 
   pull(label)
 
-data_for_phylo_plot$species <- factor(data_for_phylo_plot$species, levels = tip_order_circ)
+data_for_phylo_plot2 <- data_for_plot %>%
+  select(species, contribution_center)
+data_for_phylo_plot2$species <- factor(data_for_phylo_plot2$species, levels = tip_order_circ)
 
 # Plot the tree
-circ_tree <- ggtree(all_phylo, layout = "circular") %<+% data_for_phylo_plot +  # The '%<+%' operator merges data into ggtree
-  geom_tiplab(aes(color = rel_cont)) +  # Color by contribution_value
+circ_tree <- ggtree(all_phylo, layout = "circular") %<+% data_for_phylo_plot2 +  # The '%<+%' operator merges data into ggtree
+  geom_tiplab(aes(color = contribution_center)) +  # Color by contribution_value
   scale_color_gradient2(
     low = "blue", mid = "grey40", high = "red", midpoint = 0,
-    name = "Relative\nspecies\ncontribution\nto CTI (°C)"
+    name = "Species\ncontribution\nto CTI (°C)"
   ) +
   #geom_hilight(node=454, fill="gold") + 
   #geom_text(aes(label=node), hjust=-.3) +
   theme_tree()
+
+
+
+### Merging all spp tree with individual site trees
+a <- ggarrange(
+  circ_tree,
+  ggarrange(phylo_plot_cfc, phylo_plot_hwrc, phylo_plot_ok,nrow = 3), 
+  ncol=2, widths=c(1.5, 0.8)
+)
+b <- ggarrange(phylo_plot_jrgce, phylo_plot_phace, phylo_plot_tera,ncol = 3,
+               widths=c(1.05,1.05,1.1)) +
+  theme(plot.margin = margin(0.1,0,0.1,0.2,"cm")) 
+all_sites_phylos <- ggarrange(a,b,
+                               nrow=2,heights=c(1.7,0.6))
+# Save to computer
+png("spp_cont2.png", units="in", width=17, height=14, res=300)
+ggarrange(a,b,
+          nrow=2,heights=c(1.7,0.6))
+dev.off()
+
+
+
+### Top contributors %
+# Function to calculate top species contributing to 95% of absolute contributions per site
+calculate_top_species_per_site <- function(df, contributions_col = "contribution_center", target_percent = 95) {
+  df %>%
+    group_by(site) %>%  # Group by site
+    arrange(site, desc(abs(!!sym(contributions_col)))) %>%  # Sort contributions by absolute value in descending order
+    mutate(abs_contribution = abs(!!sym(contributions_col)),  # Calculate absolute contributions
+           cumulative_contribution = cumsum(abs_contribution),  # Calculate cumulative sum of absolute contributions
+           cumulative_percentage = cumulative_contribution / sum(abs_contribution) * 100) %>%
+    filter(cumulative_percentage <= target_percent) %>%  # Filter for top contributors
+    summarise(top_species_count = n(),  # Count the number of top-contributing species per site
+              top_species = list(species))  # Collect species names in a list
+}
+
+# Calculate the top-contributing species per site
+top_species_per_site <- calculate_top_species_per_site(data_for_plot, contributions_col = "contribution_center", target_percent = 95)
+
+# Total number of species in each experiment
+total_spp <- data_for_plot %>%
+  group_by(site) %>%
+  summarize(total_spp = n())
 
 
 
@@ -1426,9 +1495,17 @@ saveRDS(all_spp_contour, paste(path_out,'point_contours_treat_all.rds'))
 saveRDS(all_spp_contour_vals, paste(path_out,'point_contours_treat_vals_all.rds'))
 saveRDS(all_sites_contour, paste(path_out,'all_sites_contour.rds'))
 
-saveRDS(phylo_plot_phace, paste(path_out,'phylo_plot_phace.rds'))
 saveRDS(all_spp_phylo, paste(path_out,'phylo_plot_all.rds'))
 saveRDS(circ_tree, paste(path_out,'phylo_plot_all_circ.rds'))
+saveRDS(all_sites_phylos, paste(path_out,'phylo_plot_all_comb_circ.rds'))
+saveRDS(phylo_plot_phace, paste(path_out,'phylo_plot_phace.rds'))
+saveRDS(phylo_plot_cfc, paste(path_out,'phylo_plot_cfc.rds'))
+saveRDS(phylo_plot_hwrc, paste(path_out,'phylo_plot_hwrc.rds'))
+saveRDS(phylo_plot_tera, paste(path_out,'phylo_plot_tera.rds'))
+saveRDS(phylo_plot_ok, paste(path_out,'phylo_plot_ok.rds'))
+saveRDS(phylo_plot_jrgce, paste(path_out,'phylo_plot_jrgce.rds'))
+
+
 
 
 

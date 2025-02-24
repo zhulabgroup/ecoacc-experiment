@@ -13,7 +13,7 @@ library(tidyverse)
 library(stringr)
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 setwd(path_data)
 # Load in data
 niche_est_phace <- read.csv(" phace_niche.csv")
@@ -23,7 +23,7 @@ niche_est_phace <- niche_est_phace %>%
 phace <- read.csv(" phace_clean.csv")
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 setwd(path_data)
 # Load in data
 niche_est_tera <- read.csv(" teracon_niche.csv")
@@ -33,7 +33,7 @@ niche_est_tera <- niche_est_tera %>%
 tera <- read.csv(" teracon_clean.csv")
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/B4Warmed/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/B4Warmed/"
 setwd(path_data)
 # Load in data
 niche_est_b4 <- read.csv(" b4warmed_niche.csv")
@@ -49,7 +49,7 @@ niche_est_hwrc <- niche_est_b4 %>%
   filter(site == "HWRC")
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/OK/"
 setwd(path_data)
 # Load in data
 niche_est_ok <- read.csv(" ok_niche.csv")
@@ -59,7 +59,7 @@ niche_est_ok <- niche_est_ok %>%
 ok <- read.csv(" ok_clean.csv")
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 setwd(path_data)
 # Load in data
 niche_est_jrgce <- read.csv(" jrgce_niche.csv")
@@ -67,6 +67,28 @@ niche_est_jrgce <- niche_est_jrgce %>%
   dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
   distinct()
 jrgce <- read.csv(" jrgce_clean.csv")
+
+
+
+### Selecting each plot's treatment designation for each experiment
+phace_treat <- phace %>%
+  dplyr::select(plot, temp_treatment) %>%
+  distinct()
+tera_treat <- tera %>%
+  dplyr::select(plot, temp_treatment) %>%
+  distinct()
+b4_cfc_treat <- b4_cfc %>%
+  dplyr::select(plot, temp_treatment) %>%
+  distinct()
+b4_hwrc_treat <- b4_hwrc %>%
+  dplyr::select(plot, temp_treatment) %>%
+  distinct()
+ok_treat <- ok %>%
+  dplyr::select(plot, temp_treatment) %>%
+  distinct()
+jrgce_treat <- jrgce %>%
+  dplyr::select(year, plot, temp_treatment) %>% # some plots changed treatments over time; need to include year here
+  distinct()
 
 
 
@@ -104,6 +126,33 @@ jrgce <- jrgce %>%
                     50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 6, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 7, 70, 71, 72, 73, 74, 75, 76, 77, 78,
                     79, 8, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 9, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99),
            fill = list(rel_abun = 0))
+
+
+### Merging with treatment info
+phace <- phace %>%
+  left_join(phace_treat, by = "plot") %>%
+  dplyr::select(-temp_treatment.x) %>%
+  rename(temp_treatment = temp_treatment.y)
+tera <- tera %>%
+  left_join(tera_treat, by = "plot") %>%
+  dplyr::select(-temp_treatment.x) %>%
+  rename(temp_treatment = temp_treatment.y)
+b4_cfc <- b4_cfc %>%
+  left_join(b4_cfc_treat, by = "plot") %>%
+  dplyr::select(-temp_treatment.x) %>%
+  rename(temp_treatment = temp_treatment.y)
+b4_hwrc <- b4_hwrc %>%
+  left_join(b4_hwrc_treat, by = "plot") %>%
+  dplyr::select(-temp_treatment.x) %>%
+  rename(temp_treatment = temp_treatment.y)
+ok <- ok %>%
+  left_join(ok_treat, by = "plot") %>%
+  dplyr::select(-temp_treatment.x) %>%
+  rename(temp_treatment = temp_treatment.y)
+jrgce <- jrgce %>%
+  left_join(jrgce_treat, by = c("year","plot")) %>%
+  dplyr::select(-temp_treatment.x) %>%
+  rename(temp_treatment = temp_treatment.y)
 
 # Merging niche lists into one
 niche_est_phace$site <- "PHACE"
@@ -157,7 +206,6 @@ calculate_initial_CTI <- function(data) {
   initial_cti <- data %>%
     filter(!is.na(temp_niche)) %>%
     filter(year == initial_year) %>%
-    group_by(plot) %>%
     summarise(
       cti_baseline = sum(rel_abund * temp_niche) / sum(rel_abund)
     )
@@ -168,7 +216,7 @@ cti_initial <- lapply(rel_abun_list, calculate_initial_CTI)
 
 ## Merging abundance data with initial CTI
 merged_list <- Map(function(df1, df2) {
-  left_join(df1, df2, by = "plot")
+  merge(df1, df2)
 },
 rel_abun_list,
 cti_initial)
@@ -185,7 +233,7 @@ final_list <- lapply(merged_list, function(df) {
 # Using raw temp niche values
 calculate_CTI <- function(data) {
   data %>%
-    group_by(year, plot) %>%
+    group_by(year, plot, temp_treatment) %>%
     reframe(CTI = sum(rel_abun * temp_niche) / sum(rel_abun)) %>%
     distinct()
 }
@@ -194,7 +242,7 @@ cti_results <- lapply(final_list, calculate_CTI)
 # Using mean-centered niche values
 calculate_CTI_center <- function(data) {
   data %>%
-    group_by(year, plot) %>%
+    group_by(year, plot, temp_treatment) %>%
     reframe(CTI = sum(rel_abun * temp_niche_center) / sum(rel_abun)) %>%
     distinct()
 }
@@ -206,7 +254,10 @@ cti_results_center <- lapply(final_list, calculate_CTI_center)
 ## CTI
 # Slope values are the same whether using raw or centered temp niche values
 calculate_CTI_slope <- function(data) {
-  cov(data$year, data$CTI) / var(data$year)
+  data %>%
+    group_by(temp_treatment) %>%
+    summarise(slope = cov(year, CTI) / var(year))
+  #cov(data$year, data$CTI) / var(data$year)
 }
 CTI_slope_list <- lapply(cti_results, calculate_CTI_slope)
 
@@ -222,15 +273,12 @@ calculate_slopes <- function(abun_data) {
     # Subset the data for the current species
     species_data <- abun_data[abun_data$species == species, ]
     
-    # Extract time and corresponding values
-    time <- species_data$year
-    value <- species_data$rel_abun
-    
-    # Calculate the slope
-    slope <- cov(time, value) / var(time)
+    slope_data <- species_data %>%
+      group_by(temp_treatment) %>%
+      summarise(slope = cov(year, rel_abund) / var(year))
     
     # Store the slope in the list
-    slopes[[species]] <- slope
+    slopes[[species]] <- slope_data
   }
   
   return(slopes)
@@ -239,6 +287,7 @@ all_slopes <- lapply(final_list, calculate_slopes)
 
 
 
+#########  Skip for now ###########
 ### Calculate the variance of the slopes using residuals
 ## CTI
 calculate_CTI_variance <- function(data) {
@@ -288,58 +337,49 @@ all_variances <- lapply(final_list, calculate_variances)
 ### Slope contribution calculations
 ## Using raw temp niche values
 # Initialize a list to store the contributions for each dataframe
-all_contributions <- vector("list", length(all_slopes))
-
-# Initialize a list to store the sum of contributions for each dataframe
-slope_sums <- numeric(length(all_slopes))
+all_contributions <- list()
 
 # Iterate over each element in the all_slopes list
 for (i in seq_along(all_slopes)) {
+  
+  result_list <- list()
   
   # Extract slopes for the current dataframe
   slopes <- all_slopes[[i]]
   
   # Determine the corresponding dataframe
   abun <- final_list[[i]]
-  
-  # Initialize a vector to store contributions for this dataframe
-  contributions <- numeric(length(slopes))
-  
-  # Set the names of contributions to match the species names
-  names(contributions) <- names(slopes)
   
   # Calculate the contribution for each species
   for (species in names(slopes)) {
     
     niche_value <- abun$temp_niche[abun$species == species]
     
-    contributions[species] <- slopes[[species]] * niche_value
+    contribution <- slopes[[species]] %>%
+      group_by(temp_treatment) %>%
+      summarize(contribution = slope * niche_value) %>%
+      distinct()
+    
+    result_list[[species]] <- contribution
   }
   
   # Store the named vector of contributions in all_contributions
-  all_contributions[[i]] <- contributions
-  
-  # Sum of contributions for the current dataframe
-  slope_sum <- sum(contributions, na.rm = TRUE)
-  
-  # Store the result in slope_sums
-  slope_sums[i] <- slope_sum
+  all_contributions[[i]] <- result_list
+
 }
 
 # Optionally, set names for the elements in all_contributions and slope_sums
-names(all_contributions) <- names(final_list)
-names(slope_sums) <- names(final_list)
+names(all_contributions) <- names(all_slopes)
 
 
 ## Using mean-centered values
 # Initialize a list to store the contributions for each dataframe
-all_contributions_center <- vector("list", length(all_slopes))
-
-# Initialize a list to store the sum of contributions for each dataframe
-slope_sums_center <- numeric(length(all_slopes))
+all_contributions_center <- list()
 
 # Iterate over each element in the all_slopes list
 for (i in seq_along(all_slopes)) {
+  
+  result_list <- list()
   
   # Extract slopes for the current dataframe
   slopes <- all_slopes[[i]]
@@ -347,36 +387,30 @@ for (i in seq_along(all_slopes)) {
   # Determine the corresponding dataframe
   abun <- final_list[[i]]
   
-  # Initialize a vector to store contributions for this dataframe
-  contributions_center <- numeric(length(slopes))
-  
-  # Set the names of contributions to match the species names
-  names(contributions_center) <- names(slopes)
-  
   # Calculate the contribution for each species
   for (species in names(slopes)) {
     
-    niche_value_center <- abun$temp_niche_center[abun$species == species]
+    niche_value <- abun$temp_niche_center[abun$species == species]
     
-    contributions_center[species] <- slopes[[species]] * niche_value_center
+    contribution <- slopes[[species]] %>%
+      group_by(temp_treatment) %>%
+      summarize(contribution = slope * niche_value) %>%
+      distinct()
+    
+    result_list[[species]] <- contribution
   }
   
   # Store the named vector of contributions in all_contributions
-  all_contributions_center[[i]] <- contributions_center
+  all_contributions_center[[i]] <- result_list
   
-  # Sum of contributions for the current dataframe
-  slope_sum_center <- sum(contributions_center, na.rm = TRUE)
-  
-  # Store the result in slope_sums
-  slope_sums_center[i] <- slope_sum_center
 }
 
 # Optionally, set names for the elements in all_contributions and slope_sums
-names(all_contributions) <- names(final_list)
-names(slope_sums) <- names(final_list)
+names(all_contributions_center) <- names(all_slopes)
 
 
 
+########## skip for now ##############
 ### Variance contribution calculations
 ## Using raw temp niche values
 # Initialize a list to store the contributions for each dataframe
@@ -512,32 +546,17 @@ writeLines(unlist(output_strings_var))
 
 ### Data for plotting
 ## Contribution data
-# Initialize an empty data frame
-contribution_df <- data.frame()
-
-# Iterate through each element in all_contributions
-for (site_index in seq_along(all_contributions)) {
-  
-  # Extract the contributions and site name
-  contributions <- all_contributions[[site_index]]
-  var_contributions <- all_var_contributions[[site_index]]
-  site_name <- names(all_contributions)[site_index]
-  contributions_center <- all_contributions_center[[site_index]]
-  var_contributions_center <- all_var_contributions_center[[site_index]]
-  
-  # Create a temporary data frame for the current site
-  temp_df <- data.frame(
-    species = names(contributions),
-    contribution = contributions,
-    var = var_contributions,
-    contribution_center = contributions_center,
-    var_center = var_contributions_center,
-    site = site_name
-  )
-  
-  # Bind the temporary data frame to the main data frame
-  contribution_df <- rbind(contribution_df, temp_df)
-}
+all_contributions_df <- imap_dfr(all_contributions, ~ {
+  site_name <- .y  # Get the site name
+  # Iterate over each species tibble within the site
+  imap_dfr(.x, ~ {
+    species_name <- .y  # Get the species name
+    tibble_data <- .x
+    # Add species and site columns
+    tibble_data %>%
+      mutate(species = species_name, site = site_name)
+  })
+})
 
 ## Combining each site with its species' centered niche values
 # Function to join only the "temp_niche_center" column from the list with the main dataframe
@@ -572,39 +591,160 @@ for (site_name in names(niche_list)) {
   site_data <- niche_list[[site_name]]
   
   # Join with the main dataframe, including only the "temp_niche_center" column
-  joined_df <- join_site_data(site_name, site_data, contribution_df)
+  joined_df <- join_site_data(site_name, site_data, all_contributions_df)
   
   # Bind the results together
   all_joined_df <- bind_rows(all_joined_df, joined_df)
 }
-all_joined_df <- all_joined_df %>%
-  distinct()
 
 
 ## Slope data
 # Convert all_slopes to a data frame
-all_slopes_df <- do.call(rbind, lapply(names(all_slopes), function(site) {
-  data.frame(site = site, 
-             species = names(all_slopes[[site]]), 
-             slope = unlist(all_slopes[[site]]),
-             stringsAsFactors = FALSE)
-}))
+all_slopes_df <- imap_dfr(all_slopes, ~ {
+  site_name <- .y  # Get the site name
+  # Iterate over each species tibble within the site
+  imap_dfr(.x, ~ {
+    species_name <- .y  # Get the species name
+    tibble_data <- .x
+    # Add species and site columns
+    tibble_data %>%
+      mutate(species = species_name, site = site_name)
+  })
+})
 
 # Merge data frames
-data_for_plot <- merge(all_joined_df, all_slopes_df, by = c("site", "species"), all.x = TRUE)
+data_for_plot <- merge(all_joined_df, all_slopes_df, by = c("site", "temp_treatment","species"), all.x = TRUE)
+
+### Adding in top contributor designations (determined in contributions_treatment.R)
+### Set path to turbo to get data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/data_for_plots/"
+setwd(path_data)
+# Load in data
+top_contributors <- read.csv(" top_contributors.csv")
+# Merge with data
+data_for_plot <- left_join(data_for_plot, top_contributors, by = c("site","species"))
 
 ## CTI slope
 # Convert slope_CTI to a dataframe for easier merging
-slope_CTI_df <- data.frame(
-  site = names(CTI_slope_list),
-  slope_CTI = unlist(CTI_slope_list)
-)
+#slope_CTI_df <- data.frame(
+#  site = names(CTI_slope_list),
+#  slope_CTI = unlist(CTI_slope_list)
+#)
 
 # Merge the slope_CTI values with data_for_plot by site
-data_for_plot <- left_join(data_for_plot, slope_CTI_df, by = "site")
+#data_for_plot <- left_join(data_for_plot, slope_CTI_df, by = "site")
 
 # Remove data whose absolute value for slope is < 0.0002
-data_for_plot <- data_for_plot[abs(data_for_plot$contribution) > 0.002, ]
+#data_for_plot <- data_for_plot[abs(data_for_plot$contribution) > 0.002, ]
+
+
+
+### Contour plot
+contour_plot <- function(data, site_name) {
+  # Filter the data for the specified site
+  site_data <- data %>% filter(site == site_name)
+  
+  # Pulling out ranges of temp niches and slopes
+  temp <- seq(min(site_data$temp_niche), max(site_data$temp_niche), length.out = 50)
+  abun <- seq(min(site_data$slope), max(site_data$slope), length.out = 50)
+  
+  # Merge data into dataframe
+  grid_df <- expand.grid(temp_anomaly = temp, abund = abun)
+  grid_df <- grid_df %>%
+    mutate(spp_contrib = temp_anomaly * abund)
+  
+  # Get unique temp_treatment categories
+  unique_treatments <- unique(site_data$temp_treatment)
+  
+  # Define the color mapping based on available treatments
+  treatment_colors <- c("ambient" = "blue", "1.7" = "orange", "warmed" = "red", "3.4" = "red", "amb" = "blue")
+  labels = c("ambient" = "Ambient","warmed" = "Warmed","1.7" = "Intermediate", "3.4" = "Warmed", "amb" = "Ambient")
+  used_colors <- treatment_colors[names(treatment_colors) %in% unique_treatments]
+  used_labels <- labels[names(labels) %in% unique_treatments]
+  
+  # Top species for name labels per year
+  top_contributors <- site_data %>% 
+    group_by(temp_treatment) %>%
+    mutate(abs_contribution_center = abs(contribution)) %>%
+    arrange(desc(abs_contribution_center)) %>%
+    slice(1)
+  
+  # Determine arrows from ambient to warm
+  arrow_data <- site_data %>%
+    filter(temp_treatment %in% c("ambient", "warmed", "amb", "3.4")) %>% 
+    filter(top_contributors %in% c("top_1", "top_2", "top_3")) %>%
+    group_by(species) %>%
+    filter(n() > 1) %>% # Make sure both treatments exist for each species/year
+    arrange(temp_treatment) %>%
+    summarize(
+      x_start = temp_niche[temp_treatment %in% c("ambient", "amb")],
+      y_start = slope[temp_treatment %in% c("ambient", "amb")],
+      x_end = temp_niche[temp_treatment %in% c("warmed", "3.4")],
+      y_end = slope[temp_treatment %in% c("warmed", "3.4")]
+    )
+  
+  # Plot
+  p <- ggplot(grid_df, aes(x = temp_anomaly, y = abund)) +
+    geom_tile(aes(fill = spp_contrib)) + # Add tiles to represent the surface
+    geom_contour(aes(z = spp_contrib), color = "gray50") + # Specified contour lines
+    geom_segment(data = arrow_data, aes(x = x_start, y = y_start, xend = x_end, yend = y_end),
+                 color = "black", size = 0.5) +
+    geom_point(data = site_data, aes(x = temp_niche, y = slope, color = temp_treatment,alpha = top_contributors, shape = top_contributors),size=3) +
+    scale_alpha_manual(name = "Top species\ncontributors",
+                       values = c("top_1" = 1, "top_2" = 1, "top_3" = 1, "none" = 0.4),
+                       labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
+    scale_shape_manual(name = "Top species\ncontributors",
+                       values = c("top_1" = 8, "top_2" = 18, "top_3" = 17, "none" = 20),
+                       labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
+    scale_fill_gradient2(
+      low = "blue", mid = "white", high = "red", midpoint = 0,
+      name = "Species\ncontribution\nto CTI (°C)"
+    ) +
+    scale_color_manual(name = "Treatment",
+                       values = used_colors,labels = used_labels) + # Use the dynamic color mapping
+    geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
+    ggtitle(site_name) +
+    labs(
+      x = "Species temperature (°C)",
+      y = expression(bold(Delta~Abundance)),
+    ) +
+    #geom_label_repel(data = top_contributors,
+    #                 aes(x = avg_temp_niche, y = avg_abun, label = species),
+    #                 size = 3,
+    #                 box.padding = 0.5,          # Increase the padding around the box
+    #                 point.padding = 0.3,   
+    #                 fill = "white",             # Background color of the label
+    #                 color = "black",
+    #                 nudge_x = 0.1,          # Slightly nudge labels in the x-direction if needed
+    #                 nudge_y = 0.0001,  
+    #                 min.segment.length = unit(0, 'lines'),
+    #                 segment.color = 'grey50') +
+    theme_minimal() +
+    theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 14),
+          axis.title = element_text(size = 14, face = "bold")) +
+    coord_cartesian(expand = FALSE) # Ensure no expansion on axes
+  
+  # Print the plot
+  print(p)
+}
+# Loop through each site and store the output plot
+# Initialize an empty list to store the plots
+plots_contours <- list()
+
+for (site_name in unique(data_for_plot$site)) {
+  # Generate the plot for the current site
+  plot <- contour_plot(data_for_plot, site_name)
+  
+  # Store the plot in the list with the site name as the key
+  plots_contours[[site_name]] <- plot
+}
+point_contours_cfc <- plots_contours[[1]]
+point_contours_hwrc <- plots_contours[[2]]
+point_contours_jrgce <- plots_contours[[3]]
+point_contours_ok <- plots_contours[[4]]
+point_contours_phace <- plots_contours[[5]]
+point_contours_tera <- plots_contours[[6]]
 
 
 
@@ -966,13 +1106,20 @@ plot_site_contribution3(data_for_plot, slope_CTI_df, "angelo")
 
 
 ### Export Rdata for plots
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/data_for_plots/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/data_for_plots/"
 saveRDS(point_center_cfc, paste(path_out,'point_center_cfc.rds'))
 saveRDS(point_center_hwrc, paste(path_out,'point_center_hwrc.rds'))
 saveRDS(point_center_jrgce, paste(path_out,'point_center_jrgce.rds'))
 saveRDS(point_center_ok, paste(path_out,'point_center_ok.rds'))
 saveRDS(point_center_phace, paste(path_out,'point_center_phace.rds'))
 saveRDS(point_center_tera, paste(path_out,'point_center_tera.rds'))
+
+saveRDS(point_contours_cfc, paste(path_out,'point_contours_cfc.rds'))
+saveRDS(point_contours_hwrc, paste(path_out,'point_contours_hwrc.rds'))
+saveRDS(point_contours_jrgce, paste(path_out,'point_contours_jrgce.rds'))
+saveRDS(point_contours_ok, paste(path_out,'point_contours_ok.rds'))
+saveRDS(point_contours_phace, paste(path_out,'point_contours_phace.rds'))
+saveRDS(point_contours_tera, paste(path_out,'point_contours_tera.rds'))
 
 saveRDS(point_ellipse_cfc, paste(path_out,'point_ellipse_cfc.rds'))
 saveRDS(point_ellipse_hwrc, paste(path_out,'point_ellipse_hwrc.rds'))

@@ -90,6 +90,35 @@ niche_est_ok <- read.csv(" ok_niche.csv")
 
 
 
+### Mean and SE for CTI in each year
+CTI_mean_tera <- CTI_teracon %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI),
+            se_CTI = sd(CTI)/sqrt(n()))
+CTI_mean_jrgce <- CTI_jrgce %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI),
+            se_CTI = sd(CTI)/sqrt(n()))
+CTI_mean_phace <- CTI_phace %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI),
+            se_CTI = sd(CTI)/sqrt(n()))
+CTI_mean_b4_cfc <- CTI_b4_cfc %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI),
+            se_CTI = sd(CTI)/sqrt(n()))
+CTI_mean_b4_hwrc <- CTI_b4_hwrc %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI),
+            se_CTI = sd(CTI)/sqrt(n()))
+CTI_mean_ok <- CTI_ok %>%
+  group_by(year,temp_treatment) %>%
+  summarize(mean_CTI = mean(CTI),
+            se_CTI = sd(CTI)/sqrt(n()))
+
+
+
+
 ### Temperature niche histograms
 niche_est_tera <- niche_est_tera %>%
   dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
@@ -114,6 +143,14 @@ CTI_sens_tera_plot <- ggplot(CTI_sens_teracon, aes(x = year, y = sensitivity)) +
   labs(x = "Year", y = "CTI\n(Warmed - Ambient)") +
   #scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
   theme_bw()
+CTI_sens_tera_plot2 <- ggplot(CTI_sens_teracon, aes(x = year, y = sensitivity)) +
+  geom_jitter(alpha=0.2) +
+  geom_smooth(method='lm',color="black") +
+  labs(x = "Year", y = "CTI (Warmed - Ambient)",title="TeRaCON") +
+  #scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  theme_bw() +
+  theme(axis.title = element_text(size=14),
+        axis.text = element_text(size=12))
 
 CTI_sens_jrgce_plot <- ggplot(CTI_sens_jrgce, aes(x = year, y = sensitivity)) +
   geom_jitter(alpha=0.2) +
@@ -121,6 +158,14 @@ CTI_sens_jrgce_plot <- ggplot(CTI_sens_jrgce, aes(x = year, y = sensitivity)) +
   labs(x = "Year", y = "CTI\n(Warmed - Ambient)") +
   #scale_x_continuous(breaks = seq(1998, 2014, by = 3)) +
   theme_bw()
+CTI_sens_jrgce_plot2 <- ggplot(CTI_sens_jrgce, aes(x = year, y = sensitivity)) +
+  geom_jitter(alpha=0.2) +
+  geom_smooth(method='lm',color="black") +
+  labs(x = "Year", y = "CTI (Warmed - Ambient)",title="JRGCE") +
+  #scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  theme_bw() +
+  theme(axis.title = element_text(size=14),
+        axis.text = element_text(size=12))
 
 CTI_sens_phace_plot <- ggplot(CTI_sens_phace, aes(x = year, y = sensitivity)) +
   geom_jitter(alpha=0.2) +
@@ -128,6 +173,14 @@ CTI_sens_phace_plot <- ggplot(CTI_sens_phace, aes(x = year, y = sensitivity)) +
   labs(x = "Year", y = "CTI\n(Warmed - Ambient)") +
   #scale_x_continuous(breaks = seq(2007, 2013)) +
   theme_bw()
+CTI_sens_phace_plot2 <- ggplot(CTI_sens_phace, aes(x = year, y = sensitivity)) +
+  geom_jitter(alpha=0.2) +
+  geom_smooth(method='lm',color="black") +
+  labs(x = "Year", y = "CTI (Warmed - Ambient)",title="PHACE") +
+  #scale_x_continuous(breaks = seq(2007, 2013)) +
+  theme_bw() +
+  theme(axis.title = element_text(size=14),
+        axis.text = element_text(size=12))
 
 CTI_sens_b4_cfc_rem <- CTI_sens_b4_cfc %>%
   filter(year != 2021)
@@ -137,6 +190,14 @@ CTI_sens_b4_cfc_plot <- ggplot(CTI_sens_b4_cfc_rem, aes(x = year, y = sensitivit
   labs(x = "Year", y = "CTI\n(Warmed - Ambient)") +
   #scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
   theme_bw()
+CTI_sens_b4_cfc_plot2 <- ggplot(CTI_sens_b4_cfc_rem, aes(x = year, y = sensitivity_high_temp)) +
+  geom_jitter(alpha=0.2) +
+  geom_smooth(method='lm',color="black") +
+  labs(x = "Year", y = "CTI (Warmed - Ambient)",title="B4WarmED CFC") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 3)) +
+  theme_bw() +
+  theme(axis.title = element_text(size=14),
+        axis.text = element_text(size=12))
 
 CTI_sens_b4_hwrc_rem <- CTI_sens_b4_hwrc %>%
   filter(year != 2021)
@@ -144,8 +205,16 @@ CTI_sens_b4_hwrc_plot <- ggplot(CTI_sens_b4_hwrc_rem, aes(x = year, y = sensitiv
   geom_jitter(alpha=0.2) +
   geom_smooth(method='lm',color="black") +
   labs(x = "Year", y = "CTI\n(Warmed - Ambient)") +
-  #scale_x_continuous(breaks = seq(2008, 2021, by = 2)) +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 3)) +
   theme_bw()
+CTI_sens_b4_hwrc_plot2 <- ggplot(CTI_sens_b4_hwrc_rem, aes(x = year, y = sensitivity_high_temp)) +
+  geom_jitter(alpha=0.2) +
+  geom_smooth(method='lm',color="black") +
+  labs(x = "Year", y = "CTI (Warmed - Ambient)",title="B4WarmED HWRC") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 3)) +
+  theme_bw() +
+  theme(axis.title = element_text(size=14),
+        axis.text = element_text(size=12))
 
 CTI_sens_ok_plot <- ggplot(CTI_sens_ok, aes(x = year, y = sensitivity)) +
   geom_jitter(alpha=0.2) +
@@ -153,6 +222,14 @@ CTI_sens_ok_plot <- ggplot(CTI_sens_ok, aes(x = year, y = sensitivity)) +
   labs(x = "Year", y = "CTI\n(Warmed - Ambient)") +
   #scale_x_continuous(breaks = seq(2007, 2013)) +
   theme_bw()
+CTI_sens_ok_plot2 <- ggplot(CTI_sens_ok, aes(x = year, y = sensitivity)) +
+  geom_jitter(alpha=0.2) +
+  geom_smooth(method='lm',color="black") +
+  labs(x = "Year", y = "CTI (Warmed - Ambient)",title="Oklahoma") +
+  #scale_x_continuous(breaks = seq(2007, 2013)) +
+  theme_bw() +
+  theme(axis.title = element_text(size=14),
+        axis.text = element_text(size=12))
 
 
 
@@ -166,7 +243,24 @@ CTI_tera_plot <- ggplot(CTI_teracon, aes(x = year, y = CTI, color = temp_treatme
                      labels = c("Ambient","Warmed"),
                      values = c("blue","red")) +
   theme_bw()
-
+CTI_mean_tera_plot <- ggplot(CTI_teracon, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_errorbar(data = CTI_mean_tera, 
+                aes(x = year, y = mean_CTI, ymin = mean_CTI-se_CTI, ymax = mean_CTI+se_CTI), 
+                width = 0.2, position = position_dodge(width = 0.9), alpha=0.5) +
+  geom_point(data = CTI_mean_tera, 
+             aes(x = year, y = mean_CTI,fill=temp_treatment), 
+             shape = 21, size = 2, position = position_dodge(width = 0.9),alpha=0.5) +
+  geom_smooth(method="lm") +
+  labs(x = "Year", y = "TeRaCON\nCTI") +
+  #scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  theme_bw() +
+  theme(legend.position = "none")
 CTI_box_tera <- ggplot(CTI_teracon, aes(x = year, y = CTI, group = interaction(year, temp_treatment), color = temp_treatment, fill=temp_treatment)) +
   geom_boxplot(alpha=0.2, color="grey70") +
   geom_smooth(method="lm",aes(group=temp_treatment)) +
@@ -181,6 +275,7 @@ CTI_box_tera <- ggplot(CTI_teracon, aes(x = year, y = CTI, group = interaction(y
   theme_bw() +
   theme(legend.position = "none")
 
+
 CTI_jrgce_plot <- ggplot(CTI_jrgce, aes(x = year, y = CTI, color = temp_treatment)) +
   geom_point(position = position_jitterdodge(),alpha = 0.1) +
   geom_smooth(method="lm") +
@@ -190,7 +285,24 @@ CTI_jrgce_plot <- ggplot(CTI_jrgce, aes(x = year, y = CTI, color = temp_treatmen
                      labels = c("Ambient","Warmed"),
                      values = c("blue","red")) +
   theme_bw()
-
+CTI_mean_jrgce_plot <- ggplot(CTI_jrgce, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_errorbar(data = CTI_mean_jrgce, 
+                aes(x = year, y = mean_CTI, ymin = mean_CTI-se_CTI, ymax = mean_CTI+se_CTI), 
+                width = 0.2, position = position_dodge(width = 0.9), alpha=0.5) +
+  geom_point(data = CTI_mean_jrgce, 
+             aes(x = year, y = mean_CTI,fill=temp_treatment), 
+             shape = 21, size = 2, position = position_dodge(width = 0.9),alpha=0.5) +
+  geom_smooth(method="lm") +
+  labs(x = "Year", y = "JRGCE\nCTI") +
+  #scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Warmed"),
+                    values = c("blue","red")) +
+  theme_bw() +
+  theme(legend.position = "none")
 CTI_box_jrgce <- ggplot(CTI_jrgce, aes(x = year, y = CTI, group = interaction(year, temp_treatment), color = temp_treatment, fill=temp_treatment)) +
   geom_boxplot(alpha=0.2, color="grey70") +
   geom_smooth(method="lm",aes(group=temp_treatment)) +
@@ -205,6 +317,7 @@ CTI_box_jrgce <- ggplot(CTI_jrgce, aes(x = year, y = CTI, group = interaction(ye
   theme_bw() +
   theme(legend.position = "none")
 
+
 CTI_phace_plot <- ggplot(CTI_phace, aes(x = year, y = CTI, color = temp_treatment)) +
   geom_point(position = position_jitterdodge(),alpha = 0.2) +
   geom_smooth(method="lm") +
@@ -214,7 +327,24 @@ CTI_phace_plot <- ggplot(CTI_phace, aes(x = year, y = CTI, color = temp_treatmen
                      labels = c("Ambient","Warmed"),
                      values = c("blue","red")) +
   theme_bw()
-
+CTI_mean_phace_plot <- ggplot(CTI_phace, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_errorbar(data = CTI_mean_phace, 
+                aes(x = year, y = mean_CTI, ymin = mean_CTI-se_CTI, ymax = mean_CTI+se_CTI), 
+                width = 0.2, position = position_dodge(width = 0.9), alpha=0.5) +
+  geom_point(data = CTI_mean_phace, 
+             aes(x = year, y = mean_CTI,fill=temp_treatment), 
+             shape = 21, size = 2, position = position_dodge(width = 0.9),alpha=0.5) +
+  geom_smooth(method="lm") +
+  labs(x = "Year", y = "PHACE\nCTI") +
+  #scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Warmed"),
+                    values = c("blue","red")) +
+  theme_bw() +
+  theme(legend.position = "none")
 CTI_box_phace <- ggplot(CTI_phace, aes(x = year, y = CTI, group = interaction(year, temp_treatment), color = temp_treatment, fill=temp_treatment)) +
   geom_boxplot(alpha=0.2, color="grey70") +
   geom_smooth(method="lm",aes(group=temp_treatment)) +
@@ -232,6 +362,10 @@ CTI_box_phace <- ggplot(CTI_phace, aes(x = year, y = CTI, group = interaction(ye
 CTI_b4_cfc_rem <- CTI_b4_cfc %>%
   filter(year != 2021) %>%
   filter(temp_treatment != "1.7")
+CTI_b4_cfc_rem2 <- CTI_b4_cfc %>%
+  filter(year != 2021)
+CTI_mean_b4_cfc_rem2 <- CTI_mean_b4_cfc %>%
+  filter(year != 2021)
 CTI_b4_cfc_plot <- ggplot(CTI_b4_cfc_rem, aes(x = year, y = CTI, color = temp_treatment)) +
   geom_point(position = position_jitterdodge(),alpha = 0.2) +
   geom_smooth(method="lm") +
@@ -242,7 +376,25 @@ CTI_b4_cfc_plot <- ggplot(CTI_b4_cfc_rem, aes(x = year, y = CTI, color = temp_tr
                      labels = c("Ambient","Warmed"),
                      values = c("blue","red")) +
   theme_bw() 
-
+CTI_mean_b4_cfc_plot <- ggplot(CTI_b4_cfc_rem2, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_errorbar(data = CTI_mean_b4_cfc_rem2, 
+                aes(x = year, y = mean_CTI, ymin = mean_CTI-se_CTI, ymax = mean_CTI+se_CTI), 
+                width = 0.2, position = position_dodge(width = 0.9), alpha=0.5) +
+  geom_point(data = CTI_mean_b4_cfc_rem2, 
+             aes(x = year, y = mean_CTI,fill=temp_treatment), 
+             shape = 21, size = 2, position = position_dodge(width = 0.9),alpha=0.5) +
+  geom_smooth(method="lm") +
+  labs(x = "Year", y = "B4WarmED CFC\nCTI") +
+  #scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  scale_color_manual(name = "Treatment",
+                     breaks=c("amb","1.7","3.4"),
+                     labels = c("Ambient","Intermediate","Warmed"),
+                     values = c("blue","orange","red")) +
+  scale_fill_manual(name = "Treatment",
+                    breaks=c("amb","1.7","3.4"),
+                    labels = c("Ambient","Intermediate","Warmed"),
+                    values = c("blue","orange","red")) +
+  theme_bw()
 CTI_box_cfc <- ggplot(CTI_b4_cfc, aes(x = year, y = CTI, group = interaction(year, temp_treatment), color = temp_treatment, fill=temp_treatment)) +
   geom_boxplot(alpha=0.2, color="grey70") +
   geom_smooth(method="lm",aes(group=temp_treatment)) +
@@ -259,9 +411,14 @@ CTI_box_cfc <- ggplot(CTI_b4_cfc, aes(x = year, y = CTI, group = interaction(yea
   theme_bw() +
   theme(legend.position = "none")
 
+
 CTI_b4_hwrc_rem <- CTI_b4_hwrc %>%
   filter(year != 2021) %>%
   filter(temp_treatment != "1.7")
+CTI_b4_hwrc_rem2 <- CTI_b4_hwrc %>%
+  filter(year != 2021)
+CTI_mean_b4_hwrc_rem2 <- CTI_mean_b4_hwrc %>%
+  filter(year != 2021)
 CTI_b4_hwrc_plot <- ggplot(CTI_b4_hwrc_rem, aes(x = year, y = CTI, color = temp_treatment)) +
   geom_point(position = position_jitterdodge(),alpha = 0.2) +
   geom_smooth(method="lm") +
@@ -272,7 +429,25 @@ CTI_b4_hwrc_plot <- ggplot(CTI_b4_hwrc_rem, aes(x = year, y = CTI, color = temp_
                      labels = c("Ambient","Warmed"),
                      values = c("blue","red")) +
   theme_bw()
-
+CTI_mean_b4_hwrc_plot <- ggplot(CTI_b4_hwrc_rem2, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_errorbar(data = CTI_mean_b4_hwrc_rem2, 
+                aes(x = year, y = mean_CTI, ymin = mean_CTI-se_CTI, ymax = mean_CTI+se_CTI), 
+                width = 0.2, position = position_dodge(width = 0.9), alpha=0.5) +
+  geom_point(data = CTI_mean_b4_hwrc_rem2, 
+             aes(x = year, y = mean_CTI,fill=temp_treatment), 
+             shape = 21, size = 2, position = position_dodge(width = 0.9),alpha=0.5) +
+  geom_smooth(method="lm") +
+  labs(x = "Year", y = "B4WarmED HWRC\nCTI") +
+  #scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  scale_color_manual(name = "Treatment",
+                     breaks=c("amb","1.7","3.4"),
+                     labels = c("Ambient","Intermediate","Warmed"),
+                     values = c("blue","orange","red")) +
+  scale_fill_manual(name = "Treatment",
+                    breaks=c("amb","1.7","3.4"),
+                    labels = c("Ambient","Intermediate","Warmed"),
+                    values = c("blue","orange","red")) +
+  theme_bw()
 CTI_box_hwrc <- ggplot(CTI_b4_hwrc, aes(x = year, y = CTI, group = interaction(year, temp_treatment), color = temp_treatment, fill=temp_treatment)) +
   geom_boxplot(alpha=0.2, color="grey70") +
   geom_smooth(method="lm",aes(group=temp_treatment)) +
@@ -298,7 +473,24 @@ CTI_ok_plot <- ggplot(CTI_ok, aes(x = year, y = CTI, color = temp_treatment)) +
                      labels = c("Ambient","Warmed"),
                      values = c("blue","red")) +
   theme_bw()
-
+CTI_mean_ok_plot <- ggplot(CTI_ok, aes(x = year, y = CTI, color = temp_treatment)) +
+  geom_errorbar(data = CTI_mean_ok, 
+                aes(x = year, y = mean_CTI, ymin = mean_CTI-se_CTI, ymax = mean_CTI+se_CTI), 
+                width = 0.2, position = position_dodge(width = 0.9), alpha=0.5) +
+  geom_point(data = CTI_mean_ok, 
+             aes(x = year, y = mean_CTI,fill=temp_treatment), 
+             shape = 21, size = 2, position = position_dodge(width = 0.9),alpha=0.5) +
+  geom_smooth(method="lm") +
+  labs(x = "Year", y = "Oklahoma\nCTI") +
+  #scale_x_continuous(breaks = seq(2012, 2023, by = 2)) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Warmed"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Warmed"),
+                    values = c("blue","red")) +
+  theme_bw() +
+  theme(legend.position = "none")
 CTI_box_ok <- ggplot(CTI_ok, aes(x = year, y = CTI, group = interaction(year, temp_treatment), color = temp_treatment, fill=temp_treatment)) +
   geom_boxplot(alpha=0.2, color="grey70") +
   geom_smooth(method="lm",aes(group=temp_treatment)) +
@@ -775,26 +967,36 @@ arrow_ok <- ggplot(CTI_CPI_ok) +
 combined_CTI <- wrap_plots(CTI_jrgce_plot,CTI_phace_plot,CTI_tera_plot,
                        CTI_ok_plot,CTI_b4_cfc_plot,CTI_b4_hwrc_plot,
                        ncol = 3) + plot_layout(guides = "collect")
+combined_CTI_sens <- wrap_plots(CTI_sens_jrgce_plot2,CTI_sens_phace_plot2,CTI_sens_tera_plot2,
+                           CTI_sens_ok_plot2,CTI_sens_b4_cfc_plot2,CTI_sens_b4_hwrc_plot2,
+                           ncol = 3) + plot_layout(guides = "collect",axis_titles = "collect")
+# Save to computer
+png("cti_sens.png", units="in", width=10, height=6, res=300)
+wrap_plots(CTI_sens_jrgce_plot2,CTI_sens_phace_plot2,CTI_sens_tera_plot2,
+           CTI_sens_ok_plot2,CTI_sens_b4_cfc_plot2,CTI_sens_b4_hwrc_plot2,
+           ncol = 3) + plot_layout(guides = "collect",axis_titles = "collect")
+dev.off()
 
 ### CTI and CTI warmed-ambient
-combined_sens <- ggarrange(CTI_jrgce_plot,CTI_sens_jrgce_plot,
-          CTI_phace_plot,CTI_sens_phace_plot,
-          CTI_tera_plot,CTI_sens_tera_plot,
-          CTI_ok_plot,CTI_sens_ok_plot,
-          CTI_b4_cfc_plot,CTI_sens_b4_cfc_plot,
-          CTI_b4_hwrc_plot,CTI_sens_b4_hwrc_plot,
-          ncol=2,nrow=6,common.legend = T,legend = "right",
-          align="hv")+
+combined_sens <- wrap_plots(CTI_mean_jrgce_plot,CTI_sens_jrgce_plot,
+                            CTI_mean_phace_plot,CTI_sens_phace_plot,
+                            CTI_mean_tera_plot,CTI_sens_tera_plot,
+                            CTI_mean_ok_plot,CTI_sens_ok_plot,
+                            CTI_mean_b4_cfc_plot,CTI_sens_b4_cfc_plot,
+                            CTI_mean_b4_hwrc_plot,CTI_sens_b4_hwrc_plot,
+                            ncol=2,nrow=6) +
+  plot_layout(guides = "collect")+
   theme(plot.margin = margin(0.2,0.1,0.1,0.1,"cm")) 
+
 png("cti_sens.png", units="in", width=9, height=10, res=300)
-ggarrange(CTI_jrgce_plot,CTI_sens_jrgce_plot,
-          CTI_phace_plot,CTI_sens_phace_plot,
-          CTI_tera_plot,CTI_sens_tera_plot,
-          CTI_ok_plot,CTI_sens_ok_plot,
-          CTI_b4_cfc_plot,CTI_sens_b4_cfc_plot,
-          CTI_b4_hwrc_plot,CTI_sens_b4_hwrc_plot,
-          ncol=2,nrow=6,common.legend = T,legend = "right",
-          align="hv")+
+wrap_plots(CTI_mean_jrgce_plot,CTI_sens_jrgce_plot,
+           CTI_mean_phace_plot,CTI_sens_phace_plot,
+           CTI_mean_tera_plot,CTI_sens_tera_plot,
+           CTI_mean_ok_plot,CTI_sens_ok_plot,
+           CTI_mean_b4_cfc_plot,CTI_sens_b4_cfc_plot,
+           CTI_mean_b4_hwrc_plot,CTI_sens_b4_hwrc_plot,
+           ncol=2,nrow=6) +
+  plot_layout(guides = "collect")+
   theme(plot.margin = margin(0.2,0.1,0.1,0.1,"cm")) 
 dev.off()
 
@@ -843,6 +1045,7 @@ arrows <- ggarrange(arrow_jrgce,arrow_phace,arrow_teracon,arrow_ok,arrow_b4_cfc,
 # Export Rdata for plot
 path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/data_for_plots/"
 saveRDS(combined_CTI, paste(path_out,'cti.rds'))
+saveRDS(combined_CTI_sens, paste(path_out,'sens.rds'))
 saveRDS(combined_sens, paste(path_out,'cti_sens.rds'))
 saveRDS(biocon_CTI, paste(path_out,'biocon_cti.rds'))
 saveRDS(temp_CTI, paste(path_out,'temperature_and_cti.rds'))
