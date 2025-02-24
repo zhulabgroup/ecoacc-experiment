@@ -1,0 +1,199 @@
+---
+title: "EcoAcc: Experiments"
+author: "Kara Dobson"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+format: 
+  html:
+    code-fold: true
+    code-line-numbers: true
+    code-tools:
+      source: false
+    toc: true
+embed-resources: true
+dpi: 300
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, echo = F, message = F, warning = F}
+# Load packages
+library(tidyverse)
+library(ggpubr)
+library(deeptime)
+library(patchwork)
+library(plotly)
+library(maps)
+library(mapdata)
+library(gridExtra)
+library(viridis)
+
+# Set path to turbo to get plot data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/data_for_plots/"
+setwd(path_data)
+# Load in data
+map <- readRDS(" map.rds")
+
+cti <- readRDS(" cti.rds")
+sens <- readRDS(" sens.rds")
+cti_sens <- readRDS(" cti_sens.rds")
+biocon_cti <- readRDS(" biocon_cti.rds")
+temperature_and_cti <- readRDS(" temperature_and_cti.rds")
+biomass_and_cti <- readRDS(" biomass_and_cti.rds")
+biomass_vs_cti <- readRDS(" biomass_vs_cti.rds")
+biomass_vs_cti_treatments <- readRDS(" biomass_vs_cti_treatments.rds")
+biomass_vs_dis <- readRDS(" biomass_vs_disequilib.rds")
+treatment_arrows <- readRDS(" treatment_arrows.rds")
+
+point_center_cfc <- readRDS(" point_center_cfc.rds")
+point_center_hwrc <- readRDS(" point_center_hwrc.rds")
+point_center_tera <- readRDS(" point_center_tera.rds")
+point_center_jrgce <- readRDS(" point_center_jrgce.rds")
+point_center_ok <- readRDS(" point_center_ok.rds")
+point_center_phace <- readRDS(" point_center_phace.rds")
+
+point_center_treat_cfc <- readRDS(" point_center_treat_cfc.rds")
+point_center_treat_hwrc <- readRDS(" point_center_treat_hwrc.rds")
+point_center_treat_tera <- readRDS(" point_center_treat_tera.rds")
+point_center_treat_jrgce <- readRDS(" point_center_treat_jrgce.rds")
+point_center_treat_ok <- readRDS(" point_center_treat_ok.rds")
+point_center_treat_phace <- readRDS(" point_center_treat_phace.rds")
+
+point_ellipse_cfc <- readRDS(" point_ellipse_cfc.rds")
+point_ellipse_hwrc <- readRDS(" point_ellipse_hwrc.rds")
+point_ellipse_tera <- readRDS(" point_ellipse_tera.rds")
+point_ellipse_jrgce <- readRDS(" point_ellipse_jrgce.rds")
+point_ellipse_ok <- readRDS(" point_ellipse_ok.rds")
+point_ellipse_phace <- readRDS(" point_ellipse_phace.rds")
+
+point_ellipse_treat_cfc <- readRDS(" point_ellipse_treat_cfc.rds")
+point_ellipse_treat_hwrc <- readRDS(" point_ellipse_treat_hwrc.rds")
+point_ellipse_treat_tera <- readRDS(" point_ellipse_treat_tera.rds")
+point_ellipse_treat_jrgce <- readRDS(" point_ellipse_treat_jrgce.rds")
+point_ellipse_treat_ok <- readRDS(" point_ellipse_treat_ok.rds")
+point_ellipse_treat_phace <- readRDS(" point_ellipse_treat_phace.rds")
+
+point_contours_cfc <- readRDS(" point_contours_cfc.rds")
+point_contours_hwrc <- readRDS(" point_contours_hwrc.rds")
+point_contours_tera <- readRDS(" point_contours_tera.rds")
+point_contours_jrgce <- readRDS(" point_contours_jrgce.rds")
+point_contours_ok <- readRDS(" point_contours_ok.rds")
+point_contours_phace <- readRDS(" point_contours_phace.rds")
+
+point_contours_treat_cfc <- readRDS(" point_contours_treat_cfc.rds")
+point_contours_treat_hwrc <- readRDS(" point_contours_treat_hwrc.rds")
+point_contours_treat_tera <- readRDS(" point_contours_treat_tera.rds")
+point_contours_treat_jrgce <- readRDS(" point_contours_treat_jrgce.rds")
+point_contours_treat_ok <- readRDS(" point_contours_treat_ok.rds")
+point_contours_treat_phace <- readRDS(" point_contours_treat_phace.rds")
+
+contours_shortterm_cfc <- readRDS(" contours_shortterm_cfc.rds")
+contours_shortterm_hwrc <- readRDS(" contours_shortterm_hwrc.rds")
+contours_shortterm_phace <- readRDS(" contours_shortterm_phace.rds")
+contours_shortterm_tera <- readRDS(" contours_shortterm_tera.rds")
+contours_shortterm_jrgce <- readRDS(" contours_shortterm_jrgce.rds")
+contours_shortterm_ok <- readRDS(" contours_shortterm_ok.rds")
+
+contours_treat_shortterm_cfc <- readRDS(" contours_treat_shortterm_cfc.rds")
+contours_treat_shortterm_hwrc <- readRDS(" contours_treat_shortterm_hwrc.rds")
+contours_treat_shortterm_phace <- readRDS(" contours_treat_shortterm_phace.rds")
+contours_treat_shortterm_tera <- readRDS(" contours_treat_shortterm_tera.rds")
+contours_treat_shortterm_jrgce <- readRDS(" contours_treat_shortterm_jrgce.rds")
+contours_treat_shortterm_ok <- readRDS(" contours_treat_shortterm_ok.rds")
+
+point_contours_treat_all <- readRDS(" point_contours_treat_all.rds")
+point_contours_treat_vals_all <- readRDS(" point_contours_treat_vals_all.rds")
+point_contours_all_sites <- readRDS(" all_sites_contour.rds")
+
+point_plotly_cfc <- readRDS(" point_plotly_cfc.rds")
+point_plotly_hwrc <- readRDS(" point_plotly_hwrc.rds")
+point_plotly_tera <- readRDS(" point_plotly_tera.rds")
+point_plotly_jrgce <- readRDS(" point_plotly_jrgce.rds")
+point_plotly_ok <- readRDS(" point_plotly_ok.rds")
+point_plotly_phace <- readRDS(" point_plotly_phace.rds")
+
+scatter_cfc <- readRDS(" scatter_cfc.rds")
+scatter_hwrc <- readRDS(" scatter_hwrc.rds")
+scatter_jrgce <- readRDS(" scatter_jrgce.rds")
+scatter_ok <- readRDS(" scatter_ok.rds")
+scatter_phace <- readRDS(" scatter_phace.rds")
+scatter_tera <- readRDS(" scatter_tera.rds")
+
+scatter_treat_cfc <- readRDS(" scatter_treat_cfc.rds")
+scatter_treat_hwrc <- readRDS(" scatter_treat_hwrc.rds")
+scatter_treat_jrgce <- readRDS(" scatter_treat_jrgce.rds")
+scatter_treat_ok <- readRDS(" scatter_treat_ok.rds")
+scatter_treat_phace <- readRDS(" scatter_treat_phace.rds")
+scatter_treat_tera <- readRDS(" scatter_treat_tera.rds")
+
+biocon_pre <- readRDS(" biocon_treat_pre.rds")
+biocon_post <- readRDS(" biocon_treat_post.rds")
+
+phylo_phace <- readRDS(" phylo_plot_phace.rds")
+phylo_all <- readRDS(" phylo_plot_all.rds")
+phylo_all_circ <- readRDS(" phylo_plot_all_circ.rds")
+phylo_all_comb_circ <- readRDS(" phylo_plot_all_comb_circ.rds")
+```
+
+Using community composition and ecosystem response data from various warming experiments, we can visualize changes in community structure (e.g., CTI) alongside changes in function (e.g., ANPP) due to warming.
+
+The experimental warming data set currently contains 6 sites across the U.S., shown below. These sites differ in terms of the length of the warming experiment, the amount warmed, and the species types present. However, all experiments contain a measurement of community composition and aboveground biomass for each year.
+
+## Map of the locations of each warming experiment
+
+```{r, message = F, warning = F,fig.width = 10, fig.height = 6}
+map
+```
+
+## CTI
+
+### Changes in CTI over time between warmed and ambient treatments from 6 in situ warming experiments
+
+```{r,message = F, warning = F, fig.width = 7, fig.height = 12}
+cti_sens
+```
+
+## Species-level analyses
+
+### Species contributing to warming effect each year; treatment effect and per treatment
+
+```{r,message=F,warning=F,fig.width = 15, fig.height = 15}
+#png("4_panel.png", units="in", width=15, height=14, res=300)
+ggarrange(contours_shortterm_phace,contours_treat_shortterm_phace,
+          point_contours_phace,point_contours_treat_phace,
+          ncol=2,nrow=2)
+#dev.off()
+ggarrange(contours_shortterm_jrgce,contours_treat_shortterm_jrgce,
+          point_contours_jrgce,point_contours_treat_jrgce,
+          ncol=2,nrow=2)
+ggarrange(contours_shortterm_tera,contours_treat_shortterm_tera,
+          point_contours_tera,point_contours_treat_tera,
+          ncol=2,nrow=2)
+ggarrange(contours_shortterm_ok,contours_treat_shortterm_ok,
+          point_contours_ok,point_contours_treat_ok,
+          ncol=2,nrow=2)
+ggarrange(contours_shortterm_hwrc,contours_treat_shortterm_hwrc,
+          point_contours_hwrc,point_contours_treat_hwrc,
+          ncol=2,nrow=2)
+ggarrange(contours_shortterm_cfc,contours_treat_shortterm_cfc,
+          point_contours_cfc,point_contours_treat_cfc,
+          ncol=2,nrow=2)
+```
+
+### Species contributing to warming effect
+
+```{r,message=F,warning=F,fig.width = 17, fig.height = 14}
+point_contours_all_sites
+```
+
+### Mapping species contributions to phylogeny
+
+Red species have greater relative contributions to CTI than blue species. If a species was present in more than one experiment, the contribution value shown here is an average of its relative contribution.
+
+```{r,message=F,warning=F,fig.width = 20, fig.height = 20}
+phylo_all_circ
+```
+
+```{r,message=F,warning=F,fig.width = 25, fig.height = 25}
+phylo_all_comb_circ
+```
