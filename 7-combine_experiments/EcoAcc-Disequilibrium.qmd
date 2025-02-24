@@ -1,0 +1,129 @@
+---
+title: "EcoAcc: Disequilibrium"
+author: "Kara Dobson"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+format: 
+  html:
+    code-fold: true
+    code-line-numbers: true
+    code-tools:
+      source: false
+    toc: true
+embed-resources: true
+dpi: 300
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, echo = F, message = F, warning = F}
+# Load packages
+library(tidyverse)
+library(ggpubr)
+library(deeptime)
+library(patchwork)
+library(plotly)
+library(maps)
+library(mapdata)
+library(gridExtra)
+library(viridis)
+
+# Set path to turbo to get plot data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/data_for_plots/"
+setwd(path_data)
+# Load in data
+map <- readRDS(" map.rds")
+
+cti <- readRDS(" cti.rds")
+sens <- readRDS(" sens.rds")
+cti_sens <- readRDS(" cti_sens.rds")
+biocon_cti <- readRDS(" biocon_cti.rds")
+temperature_and_cti <- readRDS(" temperature_and_cti.rds")
+biomass_and_cti <- readRDS(" biomass_and_cti.rds")
+biomass_vs_cti <- readRDS(" biomass_vs_cti.rds")
+biomass_vs_cti_treatments <- readRDS(" biomass_vs_cti_treatments.rds")
+biomass_vs_dis <- readRDS(" biomass_vs_disequilib.rds")
+treatment_arrows <- readRDS(" treatment_arrows.rds")
+
+point_center_cfc <- readRDS(" point_center_cfc.rds")
+point_center_hwrc <- readRDS(" point_center_hwrc.rds")
+point_center_tera <- readRDS(" point_center_tera.rds")
+point_center_jrgce <- readRDS(" point_center_jrgce.rds")
+point_center_ok <- readRDS(" point_center_ok.rds")
+point_center_phace <- readRDS(" point_center_phace.rds")
+
+point_center_treat_cfc <- readRDS(" point_center_treat_cfc.rds")
+point_center_treat_hwrc <- readRDS(" point_center_treat_hwrc.rds")
+point_center_treat_tera <- readRDS(" point_center_treat_tera.rds")
+point_center_treat_jrgce <- readRDS(" point_center_treat_jrgce.rds")
+point_center_treat_ok <- readRDS(" point_center_treat_ok.rds")
+point_center_treat_phace <- readRDS(" point_center_treat_phace.rds")
+
+point_ellipse_cfc <- readRDS(" point_ellipse_cfc.rds")
+point_ellipse_hwrc <- readRDS(" point_ellipse_hwrc.rds")
+point_ellipse_tera <- readRDS(" point_ellipse_tera.rds")
+point_ellipse_jrgce <- readRDS(" point_ellipse_jrgce.rds")
+point_ellipse_ok <- readRDS(" point_ellipse_ok.rds")
+point_ellipse_phace <- readRDS(" point_ellipse_phace.rds")
+
+point_ellipse_treat_cfc <- readRDS(" point_ellipse_treat_cfc.rds")
+point_ellipse_treat_hwrc <- readRDS(" point_ellipse_treat_hwrc.rds")
+point_ellipse_treat_tera <- readRDS(" point_ellipse_treat_tera.rds")
+point_ellipse_treat_jrgce <- readRDS(" point_ellipse_treat_jrgce.rds")
+point_ellipse_treat_ok <- readRDS(" point_ellipse_treat_ok.rds")
+point_ellipse_treat_phace <- readRDS(" point_ellipse_treat_phace.rds")
+
+point_contours_treat_cfc <- readRDS(" point_contours_treat_cfc.rds")
+point_contours_treat_hwrc <- readRDS(" point_contours_treat_hwrc.rds")
+point_contours_treat_tera <- readRDS(" point_contours_treat_tera.rds")
+point_contours_treat_jrgce <- readRDS(" point_contours_treat_jrgce.rds")
+point_contours_treat_ok <- readRDS(" point_contours_treat_ok.rds")
+point_contours_treat_phace <- readRDS(" point_contours_treat_phace.rds")
+
+point_contours_treat_all <- readRDS(" point_contours_treat_all.rds")
+point_contours_treat_vals_all <- readRDS(" point_contours_treat_vals_all.rds")
+point_contours_all_sites <- readRDS(" all_sites_contour.rds")
+
+point_plotly_cfc <- readRDS(" point_plotly_cfc.rds")
+point_plotly_hwrc <- readRDS(" point_plotly_hwrc.rds")
+point_plotly_tera <- readRDS(" point_plotly_tera.rds")
+point_plotly_jrgce <- readRDS(" point_plotly_jrgce.rds")
+point_plotly_ok <- readRDS(" point_plotly_ok.rds")
+point_plotly_phace <- readRDS(" point_plotly_phace.rds")
+
+scatter_cfc <- readRDS(" scatter_cfc.rds")
+scatter_hwrc <- readRDS(" scatter_hwrc.rds")
+scatter_jrgce <- readRDS(" scatter_jrgce.rds")
+scatter_ok <- readRDS(" scatter_ok.rds")
+scatter_phace <- readRDS(" scatter_phace.rds")
+scatter_tera <- readRDS(" scatter_tera.rds")
+
+scatter_treat_cfc <- readRDS(" scatter_treat_cfc.rds")
+scatter_treat_hwrc <- readRDS(" scatter_treat_hwrc.rds")
+scatter_treat_jrgce <- readRDS(" scatter_treat_jrgce.rds")
+scatter_treat_ok <- readRDS(" scatter_treat_ok.rds")
+scatter_treat_phace <- readRDS(" scatter_treat_phace.rds")
+scatter_treat_tera <- readRDS(" scatter_treat_tera.rds")
+
+biocon_pre <- readRDS(" biocon_treat_pre.rds")
+biocon_post <- readRDS(" biocon_treat_post.rds")
+
+phylo_phace <- readRDS(" phylo_plot_phace.rds")
+phylo_all <- readRDS(" phylo_plot_all.rds")
+phylo_all_circ <- readRDS(" phylo_plot_all_circ.rds")
+phylo_all_comb_circ <- readRDS(" phylo_plot_all_comb_circ.rds")
+```
+
+### Relationship between climate-community disequilibrium and aboveground biomass production each year
+
+MAT - CTI represents community-climate disequilibrium. MAT data were calculated by obtaining yearly ambient MAT data from weather stations near each site (using IEM stations), then offsetting the MAT by the amount warmed by the warming treatment. IEM was used rather than Terra/WorldClim because the latter goes until 2019 only.
+
+We see warmed treatments on the left because the MAT under warming is greater than MAT under ambient conditions. Therefore, although we see warming increasing CTI, the CTI isn't yet matching the elevated MAT.
+
+```{r, message = F, warning = F, fig.width = 13, fig.height = 6}
+biomass_vs_dis
+```
+
+```{r, message = F, warning = F, fig.width = 14, fig.height = 6}
+biomass_vs_cti
+```
