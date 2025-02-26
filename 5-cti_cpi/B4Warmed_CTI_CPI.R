@@ -8,8 +8,6 @@
 
 # Load packages
 library(tidyverse)
-library(lmerTest)
-library(emmeans)
 
 # Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/B4Warmed/"
@@ -35,34 +33,26 @@ full_abun_data_cfc <- full_abun_data_cfc %>%
   filter(!is.na(rel_abun)) %>%
   filter(!is.na(temp_niche)) %>%
   filter(!is.na(precip_niche))
+full_abun_data_cfc$site <- "B4Warmed CFC"
 full_abun_data_hwrc <- left_join(b4_hwrc, niche_est_hwrc, by = c("species"))
 full_abun_data_hwrc <- full_abun_data_hwrc %>%
   filter(!is.na(rel_abun)) %>%
   filter(!is.na(temp_niche)) %>%
   filter(!is.na(precip_niche))
+full_abun_data_hwrc$site <- "B4Warmed HWRC"
 
 
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/datasets/climate/IEM/Monthly_temps/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/"
 setwd(path_data)
 # Load in data
-iem_cfc <- read.csv("iem_B4Warmed_CFC_monthly_temps.csv")
-iem_hwrc <- read.csv("iem_B4Warmed_HWRC_monthly_temps.csv")
-iem_cfc <- iem_cfc %>%
-  rename(year = X) %>%
-  mutate(MAT = (ANN-32)*5/9) %>%
-  dplyr::select(year, MAT)
-iem_hwrc <- iem_hwrc %>%
-  rename(year = X) %>%
-  mutate(MAT = (ANN-32)*5/9) %>%
-  dplyr::select(year, MAT)
-iem_cfc$year <- as.integer(iem_cfc$year)
-iem_hwrc$year <- as.integer(iem_hwrc$year)
+mat <- read.csv(" MAT.csv")
+# Merging with data
+full_abun_data_cfc <- left_join(full_abun_data_cfc, mat, by = c("site","year"))
+full_abun_data_hwrc <- left_join(full_abun_data_hwrc, mat, by = c("site","year"))
 
-# Merging with PHACE data
-full_abun_data_cfc <- left_join(full_abun_data_cfc, iem_cfc, by = "year")
-full_abun_data_hwrc <- left_join(full_abun_data_hwrc, iem_hwrc, by = "year")
+
 
 # Coding MAT from warmed plots to be hotter
 # 1.7 and 3.4 warming levels, warmed for 8 months of the year
@@ -146,7 +136,7 @@ CTI_CPI_hwrc <- full_abun_data_hwrc %>%
               names_sep = "_")
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/B4Warmed/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/B4Warmed/"
 write.csv(CTI_cfc,paste(path_out,'CTI_b4warmed_cfc.csv'))
 write.csv(CTI_sens_cfc,paste(path_out,'CTI_sens_b4warmed_cfc.csv'))
 write.csv(CTI_CPI_cfc,paste(path_out,'CTI_CPI_b4warmed_cfc.csv'))

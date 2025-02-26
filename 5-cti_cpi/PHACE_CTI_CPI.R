@@ -12,7 +12,7 @@ library(lmerTest)
 library(emmeans)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 setwd(path_data)
 # Load in data
 niche_est <- read.csv(" phace_niche.csv")
@@ -23,22 +23,17 @@ phace <- read.csv(" phace_clean.csv")
 
 # Combining phace abundance data with niche estimate data
 full_abun_data <- left_join(phace, niche_est, by = "species")
+full_abun_data$site <- "PHACE"
 
 
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/datasets/climate/IEM/Monthly_temps/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/"
 setwd(path_data)
 # Load in data
-iem <- read.csv("iem_PHACE_monthly_temps.csv")
-iem <- iem %>%
-  rename(year = X) %>%
-  mutate(MAT = (ANN-32)*5/9) %>%
-  dplyr::select(year, MAT)
-iem$year <- as.integer(iem$year)
-
-# Merging with PHACE data
-full_abun_data <- left_join(full_abun_data, iem, by = "year")
+mat <- read.csv(" MAT.csv")
+# Merging with data
+full_abun_data <- left_join(full_abun_data, mat, by = c("site","year"))
 
 # Coding MAT from warmed plots to be 2.25 hotter in the dataframe (PHACE warmed year-round; 1.5 during day and 3 during night)
 full_abun_data$MAT <- ifelse(
@@ -46,33 +41,6 @@ full_abun_data$MAT <- ifelse(
   full_abun_data$MAT + 2.25,
   full_abun_data$MAT
 )
-
-
-
-# Set path to chelsa data
-path_data_chelsa = "/Volumes/seas-zhukai/datasets/climate/CHELSA/climatology/"
-setwd(path_data_chelsa)
-# Read in data
-chelsa_bio1_data <- raster("CHELSA_bio1_1981-2010_V.2.1.tif")
-
-# Phace coordinates
-coords <- data.frame(longitude = -104.9,
-                     latitude = 41.2)
-coordinates(coords)<-c("longitude", "latitude")
-
-# Define the CRS from the raster layer
-crs_raster <- crs(chelsa_bio1_data)
-
-# Assign the CRS to the SpatialPoints
-proj4string(coords) <- crs_raster
-
-# Extracting mean annual temp and precip data for each coordinate
-chelsa_bio1_ex <- extract(chelsa_bio1_data, coords, df = T) 
-
-# Scaling data correctly
-chelsa_bio1_ex_trans <- chelsa_bio1_ex %>%
-  mutate(mean_annual_temp = CHELSA_bio1_1981.2010_V.2.1*0.1-273.15)
-## Phace historical MAT = 7.45
 
 
 
@@ -117,7 +85,7 @@ CTI_CPI <- full_abun_data %>%
 
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 write.csv(CTI,paste(path_out,'CTI_phace.csv'))
 write.csv(CTI_sens,paste(path_out,'CTI_sens_phace.csv'))
 write.csv(CTI_CPI,paste(path_out,'CTI_CPI_phace.csv'))

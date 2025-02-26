@@ -28,22 +28,17 @@ full_abun_data <- full_abun_data %>%
   filter(!is.na(rel_abun)) %>%
   filter(!is.na(temp_niche)) %>%
   filter(!is.na(precip_niche))
+full_abun_data$site <- "TeRaCON"
 
 
 
-### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/datasets/climate/IEM/Monthly_temps/"
+# Set path to turbo to get data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/"
 setwd(path_data)
 # Load in data
-iem <- read.csv("iem_TeRaCON_monthly_temps.csv")
-iem <- iem %>%
-  rename(year = X) %>%
-  mutate(MAT = (ANN-32)*5/9) %>%
-  dplyr::select(year, MAT)
-iem$year <- as.integer(iem$year)
-
-# Merging with PHACE data
-full_abun_data <- left_join(full_abun_data, iem, by = "year")
+mat <- read.csv(" MAT.csv")
+# Merging with data
+full_abun_data <- left_join(full_abun_data, mat, by = c("site","year"))
 
 # Coding MAT from warmed plots to be hotter
 # 2.3 warming level, warming for 7 months of the year

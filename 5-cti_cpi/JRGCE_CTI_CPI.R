@@ -8,11 +8,9 @@
 
 # Load packages
 library(tidyverse)
-library(lmerTest)
-library(emmeans)
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 setwd(path_data)
 
 # Load in data
@@ -27,22 +25,19 @@ full_abun_data <- left_join(jrgce, niche_est, by = "species")
 full_abun_data <- full_abun_data %>%
   filter(!is.na(temp_niche)) %>%
   filter(!is.na(precip_niche))
+full_abun_data$site <- "JRGCE"
 
 
 
-### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/datasets/climate/IEM/Monthly_temps/"
+# Set path to turbo to get data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/"
 setwd(path_data)
 # Load in data
-iem <- read.csv("iem_JRGCE_monthly_temps.csv")
-iem <- iem %>%
-  rename(year = X) %>%
-  mutate(MAT = (ANN-32)*5/9) %>%
-  dplyr::select(year, MAT)
-iem$year <- as.integer(iem$year)
+mat <- read.csv(" MAT.csv")
+# Merging with data
+full_abun_data <- left_join(full_abun_data, mat, by = c("site","year"))
 
-# Merging with PHACE data
-full_abun_data <- left_join(full_abun_data, iem, by = "year")
+
 
 # Coding MAT from warmed plots to be hotter
 full_abun_data$MAT <- ifelse(
@@ -100,16 +95,10 @@ CTI_CPI <- full_abun_data %>%
               values_from = c(CTI, CPI),
               names_sep = "_")
 
-# Models (note: move to new script at some point)
-cti_mod <- lmerTest::lmer(CTI ~ temp_treatment*as.factor(year) + (1|plot), data=CTI)
-anova(cti_mod)  
-emm <- emmeans(cti_mod, ~ temp_treatment * year)
-summary(emm)
-pairs(emm, by = "year")
 
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 write.csv(CTI,paste(path_out,'CTI_jrgce.csv'))
 write.csv(CTI_sens,paste(path_out,'CTI_sens_jrgce.csv'))
 write.csv(CTI_CPI,paste(path_out,'CTI_CPI_jrgce.csv'))

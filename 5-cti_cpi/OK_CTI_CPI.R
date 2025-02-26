@@ -12,7 +12,7 @@ library(lmerTest)
 library(emmeans)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/OK/"
 setwd(path_data)
 
 # Load in data
@@ -31,22 +31,17 @@ full_abun_data <- full_abun_data %>% # removing spp w/o niche information
   filter(!is.na(rel_abun)) %>%
   filter(!is.na(temp_niche)) %>%
   filter(!is.na(precip_niche))
+full_abun_data$site <- "Oklahoma"
 
 
 
-### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/datasets/climate/IEM/Monthly_temps/"
+# Set path to turbo to get data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/"
 setwd(path_data)
 # Load in data
-iem <- read.csv("iem_OK_monthly_temps.csv")
-iem <- iem %>%
-  rename(year = X) %>%
-  mutate(MAT = (ANN-32)*5/9) %>%
-  dplyr::select(year, MAT)
-iem$year <- as.integer(iem$year)
-
-# Merging with PHACE data
-full_abun_data <- left_join(full_abun_data, iem, by = "year")
+mat <- read.csv(" MAT.csv")
+# Merging with data
+full_abun_data <- left_join(full_abun_data, mat, by = c("site","year"))
 
 # Coding MAT from warmed plots to be hotter
 full_abun_data$MAT <- ifelse(
@@ -96,7 +91,7 @@ CTI_CPI <- full_abun_data %>%
 
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/OK/"
 write.csv(CTI,paste(path_out,'CTI_ok.csv'))
 write.csv(CTI_sens,paste(path_out,'CTI_sens_ok.csv'))
 write.csv(CTI_CPI,paste(path_out,'CTI_CPI_ok.csv'))
