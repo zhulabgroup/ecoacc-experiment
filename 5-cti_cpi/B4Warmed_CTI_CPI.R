@@ -84,7 +84,7 @@ full_abun_data_hwrc$MAT <- ifelse(
 
 # Calculating CTI
 CTI_cfc <- full_abun_data_cfc %>%
-  group_by(year,plot,temp_treatment) %>%
+  group_by(year,plot,temp_treatment,MAT) %>%
   reframe(CTI = sum(rel_abun * temp_niche) / sum(rel_abun),
           CTI_var = sum(rel_abun * (temp_niche - CTI)^2) / sum(rel_abun),
           CTI_sd = sqrt(CTI_var),
@@ -93,7 +93,7 @@ CTI_cfc <- full_abun_data_cfc %>%
           disequilib = CTI - MAT) %>%
   distinct()
 CTI_hwrc <- full_abun_data_hwrc %>%
-  group_by(year,plot,temp_treatment) %>%
+  group_by(year,plot,temp_treatment,MAT) %>%
   reframe(CTI = sum(rel_abun * temp_niche) / sum(rel_abun),
           CTI_var = sum(rel_abun * (temp_niche - CTI)^2) / sum(rel_abun),
           CTI_sd = sqrt(CTI_var),

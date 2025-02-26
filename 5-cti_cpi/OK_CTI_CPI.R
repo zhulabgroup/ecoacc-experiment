@@ -54,7 +54,7 @@ full_abun_data$MAT <- ifelse(
 
 # Calculating CTI
 CTI <- full_abun_data %>%
-  group_by(year,plot,temp_treatment) %>%
+  group_by(year,plot,temp_treatment,MAT) %>%
   reframe(CTI = sum(rel_abun * temp_niche) / sum(rel_abun),
           CTI_var = sum(rel_abun * (temp_niche - CTI)^2) / sum(rel_abun),
           CTI_sd = sqrt(CTI_var),
