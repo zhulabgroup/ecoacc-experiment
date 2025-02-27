@@ -162,7 +162,7 @@ thinned_results_df$species[thinned_results_df$species == "Nassella pulchra"] <- 
 # Merge new species with entire dataframe
 jrgce <- jrgce %>%
   dplyr::select(-c(X))
-thinned_results_final <- rbind(jrgce, thinned_results_df)
+thinned_results_final <- rbind(GBIF_jrgce, thinned_results_df)
 
 
 

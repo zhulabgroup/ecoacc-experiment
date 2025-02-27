@@ -10,7 +10,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/datasets/vegetation/PHACE"
+path_data = "/Volumes/seas-zhukai/datasets/vegetation/PHACE"
 setwd(path_data)
 
 # Read in data
