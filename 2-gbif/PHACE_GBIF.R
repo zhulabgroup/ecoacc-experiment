@@ -168,9 +168,10 @@ thinned_results_df <- do.call(rbind, thinned_results)
 row.names(thinned_results_df) <- NULL
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 write.csv(gbif_data_1000,paste(path_out,'GBIF_phace.csv'))
 write.csv(thinned_results_df,paste(path_out,'GBIF_thinned_phace.csv'))
+write.csv(d_cleaned,paste(path_out,'temp_phace_GBIF.csv'),row.names=F)
 
 
 
