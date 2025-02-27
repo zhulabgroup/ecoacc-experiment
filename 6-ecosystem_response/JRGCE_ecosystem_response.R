@@ -10,7 +10,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 setwd(path_data)
 
 # Load in data
@@ -24,30 +24,16 @@ eco_grouped <- eco_jrgce %>%
   pivot_longer(cols = c(mean_ab_bio), names_to = "variable", values_to = "value") %>%
   pivot_wider(names_from = temp_treatment, values_from = value) %>%
   mutate(sensitivity = warmed - ambient) %>%
-  select(year, variable, sensitivity)
+  dplyr::select(year, variable, sensitivity)
 eco_grouped2 <- eco_jrgce %>%
   filter(!is.na(temp_treatment)) %>%
   group_by(year,temp_treatment) %>%
   reframe(mean_ab_bio = mean(ab_biomass, na.rm=T))
 
-# Function to plot changes in function over time (warmed - ambient) for a given ecosystem response var
-sens_plot <- function(df, response_var) {
-  
-  df <- df %>%
-    filter(variable == response_var)
-  
-  ggplot(df, aes(x = year, y = sensitivity)) +
-    geom_smooth() +
-    labs(x = "Year", y = "Biomass (Warmed - Ambient)") +
-    scale_x_continuous(breaks = seq(1998, 2014, by = 2)) +
-    theme_bw()
-}
-sens_plot(eco_grouped,"mean_ab_bio")
-
 
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 write.csv(eco_grouped,paste(path_out,'eco_response_jrgce.csv'))
 write.csv(eco_grouped2,paste(path_out,'eco_response_overall_jrgce.csv'))
 

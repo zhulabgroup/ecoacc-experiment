@@ -13,9 +13,10 @@ library(terra)
 library(rgbif)
 library(CoordinateCleaner)
 library(maps)
+library(spThin)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 setwd(path_data)
 
 # Read in data
@@ -23,15 +24,15 @@ jrgce_data <- read.csv(" jrgce_clean.csv")
 
 # Making a list of the species in our experimental data set for GBIF occurrences
 species_list <- unique(jrgce_data$species)
-species_list <- species_list[species_list != "Festuca DUMMY"] # removing non-spp name
-species_list <- species_list[species_list != "Avena DUMMY"] # removing non-spp name
 print(species_list)
+test_species <- c("Stipa pulchra", "Festuca perennis") # Two species that were originally missed
 
 # Testing the impacts of spp. occurrences scale on results
 # Decided to ultimately use a 1000km buffer around the US and Canada; below on line 82 subsets out the 1000km buffer
 # bounding box limits = c(min_longitude, min_latitude, max_longitude, max_latitude)
 # U.S. and Canada
 bbox_uscan <- c(-141, 24, -53, 83)
+bbox_1000 <- c(-134, 28, -111, 46)
 
 # Function to get occurrence data for each spp from GBIF, then cleaning those coordinates
 occurrences <- function(spp, bbox) {
@@ -74,10 +75,12 @@ occurrences <- function(spp, bbox) {
   return(list_of_occ)
 }
 # Run function
-spp_occurrences_uscan <- occurrences(species_list, bbox_uscan)
+spp_occurrences_uscan <- occurrences(species_list, bbox_uscan) # All species
+test_occurrences <- occurrences(test_species, bbox_1000) # Two species that were originally missed
 
 # Pulling lat and long from GBIF
 gbif_spp_uscan <- do.call(rbind.data.frame, spp_occurrences_uscan)
+gbif_test_spp_1000 <- do.call(rbind.data.frame, test_occurrences)
 
 # Filtering 1000km from the US and Canada data
 gbif_data_1000 <- gbif_spp_uscan %>%
@@ -118,15 +121,16 @@ distb_occ(gbif_data_1000,"Avena fatua")
 # Accounting for spatial autocorrelation
 # Split the dataset by species
 species_list <- split(gbif_data_1000, gbif_data_1000$species)
+species_list2 <- split(gbif_test_spp_1000, gbif_test_spp_1000$species)
 
 # Initialize a list to store results
 thinned_results <- list()
 
 # Loop through each species and apply thinning
-for (species_name in names(species_list)) {
+for (species_name in names(species_list2)) {
   cat("Processing species:", species_name, "\n")
   
-  species_data <- species_list[[species_name]]
+  species_data <- species_list2[[species_name]]
   
   # Thin data for the current species
   thinned_species <- thin(
@@ -151,12 +155,21 @@ for (species_name in names(species_list)) {
 thinned_results_df <- do.call(rbind, thinned_results)
 row.names(thinned_results_df) <- NULL
 
+# Matching names to JRGCE data
+thinned_results_df$species[thinned_results_df$species == "Lolium perenne"] <- "Festuca perennis"
+thinned_results_df$species[thinned_results_df$species == "Nassella pulchra"] <- "Stipa pulchra"
+
+# Merge new species with entire dataframe
+jrgce <- jrgce %>%
+  dplyr::select(-c(X))
+thinned_results_final <- rbind(jrgce, thinned_results_df)
+
 
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/JRGCE/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 write.csv(gbif_data_1000,paste(path_out,'GBIF_jrgce.csv'))
-write.csv(thinned_results_df,paste(path_out,'GBIF_thinned_jrgce.csv'))
+write.csv(thinned_results_final,paste(path_out,'GBIF_thinned_jrgce.csv'))
 
 
 

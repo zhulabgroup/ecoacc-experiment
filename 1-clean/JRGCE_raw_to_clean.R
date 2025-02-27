@@ -65,7 +65,7 @@ colnames(jrgce_bio_data) <- tolower(colnames(jrgce_bio_data))
 
 # Merging with meta-data on plot treatments
 jrgce_bio_data <- jrgce_bio_data %>%
-  left_join(jrgce_meta_data %>% select(id, plot, quad, treatmentsummary),
+  left_join(jrgce_meta_data %>% dplyr::select(id, plot, quad, treatmentsummary),
             by = c("id", "plot", "quad"))
 
 # Fixing column nmes
@@ -88,11 +88,11 @@ jrgce_bio_data <- left_join(jrgce_bio_data, jrgce_temp_filtered, by="year")
 # Fixing treatment names
 jrgce_abun_data <- jrgce_abun_data %>%
   mutate(temp_treatment = if_else(str_detect(treatment, "T"), "warmed", "ambient")) %>%
-  select(year,plot,species,percent_cover,temp_treatment,mean_C_temp_summer) %>%
+  dplyr::select(year,plot,species,percent_cover,temp_treatment,mean_C_temp_summer) %>%
   filter(!(year == 1998))
 jrgce_bio_data <- jrgce_bio_data %>%
   mutate(temp_treatment = if_else(str_detect(treatment, "H"), "warmed", "ambient")) %>%
-  select(year,plot,species,ab_biomass,temp_treatment) %>%
+  dplyr::select(year,plot,species,ab_biomass,temp_treatment) %>%
   filter(!(year == 1998))
 
 
@@ -100,9 +100,7 @@ jrgce_bio_data <- jrgce_bio_data %>%
 rel_abun_calc <- function(df) {
   df %>%
     filter(!(species == "Avena DUMMY" | # remove dummy spp and spp with no temp niches
-               species == "Festuca DUMMY" |
-               species == "Stipa pulchra" |
-               species == "Festuca perennis")) %>%
+               species == "Festuca DUMMY")) %>%
     group_by(year, plot) %>%
     mutate(total_cover = sum(percent_cover,na.rm=T)) %>%
     mutate(rel_abun = percent_cover / total_cover) %>%
@@ -116,7 +114,7 @@ rel_abun_jrgce <- rel_abun_calc(jrgce_abun_data)
 
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 write.csv(rel_abun_jrgce,paste(path_out,'jrgce_clean.csv'),row.names=F)
 write.csv(jrgce_bio_data,paste(path_out,'jrgce_ecosystem_dat_clean.csv'),row.names=F)
 

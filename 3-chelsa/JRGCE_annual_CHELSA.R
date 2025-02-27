@@ -11,7 +11,7 @@ library(tidyverse)
 library(raster)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 setwd(path_data)
 # Load in data
 jrgce <- read.csv(" GBIF_thinned_jrgce.csv")
@@ -54,5 +54,5 @@ gbif_spp_occ <- jrgce %>%
 chelsa_gbif <- cbind(gbif_spp_occ, chelsa_bio1_trans, chelsa_bio12_trans)
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 write.csv(chelsa_gbif,paste(path_out,'CHELSA_jrgce.csv'))

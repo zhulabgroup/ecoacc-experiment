@@ -15,16 +15,10 @@ setwd(path_data)
 
 # Load in data
 niche_est <- read.csv(" jrgce_niche.csv")
-niche_est <- niche_est %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 jrgce <- read.csv(" jrgce_clean.csv")
 
 # Combining jrgce abundance data with niche estimate data
 full_abun_data <- left_join(jrgce, niche_est, by = "species")
-full_abun_data <- full_abun_data %>%
-  filter(!is.na(temp_niche)) %>%
-  filter(!is.na(precip_niche))
 full_abun_data$site <- "JRGCE"
 
 
