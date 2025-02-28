@@ -11,10 +11,12 @@ library(tidyverse)
 library(raster)
 
 # Set path to turbo to get data
-path_data_gbif = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data_gbif = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 setwd(path_data_gbif)
 # Read in data
-gbif_data <- read.csv(" GBIF_thinned_teracon.csv") # "GBIF_teracon_limited" data in turbo is only for ecoregion 8
+gbif_data <- read.csv(" GBIF_thinned_teracon.csv")
+gbif_data <- gbif_data %>%
+  filter(!(species == "Dalea villosa")) # this sp = Petalostemum; both were present, so removing Dalea. the data would be duplicated otherwise
 # Set path to chelsa data
 path_data_chelsa = "/Volumes/seas-zhukai/datasets/climate/CHELSA/climatology/"
 setwd(path_data_chelsa)
@@ -54,6 +56,6 @@ gbif_spp_occ <- gbif_data %>%
 chelsa_gbif <- cbind(gbif_spp_occ, chelsa_bio1_ex_trans, chelsa_bio12_ex_trans)
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 write.csv(chelsa_gbif,paste(path_out,'CHELSA_teracon.csv'))
 #write.csv(chelsa_gbif,paste(path_out,'CHELSA_teracon_limited.csv')) # when using the limited gbif data (loaded in above)

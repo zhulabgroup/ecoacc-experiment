@@ -14,7 +14,7 @@ library(CoordinateCleaner)
 library(maps)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 setwd(path_data)
 
 # Read in data
@@ -24,6 +24,7 @@ teracon_data <- read.csv(" teracon_clean.csv")
 species_list <- unique(teracon_data$species)
 species_list1 <- species_list[1:10]
 species_list2 <- species_list[11:16]
+test_species <- c("Dalea villosa","Lespedeza capitata") # Species that was missing in original GBIF search (Petalostemum villosum)
 
 # 1000 km around experiment location
 bbox_1000 <- c(-106, 36, -80, 54)
@@ -69,12 +70,14 @@ occurrences <- function(spp, bbox) {
   return(list_of_occ)
 }
 # Run function
-spp_occurrences1 <- occurrences(spp = species_list1)
-spp_occurrences2 <- occurrences(spp = species_list2)
+spp_occurrences1 <- occurrences(species_list1, bbox_1000)
+spp_occurrences2 <- occurrences(species_list2, bbox_1000)
+test_spp_occurrences <- occurrences(test_species, bbox_1000)
 
 # Pulling lat and long from GBIF
 GBIF_species1 <- do.call(rbind.data.frame, spp_occurrences1)
 GBIF_species2 <- do.call(rbind.data.frame, spp_occurrences2)
+test_GBIF_species <- do.call(rbind.data.frame, test_spp_occurrences)
 
 # Merging the two lists
 GBIF_species <- rbind(GBIF_species1, GBIF_species2)
@@ -113,15 +116,18 @@ distb_occ(GBIF_species,"Bouteloua gracilis")
 # Accounting for spatial autocorrelation
 # Split the dataset by species
 species_list <- split(GBIF_species, GBIF_species$species)
+test_GBIF_species <- test_GBIF_species %>%
+  filter(species == "Dalea villosa")
+species_list2 <- split(test_GBIF_species, test_GBIF_species$species)
 
 # Initialize a list to store results
 thinned_results <- list()
 
 # Loop through each species and apply thinning
-for (species_name in names(species_list)) {
+for (species_name in names(species_list2)) {
   cat("Processing species:", species_name, "\n")
   
-  species_data <- species_list[[species_name]]
+  species_data <- species_list2[[species_name]]
   
   # Thin data for the current species
   thinned_species <- thin(
@@ -146,12 +152,20 @@ for (species_name in names(species_list)) {
 thinned_results_df <- do.call(rbind, thinned_results)
 row.names(thinned_results_df) <- NULL
 
+# Matching names to teracon data
+thinned_results_df$species[thinned_results_df$species == "Dalea villosa"] <- "Petalostemum villosum"
+
+# Merge with the other GBIF data
+gbif_data <- gbif_data %>%
+  dplyr::select(-c(X))
+thinned_results_df <- rbind(gbif_data,thinned_results_df)
+
 
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc/TeRaCON/"
-write.csv(GBIF_species,paste(path_out,'GBIF_teracon.csv'))
-write.csv(thinned_results_df,paste(path_out,'GBIF_thinned_teracon.csv'))
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
+write.csv(GBIF_species,paste(path_out,'GBIF_teracon.csv'),row.names=F)
+write.csv(thinned_results_df,paste(path_out,'GBIF_thinned_teracon.csv'),row.names=F)
 
 
 

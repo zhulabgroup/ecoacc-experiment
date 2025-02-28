@@ -8,17 +8,12 @@
 
 # Load packages
 library(tidyverse)
-library(lmerTest)
-library(emmeans)
 
 # Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 setwd(path_data)
 # Load in data
 niche_est <- read.csv(" phace_niche.csv")
-niche_est <- niche_est %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 phace <- read.csv(" phace_clean.csv")
 
 # Combining phace abundance data with niche estimate data
@@ -86,6 +81,6 @@ CTI_CPI <- full_abun_data %>%
 
 # Upload data
 path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
-write.csv(CTI,paste(path_out,'CTI_phace.csv'))
-write.csv(CTI_sens,paste(path_out,'CTI_sens_phace.csv'))
-write.csv(CTI_CPI,paste(path_out,'CTI_CPI_phace.csv'))
+write.csv(CTI,paste(path_out,'CTI_phace.csv'),row.names=F)
+write.csv(CTI_sens,paste(path_out,'CTI_sens_phace.csv'),row.names=F)
+write.csv(CTI_CPI,paste(path_out,'CTI_CPI_phace.csv'),row.names=F)

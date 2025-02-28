@@ -8,8 +8,6 @@
 
 # Load packages
 library(tidyverse)
-library(lmerTest)
-library(emmeans)
 
 # Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
@@ -17,17 +15,10 @@ setwd(path_data)
 
 # Load in data
 niche_est <- read.csv(" teracon_niche.csv")
-niche_est <- niche_est %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 teracon <- read.csv(" teracon_clean.csv")
 
 # Combining teracon abundance data with niche estimate data
 full_abun_data <- left_join(teracon, niche_est, by = "species")
-full_abun_data <- full_abun_data %>%
-  filter(!is.na(rel_abun)) %>%
-  filter(!is.na(temp_niche)) %>%
-  filter(!is.na(precip_niche))
 full_abun_data$site <- "TeRaCON"
 
 

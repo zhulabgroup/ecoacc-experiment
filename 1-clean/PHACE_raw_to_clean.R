@@ -22,9 +22,9 @@ temp_data <- read.csv("dbo_tblHourlyThermocouple.csv")
 # Wide to long for biomass values for relative abundance calculation
 phace_data_long <- phace_data %>%
   pivot_longer(cols = -c(YEAR,PLOT,COLOR,REP,BLOCK,CO2,carbon.dioxide,TEMP,temperature,Treatment,Aboveground.biomass..g.per.m2.),
-               names_to = "species", values_to = "biomass") %>%
-  filter(!(species == "Astragalus.Spp.")) # Remove genus-only spp name
+               names_to = "species", values_to = "biomass")
 phace_data_long$species[phace_data_long$species == "MachaerantheraÊpinnatifida"] <- "Machaeranthera pinnatifida" # Fix spp name
+phace_data_long$species[phace_data_long$species == "Astragalus.Spp."] <- "Astragalus sp" # Fix spp name
 
 # Calculating relative abundance and fixing column names
 phace_abun <- phace_data_long %>%
@@ -38,15 +38,15 @@ phace_abun <- phace_data_long %>%
 # Use gsub to replace periods with spaces
 phace_abun$species <- gsub("\\.", " ", phace_abun$species)
 
-# Subsetting data to begin in 2007 when the warming treatment began & removing spp w/ only a genus
+# Subsetting data to begin in 2007 when the warming treatment
 phace_rel_abun <- phace_abun %>%
   filter(year >= 2007) %>%
-  select(year,plot,temp_treatment,species,rel_abun)
+  dplyr::select(year,plot,temp_treatment,species,rel_abun)
 
 # Selecting biomass data
 phace_biomass <- phace_abun %>%
   filter(year >= 2007) %>%
-  select(year,plot,temp_treatment,species,total_biomass)
+  dplyr::select(year,plot,temp_treatment,species,total_biomass)
 
 
 
@@ -72,7 +72,7 @@ temp_avg <- temp_data %>%
 
 
 ### Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 write.csv(phace_rel_abun,paste(path_out,'phace_clean.csv'), row.names=F)
 write.csv(phace_biomass,paste(path_out,'phace_ecosystem_dat_clean.csv'), row.names=F)
 

@@ -77,19 +77,18 @@ teracon_data_sub_eco <- teracon_data_sub_eco %>%
 teracon_data_long2 <- teracon_data_long %>%
   filter(Season == "August") %>%
   mutate(temp_treatment = if_else(str_detect(temp_treatment, "elv"), "warmed", "ambient")) %>%
-  select(year,plot,temp_treatment,species,percent_cover,mean_C_temp_summer)
+  dplyr::select(year,plot,temp_treatment,species,percent_cover,mean_C_temp_summer)
 teracon_data_sub_eco2 <- teracon_data_sub_eco %>%
   filter(Season == "August") %>%
   mutate(temp_treatment = if_else(str_detect(temp_treatment, "elv"), "warmed", "ambient")) %>%
-  select(year,plot,temp_treatment,ab_biomass,bl_biomass,total_biomass,root_ingrowth,total_n,bl_n,bl_c,ab_n,ab_c,biomass_plus_root)
+  dplyr::select(year,plot,temp_treatment,ab_biomass,bl_biomass,total_biomass,root_ingrowth,total_n,bl_n,bl_c,ab_n,ab_c,biomass_plus_root)
 
 
 
 # Calculating relative abundance from percent cover
 rel_abun_calc <- function(df) {
   df %>%
-    filter(!(species == "Total Planted Species" | # removing non-spp and spp without niche values
-               species == "Petalostemum villosum")) %>%
+    filter(!(species == "Total Planted Species")) %>%
     mutate(percent_cover = if_else(is.na(percent_cover), 0, percent_cover)) %>%
     group_by(year, plot) %>%
     mutate(total_cover = sum(percent_cover,na.rm=T)) %>%

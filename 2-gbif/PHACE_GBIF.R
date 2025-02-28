@@ -173,8 +173,13 @@ gbif_data <- gbif_data %>%
   dplyr::select(-c(X))
 thinned_results_df <- rbind(gbif_data,thinned_results_df)
 
+# Fixing genus-only name
+thinned_results_df <- thinned_results_df %>%
+  mutate(species = ifelse(grepl("Astragalus", species), "Astragalus sp", species)) %>%
+  mutate(species = ifelse(grepl("Phaca", species), "Astragalus sp", species))
+
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc-experiment/PHACE/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 write.csv(gbif_data_1000,paste(path_out,'GBIF_phace.csv'))
 write.csv(thinned_results_df,paste(path_out,'GBIF_thinned_phace.csv'))
 #write.csv(d_cleaned,paste(path_out,'temp_phace_GBIF.csv'),row.names=F)

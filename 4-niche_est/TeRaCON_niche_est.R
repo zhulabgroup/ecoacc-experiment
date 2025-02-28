@@ -23,11 +23,11 @@ chelsa_data$species[chelsa_data$species == "Elymus repens"] <- "Agropyron repens
 chelsa_data$species[chelsa_data$species == "Andropogon gerardi"] <- "Andropogon gerardii" # fixing spp name to match teracon
 
 niche_est <- chelsa_data %>%
-  mutate(species=replace_na(species, "Petalostemum villosum")) %>% # fixing spp name to match teracon
   group_by(species) %>%
   mutate(temp_niche = median(mean_annual_temp)) %>%
   mutate(precip_niche = median(mean_annual_precip)) %>%
-  dplyr::select(-c(X,ID,ID.1,CHELSA_bio1_1981.2010_V.2.1,CHELSA_bio12_1981.2010_V.2.1))
+  dplyr::select(-c(X,ID,ID.1,CHELSA_bio1_1981.2010_V.2.1,CHELSA_bio12_1981.2010_V.2.1,latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
+  distinct()
 # For the 6 month data
 niche_est6 <- chelsa_data %>%
   mutate(species=replace_na(species, "Petalostemum villosum")) %>% # fixing spp name to match teracon

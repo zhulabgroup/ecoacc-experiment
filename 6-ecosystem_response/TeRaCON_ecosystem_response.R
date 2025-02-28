@@ -10,7 +10,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 setwd(path_data)
 # Load in data
 eco_teracon <- read.csv(" teracon_ecosystem_dat_clean.csv")
@@ -49,15 +49,9 @@ eco_grouped_overall <- eco_teracon %>%
           mean_ab_n = mean(ab_n))
 
 
-# Models
-eco_grouped_mod <- eco_grouped %>%
-  filter(variable == "mean_bl_n")
-eco_mod <- lm(sensitivity ~ year, data = eco_grouped_mod)
-summary(eco_mod)
-
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 write.csv(eco_grouped,paste(path_out,'eco_response_teracon.csv'))
 write.csv(eco_grouped_overall,paste(path_out,'eco_response_overall_teracon.csv'))
 
