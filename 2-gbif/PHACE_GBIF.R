@@ -15,7 +15,7 @@ library(maps)
 library(spThin)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 setwd(path_data)
 
 # Read in data
@@ -133,7 +133,8 @@ d_cleaned <- d[flags$.summary,]
 ### Accounting for spatial autocorrelation
 # Split the dataset by species
 species_list <- split(GBIF_species, GBIF_species$species)
-species_list2 <- split(d_cleaned, d_cleaned$genus) # Genus-only
+d_cleaned$species[d_cleaned$species == ""] <- "Astragalus"
+species_list2 <- split(d_cleaned, d_cleaned$species)
 
 # Initialize a list to store results
 thinned_results <- list()
@@ -167,11 +168,16 @@ for (species_name in names(species_list2)) {
 thinned_results_df <- do.call(rbind, thinned_results)
 row.names(thinned_results_df) <- NULL
 
+# Merge with the other GBIF data
+gbif_data <- gbif_data %>%
+  dplyr::select(-c(X))
+thinned_results_df <- rbind(gbif_data,thinned_results_df)
+
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 write.csv(gbif_data_1000,paste(path_out,'GBIF_phace.csv'))
 write.csv(thinned_results_df,paste(path_out,'GBIF_thinned_phace.csv'))
-write.csv(d_cleaned,paste(path_out,'temp_phace_GBIF.csv'),row.names=F)
+#write.csv(d_cleaned,paste(path_out,'temp_phace_GBIF.csv'),row.names=F)
 
 
 
