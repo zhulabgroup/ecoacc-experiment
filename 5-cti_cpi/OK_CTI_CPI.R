@@ -8,8 +8,6 @@
 
 # Load packages
 library(tidyverse)
-library(lmerTest)
-library(emmeans)
 
 # Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/OK/"
@@ -17,21 +15,39 @@ setwd(path_data)
 
 # Load in data
 niche_est <- read.csv(" ok_niche.csv")
-niche_est <- niche_est %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 ok <- read.csv(" ok_clean.csv")
+mat_sensors <- read.csv(" ok_MAT_sensors.csv")
 
-# Combining phace abundance data with niche estimate data
+
+
+### Comparing species names
+species_list_abun <- unique(ok$species)
+species_list_niche <- unique(niche_est$species)
+diff <- setdiff(species_list_abun, species_list_niche)
+
+### Combining phace abundance data with niche estimate data
 full_abun_data <- left_join(ok, niche_est, by = "species")
-spp_w_no_data <- full_abun_data %>% # check to see what species are missing data; these were not found in gbif
-  filter(is.na(temp_niche)) %>%
-  filter(is.na(precip_niche))
 full_abun_data <- full_abun_data %>% # removing spp w/o niche information
   filter(!is.na(rel_abun)) %>%
   filter(!is.na(temp_niche)) %>%
   filter(!is.na(precip_niche))
 full_abun_data$site <- "Oklahoma"
+
+### Merging with temp sensor data
+# Temperature sensors were only present in U (unclipped) plots, so here I'm duplicating the data for C (clipped) plots
+# Create a new dataframe with "C" plots
+c_plots <- mat_sensors %>%
+  # Duplicate only the rows that need "C" counterparts
+  filter(grepl("^U", plot)) %>%
+  # Replace the leading "U" with "C" in the plot column
+  mutate(plot = sub("^U", "C", plot))
+# Combine the original dataframe with the new "C" plots dataframe
+combined_mat_sensors <- bind_rows(mat_sensors, c_plots)
+
+# Merge with abundance data
+full_abun_data <- left_join(full_abun_data, combined_mat_sensors, by = c("year","plot"))
+
+
 
 
 
@@ -50,17 +66,22 @@ full_abun_data$MAT <- ifelse(
   full_abun_data$MAT
 )
 
+# Fixing column names
+full_abun_data <- full_abun_data %>%
+  rename(MAT_sensors = mat)
+
 
 
 # Calculating CTI
 CTI <- full_abun_data %>%
-  group_by(year,plot,temp_treatment,MAT) %>%
+  group_by(year,plot,temp_treatment,MAT,MAT_sensors) %>%
   reframe(CTI = sum(rel_abun * temp_niche) / sum(rel_abun),
           CTI_var = sum(rel_abun * (temp_niche - CTI)^2) / sum(rel_abun),
           CTI_sd = sqrt(CTI_var),
           CTI_skew = sum(rel_abun * (temp_niche - CTI)^3) / (sum(rel_abun) * CTI_sd^3),
           CTI_kurt = sum(rel_abun * (temp_niche - CTI)^4) / (sum(rel_abun) * CTI_sd^4) - 3,
-          disequilib = CTI - MAT) %>%
+          disequilib = CTI - MAT,
+          disequilib_sensors = CTI - MAT_sensors) %>%
   distinct()
 
 # Calculating CTI sensitivity (warmed - ambient)

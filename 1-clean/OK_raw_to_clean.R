@@ -30,6 +30,8 @@ ok_2011 <- read.csv("OK_rel_abun_2011.csv")
 ok_2012 <- read.csv("OK_rel_abun_2012.csv")
 ok_2013 <- read.csv("OK_rel_abun_2013.csv")
 ok_anpp <- read.csv("OK_ANPP_OldWarmingSite(2000-2013).csv")
+ok_temps <- read.csv("Oklahoma_temperatures.csv")[,1:16]
+
 
 # Wide to long for the relative abundance data
 df_list <- list(ok_2000, ok_2001, ok_2002, ok_2003, ok_2004, ok_2005, ok_2006, ok_2007, ok_2008, ok_2009, ok_2010, ok_2011, ok_2012, ok_2013)
@@ -72,6 +74,12 @@ ok_rel_spp$Lartin.name[ok_rel_spp$species == "Bro jap"] <- "Bromus japonicus"
 ok_rel_spp$Lartin.name[ok_rel_spp$species == "Dac glo"] <- "Dactylis glomerata"
 ok_rel_spp$Lartin.name[ok_rel_spp$species == "Apo can"] <- "Apocynum cannabinum"
 ok_rel_spp$Lartin.name[ok_rel_spp$species == "Ste nig"] <- "Stenaria nigricans"
+ok_rel_spp$Lartin.name[ok_rel_spp$Lartin.name == "Trifolium purpureum "] <- "Trifolium purpureum"
+ok_rel_spp$Lartin.name[ok_rel_spp$Lartin.name == "Muhlenbergia capillaris "] <- "Muhlenbergia capillaris"
+ok_rel_spp$Lartin.name[ok_rel_spp$Lartin.name == "Symphyotrichum ericoides "] <- "Symphyotrichum ericoides"
+ok_rel_spp$Lartin.name[ok_rel_spp$Lartin.name == "solidago drummondii"] <- "Solidago drummondii"
+ok_rel_spp$Lartin.name[ok_rel_spp$Lartin.name == "Eleocharis spp"] <- "Eleocharis sp"
+ok_rel_spp$Lartin.name[ok_rel_spp$Lartin.name == "Cyperus spp"] <- "Cyperus sp"
 
 # Selecting columns
 ok_rel_spp <- ok_rel_spp %>%
@@ -94,9 +102,31 @@ ok_anpp <- ok_anpp %>%
 colnames(ok_anpp) <- c("year", "plot", "temp_treatment", "ab_biomass")
 
 
+
+### Cleaning temp data and merging with ANPP
+# Wide to long
+ok_temps_long <- ok_temps %>%
+    pivot_longer(cols = -c(Year, DOY, Date, Month),
+                 names_to = "plot", values_to = "temp") %>%
+  mutate(plot = paste0("U", plot)) # matching plot names with abundance data
+
+# Fixing plot names for ANPP
+ok_anpp <- ok_anpp %>%
+  mutate(plot = paste0("U", temp_treatment, plot))
+
+# Determining MAT from temp sensor data
+ok_temps_mat <- ok_temps_long %>%
+  group_by(Year,plot) %>%
+  summarise(MAT = mean(temp, na.rm = TRUE))
+
+# Convert column names to lowercase for both dataframes
+colnames(ok_temps_mat) <- tolower(colnames(ok_temps_mat))
+
+
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/OK/"
 write.csv(ok_rel_spp,paste(path_out,'ok_clean.csv'),row.names=F)
 write.csv(ok_anpp,paste(path_out,'ok_ecosystem_dat_clean.csv'),row.names=F)
+write.csv(ok_temps_mat,paste(path_out,'ok_MAT_sensors.csv'),row.names=F)
 
 
