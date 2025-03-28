@@ -15,14 +15,8 @@ setwd(path_data)
 
 # Load in data
 niche_est_cfc <- read.csv(" b4warmed_cfc_niche.csv")
-niche_est_cfc <- niche_est_cfc %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 
 niche_est_hwrc <- read.csv(" b4warmed_hwrc_niche.csv")
-niche_est_hwrc <- niche_est_hwrc %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 
 b4_cfc <- read.csv(" b4warmed_cfc_clean.csv")
 b4_hwrc <- read.csv(" b4warmed_hwrc_clean.csv")

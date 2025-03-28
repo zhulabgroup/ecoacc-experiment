@@ -11,7 +11,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/B4Warmed/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/B4Warmed/"
 setwd(path_data)
 
 # Load in data
@@ -26,16 +26,18 @@ niche_est_cfc <- chelsa_data %>%
   group_by(species) %>%
   mutate(temp_niche = median(mean_annual_temp)) %>%
   mutate(precip_niche = median(mean_annual_precip)) %>%
-  dplyr::select(-c(X,site,ID,ID.1,CHELSA_bio1_1981.2010_V.2.1,CHELSA_bio12_1981.2010_V.2.1))
+  dplyr::select(-c(X,site,ID,ID.1,CHELSA_bio1_1981.2010_V.2.1,CHELSA_bio12_1981.2010_V.2.1,latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
+  distinct()
 niche_est_hwrc <- chelsa_data %>%
   filter(site =="HWRC") %>%
   group_by(species) %>%
   mutate(temp_niche = median(mean_annual_temp)) %>%
   mutate(precip_niche = median(mean_annual_precip)) %>%
-  dplyr::select(-c(X,site,ID,ID.1,CHELSA_bio1_1981.2010_V.2.1,CHELSA_bio12_1981.2010_V.2.1))
+  dplyr::select(-c(X,site,ID,ID.1,CHELSA_bio1_1981.2010_V.2.1,CHELSA_bio12_1981.2010_V.2.1,latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
+  distinct()
 
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc/B4Warmed/"
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/B4Warmed/"
 write.csv(niche_est_cfc,paste(path_out,'b4warmed_cfc_niche.csv'),row.names=F)
 write.csv(niche_est_hwrc,paste(path_out,'b4warmed_hwrc_niche.csv'),row.names=F)
