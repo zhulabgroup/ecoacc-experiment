@@ -10,73 +10,57 @@
 
 ### Load packages
 library(tidyverse)
+library(gridExtra)
 
 
 
 ### Set path to turbo to get data
 # Set path to turbo to get TRY data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/TRY_data/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TRY_data/"
 setwd(path_data)
 # Load in data
 traits <- read.csv(" exp_species_traits.csv")
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 setwd(path_data)
 # Load in data
 niche_est_phace <- read.csv(" phace_niche.csv")
-niche_est_phace <- niche_est_phace %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 niche_est_phace$site <- "PHACE"
 phace <- read.csv(" phace_clean.csv")
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 setwd(path_data)
 # Load in data
 niche_est_tera <- read.csv(" teracon_niche.csv")
-niche_est_tera <- niche_est_tera %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 niche_est_tera$site <- "TeRaCON"
 tera <- read.csv(" teracon_clean.csv")
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/B4Warmed/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/B4Warmed/"
 setwd(path_data)
 # Load in data
-niche_est_b4 <- read.csv(" b4warmed_niche.csv")
-niche_est_b4 <- niche_est_b4 %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
+niche_est_cfc <- read.csv(" b4warmed_cfc_niche.csv")
+niche_est_hwrc <- read.csv(" b4warmed_hwrc_niche.csv")
 b4_cfc <- read.csv(" b4warmed_cfc_clean.csv")
 b4_hwrc <- read.csv(" b4warmed_hwrc_clean.csv")
-# Separate dataframes for CFC and HWRC
-niche_est_cfc<- niche_est_b4 %>%
-  filter(site == "CFC")
-niche_est_hwrc <- niche_est_b4 %>%
-  filter(site == "HWRC")
+niche_est_cfc$site <- "B4WarmED CFC"
+niche_est_hwrc$site <- "B4WarmED HWRC"
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/OK/"
 setwd(path_data)
 # Load in data
 niche_est_ok <- read.csv(" ok_niche.csv")
-niche_est_ok <- niche_est_ok %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 niche_est_ok$site <- "Oklahoma"
 ok <- read.csv(" ok_clean.csv")
 
 ### Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 setwd(path_data)
 # Load in data
 niche_est_jrgce <- read.csv(" jrgce_niche.csv")
-niche_est_jrgce <- niche_est_jrgce %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 niche_est_jrgce$site <- "JRGCE"
 jrgce <- read.csv(" jrgce_clean.csv")
 

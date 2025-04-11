@@ -11,31 +11,31 @@ library(tidyverse)
 library(rtry)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/TeRaCON/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 setwd(path_data)
 # Load in data
 tera <- read.csv(" teracon_clean.csv")
 
 # Set path to data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/JRGCE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 setwd(path_data)
 # Load in data
 jrgce <- read.csv(" jrgce_clean.csv")
 
 # Set path to data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/PHACE/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 setwd(path_data)
 # Load in data
 phace <- read.csv(" phace_clean.csv")
 
 # Set path to data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/B4Warmed/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/B4Warmed/"
 setwd(path_data)
 # Load in data
 b4 <- read.csv(" b4warmed_clean.csv")
 
 # Set path to data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc/OK/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/OK/"
 setwd(path_data)
 # Load in data
 ok <- read.csv(" ok_clean.csv")
@@ -128,7 +128,10 @@ try_spp <- left_join(all_species, try, by = c("AccSpeciesName"))
 try_spp$AccSpeciesID[!is.na(try_spp$AccSpeciesID)]
 
 # Traits to get from TRY
-# Leaf thickness (46), SLA (3117), fine root length (2026), specific fine root length (614), 
+# Clonal growth form (341), Leaf thickness (46), SLA (3117), fine root length (2026), specific fine root length (614), 
 # coarse root length (1770), specific coarse root length (1550), specific root length (1080),
 # dispersal syndrome (28), plant height (3106), LDMC (47), stem diameter (21), growth form (3400), PFT (197)
+# Seed number per plant (131), seed or dispersal unit metamorphoses (813), Seed (seedbank) longevity (33),
+# seed dry mass (26), seed germination rate (95), seed length (27), seed terminal velocity (66)
+# seedbank duration (2809)
 

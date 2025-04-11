@@ -101,17 +101,25 @@ CTI_hwrc <- full_abun_data_hwrc %>%
 CTI_sens_cfc <- CTI_cfc %>%
   dplyr::select(year,plot,temp_treatment,CTI) %>%
   group_by(year,temp_treatment) %>%
-  summarize(mean_cti = mean(CTI)) %>%
-  pivot_wider(names_from = temp_treatment, values_from = mean_cti) %>%
-  mutate(sensitivity_high_temp = `3.4` - amb) %>%
-  mutate(sensitivity_med_temp = `1.7` - amb)
+  summarize(mean_cti = mean(CTI), sd_cti = sd(CTI), n = n()) %>%
+  pivot_wider(names_from = temp_treatment, values_from = c(mean_cti, sd_cti, n)) %>%
+  mutate(
+    sensitivity_high_temp = `mean_cti_3.4` - `mean_cti_amb`,
+    SE_diff_high_temp = sqrt((`sd_cti_3.4`^2 / `n_3.4`) + (`sd_cti_amb`^2 / `n_amb`)),
+    sensitivity_med_temp = `mean_cti_1.7` - `mean_cti_amb`,
+    SE_diff_med_temp = sqrt((`sd_cti_1.7`^2 / `n_1.7`) + (`sd_cti_amb`^2 / `n_amb`))
+  )
 CTI_sens_hwrc <- CTI_hwrc %>%
   dplyr::select(year,plot,temp_treatment,CTI) %>%
   group_by(year,temp_treatment) %>%
-  summarize(mean_cti = mean(CTI)) %>%
-  pivot_wider(names_from = temp_treatment, values_from = mean_cti) %>%
-  mutate(sensitivity_high_temp = `3.4` - amb) %>%
-  mutate(sensitivity_med_temp = `1.7` - amb)
+  summarize(mean_cti = mean(CTI), sd_cti = sd(CTI), n = n()) %>%
+  pivot_wider(names_from = temp_treatment, values_from = c(mean_cti, sd_cti, n)) %>%
+  mutate(
+    sensitivity_high_temp = `mean_cti_3.4` - `mean_cti_amb`,
+    SE_diff_high_temp = sqrt((`sd_cti_3.4`^2 / `n_3.4`) + (`sd_cti_amb`^2 / `n_amb`)),
+    sensitivity_med_temp = `mean_cti_1.7` - `mean_cti_amb`,
+    SE_diff_med_temp = sqrt((`sd_cti_1.7`^2 / `n_1.7`) + (`sd_cti_amb`^2 / `n_amb`))
+  )
 
 # CTI and CPI combined
 CTI_CPI_cfc <- full_abun_data_cfc %>%
