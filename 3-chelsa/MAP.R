@@ -1,10 +1,10 @@
-# TITLE:          MAT for each experiment location
+# TITLE:          MAP for each drought experiment location
 # AUTHORS:        Kara Dobson
 # COLLABORATORS:  Kai Zhu, Peter Reich
 # DATA INPUT:     CHELSA data
 # DATA OUTPUT:    MAT estimates for each year at each location
 # PROJECT:        EcoAcc
-# DATE:           Feb 2025
+# DATE:           April 2025
 
 
 # Load packages
@@ -21,9 +21,9 @@ setwd(path_data)
 # Initialize an empty list to store the raster files
 raster_list <- list()
 # Define the years
-years <- 1998:2024
+years <- 2014:2017
 # Base file path and file name pattern
-file_pattern <- "MAT_1_24degree_%d.tif"
+file_pattern <- "MAP_1_24degree_%d.tif"
 # Loop over each year and month
 for (year in years) {
   # Construct the file name
@@ -40,15 +40,15 @@ for (year in years) {
   } else {
     warning(paste("File does not exist:", file_path))
   }
-  }
+}
 
 
 
 ### Coordinates for the locations of each experiment
 locations <- tibble(
-  #Experiment = c("TeRaCON", "B4Warmed CFC", "B4Warmed HWRC", "Oklahoma", "PHACE", "JRGCE","KNZ","HYS","SGS","CHY"),
-  longitude = c(-93, -92.5, -91.8, -97.5, -104.9, -122.2, -96.6, -99.3, -104.8, -104.9),
-  latitude = c(45, 46.7, 47.9, 35, 41.2, 37.4, 39.1, 38.9, 40.8, 41.2)
+  #Experiment = c("KNZ","HYS","SGS","CHY"),
+  longitude = c(-96.6, -99.3, -104.8, -104.9),
+  latitude = c(39.1, 38.9, 40.8, 41.2)
 )
 coordinates(locations)<-c("longitude", "latitude")
 
@@ -80,26 +80,26 @@ extracted_data_df <- bind_rows(extracted_data_list)
 extracted_data_df <- extracted_data_df %>%
   pivot_longer(cols = -c(ID),
                names_to = "year",
-               values_to = "MAT") %>%
-  filter(!is.na(MAT))
-  
+               values_to = "MAP") %>%
+  filter(!is.na(MAP))
+
 # Locations of experiments in dataframe
 exp_ID <- tibble(
-  site = c("TeRaCON", "B4Warmed CFC", "B4Warmed HWRC", "Oklahoma", "PHACE", "JRGCE", "KNZ", "HYS", "SGS", "CHY"),
-  ID = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+  site = c("KNZ", "HYS", "SGS", "CHY"),
+  ID = c(1, 2, 3, 4)
 )
 
 # Merge with temperature data
-MAT_exp <- left_join(extracted_data_df,exp_ID,by="ID")
-MAT_exp <- MAT_exp %>%
-  dplyr::select(site, year, MAT)
+MAP_exp <- left_join(extracted_data_df,exp_ID,by="ID")
+MAP_exp <- MAP_exp %>%
+  dplyr::select(site, year, MAP)
 
 # Fixing values in year column
-MAT_exp$year <- sub(".*_(\\d{4})$", "\\1", MAT_exp$year)
+MAP_exp$year <- sub(".*_(\\d{4})$", "\\1", MAP_exp$year)
 
 
 
 
 ### Upload data
 path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/"
-write.csv(MAT_exp,paste(path_out,'MAT.csv'),row.names=F)
+write.csv(MAP_exp,paste(path_out,'MAP.csv'),row.names=F)
