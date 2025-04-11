@@ -255,10 +255,25 @@ filtered_df <- yu_abun %>%
   filter(!sapply(species, filter_species))
 
 
+### Separate dataframes for each site
+knz <- filtered_df %>%
+  filter(site == "KNZ")
+hys <- filtered_df %>%
+  filter(site == "HYS")
+sgs <- filtered_df %>%
+  filter(site == "SGS")
+chy <- filtered_df %>%
+  filter(site == "CHY")
+
+
 
 # Upload data
 path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
 write.csv(filtered_df,paste(path_out,'yu_clean.csv'),row.names=F)
+write.csv(knz,paste(path_out,'knz_clean.csv'),row.names=F)
+write.csv(hys,paste(path_out,'hys_clean.csv'),row.names=F)
+write.csv(sgs,paste(path_out,'sgs_clean.csv'),row.names=F)
+write.csv(chy,paste(path_out,'chy_clean.csv'),row.names=F)
 
 
 
