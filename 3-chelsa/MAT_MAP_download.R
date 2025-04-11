@@ -21,7 +21,7 @@ for (var in var_list) {
 foreach(
   year = 2014:2017,
   .packages = c("raster", "ncdf4")
-) %do% {
+) %dopar% {
   rasterOptions(tmpdir = paste0(scratch_path, "tmpraster")) # important, otherwise might run out of memory
   ppt_file <- paste0(terraclim_path, "TerraClimate_ppt_", year, ".nc")
   
