@@ -30,7 +30,7 @@ foreach(
   }
   
   monthly_ppt <- stack(ppt_file, varname = "ppt")
-  map <- mean(monthly_ppt)
+  map <- sum(monthly_ppt)
   
   raster::writeRaster(map, paste0(terraclim_path, "metric/MAP_1_24degree_", year, ".tif"), overwrite = TRUE, format = "GTiff")
 }
