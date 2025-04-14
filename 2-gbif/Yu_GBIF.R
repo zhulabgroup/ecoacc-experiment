@@ -15,7 +15,7 @@ library(maps)
 library(spThin)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
 setwd(path_data)
 
 # Read in data
@@ -127,12 +127,14 @@ occurrences <- function(spp, bbox) {
 }
 # Run function
 spp_occurrences_knz4 <- occurrences(species_list_knz4, knz_bbox_1000)
+sporobolus_asper <- occurrences("Sporobolus asper", knz_bbox_1000)
 spp_occurrences_hys4 <- occurrences(species_list_hys4, hys_bbox_1000)
 spp_occurrences_sgs2 <- occurrences(species_list_sgs2, sgs_bbox_1000)
 spp_occurrences_chy <- occurrences(species_list_chy, chy_bbox_1000)
 
 # Pulling lat and long from GBIF
 GBIF_species_knz4 <- do.call(rbind.data.frame, spp_occurrences_knz4)
+GBIF_species_sasper <- do.call(rbind.data.frame, sporobolus_asper)
 GBIF_species_hys4 <- do.call(rbind.data.frame, spp_occurrences_hys4)
 GBIF_species_chy <- do.call(rbind.data.frame, spp_occurrences_chy)
 GBIF_species_sgs2 <- do.call(rbind.data.frame, spp_occurrences_sgs2)
@@ -211,6 +213,7 @@ d1_cleaned <- d1[flags1$.summary,]
 ### Accounting for spatial autocorrelation
 # Split the dataset by species
 species_split_knz <- split(GBIF_species_knz, GBIF_species_knz$species)
+species_split_sasper <- split(GBIF_species_sasper, GBIF_species_sasper$species)
 species_split_hys <- split(GBIF_species_hys, GBIF_species_hys$species)
 species_split_hys <- species_split_hys[2:114]
 species_split_chy <- split(GBIF_species_chy, GBIF_species_chy$species)
@@ -221,6 +224,7 @@ species_list1 <- split(d1_cleaned, d1_cleaned$species)
 
 # Initialize a list to store results
 thinned_results_knz <- list()
+thinned_results_sasper <- list()
 thinned_results_hys <- list()
 thinned_results_chy <- list()
 thinned_results_sgs <- list()
@@ -243,10 +247,10 @@ thinned_results_Asclepias <- list()
 thinned_results_Oenothera <- list()
 
 # Loop through each species and apply thinning
-for (species_name in names(species_list1)) {
+for (species_name in names(species_split_sasper)) {
   cat("Processing species:", species_name, "\n")
   
-  species_data <- species_list1[[species_name]]
+  species_data <- species_split_sasper[[species_name]]
   
   # Thin data for the current species
   thinned_species <- thin(
@@ -264,12 +268,12 @@ for (species_name in names(species_list1)) {
   # Add a species column to the thinned data and store in the list
   thinned_data <- thinned_species[[1]]
   thinned_data$species <- species_name
-  thinned_results_Oenothera[[species_name]] <- thinned_data
+  thinned_results_sasper[[species_name]] <- thinned_data
 }
 
 # Combine all thinned data frames into one data frame
-thinned_results_Oenothera_df <- do.call(rbind, thinned_results_Oenothera)
-row.names(thinned_results_Oenothera_df) <- NULL
+thinned_results_sasper_df <- do.call(rbind, thinned_results_sasper)
+row.names(thinned_results_sasper_df) <- NULL
 
 # Fixing genus-only name
 # KNZ
@@ -316,8 +320,8 @@ thinned_results_df <- rbind(thinned_results_sgs_df,thinned_results_Oenothera_df)
 
 
 # Upload data
-path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
-write.csv(thinned_results_df,paste(path_out,'GBIF_sgs.csv'),row.names=F)
+path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
+write.csv(thinned_results_df,paste(path_out,'GBIF_knz.csv'),row.names=F)
 
 
 

@@ -15,18 +15,21 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
 setwd(path_data)
 
 # Load in data
-chelsa_data <- read.csv(" CHELSA_hys.csv")
+chelsa_data <- read.csv(" CHELSA_knz.csv")
 
 # Calculating the median temp and precip for each species
-#chelsa_data$species[chelsa_data$species == "Elymus smithii"] <- "Pascopyrum smithii" # fixing spp name to match phace
-#chelsa_data$species[chelsa_data$species == "Festuca octoflora"] <- "Vulpia octoflora"
-#chelsa_data$species[chelsa_data$species == "Pelecyphora vivipara"] <- "Escobaria vivipara"
-#chelsa_data$species[chelsa_data$species == "Oreocarya thyrsiflora"] <- "Cryptantha thyrsiflora"
-#chelsa_data$species[chelsa_data$species == "Oreocarya suffruticosa"] <- "Cryptantha cinerea"
-#chelsa_data$species[chelsa_data$species == "Tomostima reptans"] <- "Draba reptans"
-#chelsa_data$species[chelsa_data$species == "Xanthisma spinulosum"] <- "Machaeranthera pinnatifida"
-#chelsa_data$species[chelsa_data$species == "Physaria montana"] <- "Lesquerella montana"
-#chelsa_data$species[chelsa_data$species == "Dieteria canescens"] <- "Machaeranthera canescens"
+chelsa_data$species[chelsa_data$species == "Symphyotrichum oblongifolium"] <- "Aster oblongifolius" # fixing spp name to match phace
+chelsa_data$species[chelsa_data$species == "Bouteloua dactyloides"] <- "Buchloe dactyloides" # fixing spp name to match phace
+chelsa_data$species[chelsa_data$species == "Carex inops"] <- "Carex heliophila" # fixing spp name to match phace
+chelsa_data$species[chelsa_data$species == "Erigeron canadensis"] <- "Conyza canadensis" # fixing spp name to match phace
+chelsa_data$species[chelsa_data$species == "Eleocharis sp"] <- "Eleocharis" # fixing spp name to match phace
+chelsa_data$species[chelsa_data$species == "Juncus sp"] <- "Juncus" # fixing spp name to match phace
+chelsa_data$species[chelsa_data$species == "Brickellia eupatorioides"] <- "Kuhnia eupatorioides" # fixing spp name to match phace
+chelsa_data$species[chelsa_data$species == "Pediomelum tenuiflorum"] <- "Psoralea tenuiflora" # fixing spp name to match phace
+chelsa_data$species[chelsa_data$species == "Mimosa quadrivalvis"] <- "Schrankia nuttallii" # fixing spp name to match phace
+chelsa_data$species[chelsa_data$species == "Packera plattensis"] <- "Senecio plattensis" # fixing spp name to match phace
+chelsa_data$species[chelsa_data$species == "Andropogon gerardi"] <- "Andropogon gerardii" # fixing spp name to match phace
+chelsa_data$species[chelsa_data$species == "Sporobolus compositus"] <- "Sporobolus asper" # fixing spp name to match phace
 
 niche_est <- chelsa_data %>%
   group_by(species) %>%
@@ -38,4 +41,4 @@ niche_est <- chelsa_data %>%
 
 # Upload data
 path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
-write.csv(niche_est,paste(path_out,'hys_niche.csv'),row.names=F)
+write.csv(niche_est,paste(path_out,'knz_niche.csv'),row.names=F)
