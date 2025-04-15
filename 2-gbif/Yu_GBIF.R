@@ -133,13 +133,13 @@ sporobolus_asper <- occurrences("Sporobolus asper", knz_bbox_1000)
 spp_occurrences_hys4 <- occurrences(species_list_hys4, hys_bbox_1000)
 hys_spp_check <- occurrences(c("Draba reptans","Nothocalais cuspidata","Schedonnardus paniculatus"), hys_bbox_1000)
 spp_occurrences_sgs2 <- occurrences(species_list_sgs2, sgs_bbox_1000)
-spp_occurrences_chy1 <- occurrences(species_list_chy1, chy_bbox_1000)
+spp_occurrences_chy2 <- occurrences(species_list_chy2, chy_bbox_1000)
 
 # Pulling lat and long from GBIF
 GBIF_species_knz4 <- do.call(rbind.data.frame, spp_occurrences_knz4)
 GBIF_species_sasper <- do.call(rbind.data.frame, sporobolus_asper)
 GBIF_species_hys4 <- do.call(rbind.data.frame, spp_occurrences_hys4)
-GBIF_species_chy1 <- do.call(rbind.data.frame, spp_occurrences_chy1)
+GBIF_species_chy2 <- do.call(rbind.data.frame, spp_occurrences_chy2)
 GBIF_species_sgs2 <- do.call(rbind.data.frame, spp_occurrences_sgs2)
 
 
@@ -179,19 +179,29 @@ genus_key11 <- 3170229
 name_suggest("Oenothera") # Check for correct key by pasting it at the end here: https://www.gbif.org/occurrence/search?taxon_key=3248170
 genus_key1 <- 3188799
 
+## CHY genera
+name_suggest("Oenothera") # Check for correct key by pasting it at the end here: https://www.gbif.org/occurrence/search?taxon_key=3248170
+genus_key1 <- 3188799
+name_suggest("Orobanche") # Check for correct key by pasting it at the end here: https://www.gbif.org/occurrence/search?taxon_key=3248170
+genus_key2 <- 3173259
+name_suggest("Cirsium") # Check for correct key by pasting it at the end here: https://www.gbif.org/occurrence/search?taxon_key=3248170
+genus_key3 <- 3112554
+name_suggest("Astragalus") # Check for correct key by pasting it at the end here: https://www.gbif.org/occurrence/search?taxon_key=3248170
+genus_key4 <- 2933951
+
 
 # Construct the WKT string for the bounding box
-bbox_wkt_sgs <- paste0("POLYGON((", 
-                   sgs_bbox_1000[1], " ", sgs_bbox_1000[2], ", ",
-                   sgs_bbox_1000[3], " ", sgs_bbox_1000[2], ", ",
-                   sgs_bbox_1000[3], " ", sgs_bbox_1000[4], ", ",
-                   sgs_bbox_1000[1], " ", sgs_bbox_1000[4], ", ",
-                   sgs_bbox_1000[1], " ", sgs_bbox_1000[2], "))")
+bbox_wkt_chy <- paste0("POLYGON((", 
+                   chy_bbox_1000[1], " ", chy_bbox_1000[2], ", ",
+                   chy_bbox_1000[3], " ", chy_bbox_1000[2], ", ",
+                   chy_bbox_1000[3], " ", chy_bbox_1000[4], ", ",
+                   chy_bbox_1000[1], " ", chy_bbox_1000[4], ", ",
+                   chy_bbox_1000[1], " ", chy_bbox_1000[2], "))")
 
 # Add the spatial predicate for bounding box
 gbif_download <- occ_download(
-  pred("taxonKey", genus_key1), # run for each genus
-  pred_within(bbox_wkt_sgs),
+  pred("taxonKey", genus_key4), # run for each genus
+  pred_within(bbox_wkt_chy),
   format = "SIMPLE_CSV"
 )
 occ_download_wait(gbif_download)
@@ -222,7 +232,7 @@ species_split_hys <- species_split_hys[2:114]
 species_split_chy <- split(GBIF_species_chy, GBIF_species_chy$species)
 species_split_sgs <- split(GBIF_species_sgs, GBIF_species_sgs$species)
 # Genera
-d1_cleaned$species[d1_cleaned$species == ""] <- "Oenothera"
+d1_cleaned$species[d1_cleaned$species == ""] <- "Astragalus"
 species_list1 <- split(d1_cleaned, d1_cleaned$species)
 
 # Initialize a list to store results
@@ -248,12 +258,17 @@ thinned_results_Astragalus <- list()
 thinned_results_Asclepias <- list()
 # SGS genera
 thinned_results_Oenothera <- list()
+# CHY genera
+thinned_results_Oenothera <- list()
+thinned_results_Orobanche <- list()
+thinned_results_Cirsium <- list()
+thinned_results_Astragalus <- list()
 
 # Loop through each species and apply thinning
-for (species_name in names(species_split_sasper)) {
+for (species_name in names(species_list1)) {
   cat("Processing species:", species_name, "\n")
   
-  species_data <- species_split_sasper[[species_name]]
+  species_data <- species_list1[[species_name]]
   
   # Thin data for the current species
   thinned_species <- thin(
@@ -271,12 +286,12 @@ for (species_name in names(species_split_sasper)) {
   # Add a species column to the thinned data and store in the list
   thinned_data <- thinned_species[[1]]
   thinned_data$species <- species_name
-  thinned_results_sasper[[species_name]] <- thinned_data
+  thinned_results_Astragalus[[species_name]] <- thinned_data
 }
 
 # Combine all thinned data frames into one data frame
-thinned_results_sasper_df <- do.call(rbind, thinned_results_sasper)
-row.names(thinned_results_sasper_df) <- NULL
+thinned_results_Astragalus_df <- do.call(rbind, thinned_results_Astragalus)
+row.names(thinned_results_Astragalus_df) <- NULL
 
 # Fixing genus-only name
 # KNZ
@@ -312,6 +327,19 @@ thinned_results_Oenothera_df <- thinned_results_Oenothera_df %>%
   mutate(species = ifelse(grepl("Anogra", species), "Oenothera sp", species)) %>%
   mutate(species = ifelse(grepl("Oenothera", species), "Oenothera sp", species)) %>%
   mutate(species = ifelse(grepl("Gaura", species), "Oenothera sp", species))
+# SGS
+thinned_results_Oenothera_df <- thinned_results_Oenothera_df %>%
+  mutate(species = ifelse(grepl("Anogra", species), "Oenothera", species)) %>%
+  mutate(species = ifelse(grepl("Oenothera", species), "Oenothera", species)) %>%
+  mutate(species = ifelse(grepl("Gaura", species), "Oenothera", species))
+thinned_results_Orobanche_df <- thinned_results_Orobanche_df %>%
+  mutate(species = ifelse(grepl("Orobanche", species), "Orobanche", species))
+thinned_results_Cirsium_df <- thinned_results_Cirsium_df %>%
+  mutate(species = ifelse(grepl("Cirsium", species), "Cirsium", species))
+thinned_results_Astragalus_df <- thinned_results_Astragalus_df %>%
+  mutate(species = ifelse(grepl("Astragalus", species), "Astragalus", species))
+
+
 
 # Merge with the other GBIF data
 thinned_results_df <- rbind(GBIF_knz,thinned_results_juncus_df,thinned_results_eleocharis_df)
@@ -320,12 +348,13 @@ thinned_results_df <- rbind(GBIF_hys,thinned_results_triodanis_df,thinned_result
                             thinned_results_Helianthus_df,thinned_results_Eriogonum_df,thinned_results_Croton_df,
                             thinned_results_Chloris_df,thinned_results_Astragalus_df,thinned_results_Asclepias_df)
 thinned_results_df <- rbind(thinned_results_sgs_df,thinned_results_Oenothera_df)
+thinned_results_df <- rbind(thinned_results_chy_df,thinned_results_Oenothera_df,thinned_results_Orobanche_df,
+                            thinned_results_Cirsium_df,thinned_results_Astragalus_df)
 
 
 # Upload data
 path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
-write.csv(thinned_results_df,paste(path_out,'GBIF_knz.csv'),row.names=F)
-write.csv(GBIF_species_chy1,paste(path_out,'GBIF_chy1.csv'),row.names=F)
+write.csv(thinned_results_df,paste(path_out,'GBIF_chy.csv'),row.names=F)
 
 
 
