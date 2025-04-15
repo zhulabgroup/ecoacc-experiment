@@ -15,7 +15,7 @@ library(maps)
 library(spThin)
 
 # Set path to turbo to get data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
 setwd(path_data)
 
 # Read in data
@@ -52,6 +52,8 @@ species_list_sgs <- unique(species_names_sgs$species)
 species_list_sgs1 <- species_list_sgs[1:30]
 species_list_sgs2 <- species_list_sgs[31:62]
 species_list_chy <- unique(species_names_chy$species)
+species_list_chy1 <- species_list_chy[1:35]
+species_list_chy2 <- species_list_chy[36:75]
 
 
 # Create a list for species names without spaces
@@ -129,14 +131,15 @@ occurrences <- function(spp, bbox) {
 spp_occurrences_knz4 <- occurrences(species_list_knz4, knz_bbox_1000)
 sporobolus_asper <- occurrences("Sporobolus asper", knz_bbox_1000)
 spp_occurrences_hys4 <- occurrences(species_list_hys4, hys_bbox_1000)
+hys_spp_check <- occurrences(c("Draba reptans","Nothocalais cuspidata","Schedonnardus paniculatus"), hys_bbox_1000)
 spp_occurrences_sgs2 <- occurrences(species_list_sgs2, sgs_bbox_1000)
-spp_occurrences_chy <- occurrences(species_list_chy, chy_bbox_1000)
+spp_occurrences_chy1 <- occurrences(species_list_chy1, chy_bbox_1000)
 
 # Pulling lat and long from GBIF
 GBIF_species_knz4 <- do.call(rbind.data.frame, spp_occurrences_knz4)
 GBIF_species_sasper <- do.call(rbind.data.frame, sporobolus_asper)
 GBIF_species_hys4 <- do.call(rbind.data.frame, spp_occurrences_hys4)
-GBIF_species_chy <- do.call(rbind.data.frame, spp_occurrences_chy)
+GBIF_species_chy1 <- do.call(rbind.data.frame, spp_occurrences_chy1)
 GBIF_species_sgs2 <- do.call(rbind.data.frame, spp_occurrences_sgs2)
 
 
@@ -320,8 +323,9 @@ thinned_results_df <- rbind(thinned_results_sgs_df,thinned_results_Oenothera_df)
 
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
 write.csv(thinned_results_df,paste(path_out,'GBIF_knz.csv'),row.names=F)
+write.csv(GBIF_species_chy1,paste(path_out,'GBIF_chy1.csv'),row.names=F)
 
 
 
