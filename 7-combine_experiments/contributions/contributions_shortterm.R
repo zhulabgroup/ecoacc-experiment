@@ -18,9 +18,6 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 setwd(path_data)
 # Load in data
 niche_est_phace <- read.csv(" phace_niche.csv")
-niche_est_phace <- niche_est_phace %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 phace <- read.csv(" phace_clean.csv")
 
 ### Set path to turbo to get data
@@ -28,9 +25,6 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 setwd(path_data)
 # Load in data
 niche_est_tera <- read.csv(" teracon_niche.csv")
-niche_est_tera <- niche_est_tera %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 tera <- read.csv(" teracon_clean.csv")
 tera <- tera %>%
   dplyr::select(-mean_C_temp_summer)
@@ -39,26 +33,16 @@ tera <- tera %>%
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/B4Warmed/"
 setwd(path_data)
 # Load in data
-niche_est_b4 <- read.csv(" b4warmed_niche.csv")
-niche_est_b4 <- niche_est_b4 %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
+niche_est_cfc <- read.csv(" b4warmed_cfc_niche.csv")
+niche_est_hwrc <- read.csv(" b4warmed_hwrc_niche.csv")
 b4_cfc <- read.csv(" b4warmed_cfc_clean.csv")
 b4_hwrc <- read.csv(" b4warmed_hwrc_clean.csv")
-# Separate dataframes for CFC and HWRC
-niche_est_cfc<- niche_est_b4 %>%
-  filter(site == "CFC")
-niche_est_hwrc <- niche_est_b4 %>%
-  filter(site == "HWRC")
 
 ### Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/OK/"
 setwd(path_data)
 # Load in data
 niche_est_ok <- read.csv(" ok_niche.csv")
-niche_est_ok <- niche_est_ok %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 ok <- read.csv(" ok_clean.csv")
 
 ### Set path to turbo to get data
@@ -66,9 +50,6 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 setwd(path_data)
 # Load in data
 niche_est_jrgce <- read.csv(" jrgce_niche.csv")
-niche_est_jrgce <- niche_est_jrgce %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 jrgce <- read.csv(" jrgce_clean.csv")
 jrgce <- jrgce %>%
   dplyr::select(-mean_C_temp_summer)
@@ -269,10 +250,6 @@ names(result_list) <- names(final_list)
 # Combine all data frames into a single data frame
 res_df <- rbindlist(result_list, idcol = "site1")
 
-## Fix spp name
-res_df$species <- recode(res_df$species, "solidago drummondii" = "Solidago drummondii")
-res_df$species <- recode(res_df$species, "Andropogon gerardi" = "Andropogon gerardii")
-
 
 
 ### Data for plotting
@@ -309,8 +286,8 @@ contour_plot <- function(data, site_name) {
   site_data <- data %>% filter(site == site_name)
   
   # Pulling out ranges of temp niches and slopes
-  temp <- seq(min(site_data$avg_temp_niche), max(site_data$avg_temp_niche), length.out = 50)
-  abun <- seq(min(site_data$avg_abun), max(site_data$avg_abun), length.out = 50)
+  temp <- seq(min(site_data$avg_temp_niche)-0.1, max(site_data$avg_temp_niche)+0.1, length.out = 50)
+  abun <- seq(min(site_data$avg_abun), max(site_data$avg_abun)+0.02, length.out = 50)
   
   # Merge data into dataframe
   grid_df <- expand.grid(temp_anomaly = temp, abund = abun)
@@ -321,7 +298,7 @@ contour_plot <- function(data, site_name) {
   unique_treatments <- unique(site_data$temp_treatment)
   
   # Define the color mapping based on available treatments
-  treatment_colors <- c("ambient" = "blue", "1.7" = "orange", "warmed" = "red", "3.4" = "red", "amb" = "blue")
+  treatment_colors <- c("ambient" = "blue4", "1.7" = "orange3", "warmed" = "red4", "3.4" = "red4", "amb" = "blue4")
   labels = c("ambient" = "Ambient","warmed" = "Warmed","1.7" = "Intermediate", "3.4" = "Warmed", "amb" = "Ambient")
   used_colors <- treatment_colors[names(treatment_colors) %in% unique_treatments]
   used_labels <- labels[names(labels) %in% unique_treatments]
@@ -332,6 +309,23 @@ contour_plot <- function(data, site_name) {
     mutate(abs_contribution_center = abs(avg_cont)) %>%
     arrange(desc(abs_contribution_center)) %>%
     slice(1)
+  
+  # Create a mapping from top_contributors to species names with labels "Top X: Species"
+  initial_year <- min(site_data$year)
+  treatment_level <- min(site_data$temp_treatment)
+  
+  species_mapping <- site_data %>%
+    filter(!(top_contributors == "none")) %>%
+    filter(year == initial_year) %>%
+    filter(temp_treatment == treatment_level) %>%
+    dplyr::select(species, top_contributors) %>%
+    arrange(top_contributors) %>%
+    ungroup() %>%  # Ensure no grouping before mutating
+    mutate(rank = row_number()) %>%
+    mutate(label = paste0(rank, ": ", species)) %>%
+    dplyr::select(top_contributors, label) %>%
+    distinct() %>%
+    deframe()
   
   # Determine arrows from ambient to warm
   arrow_data <- site_data %>%
@@ -350,16 +344,19 @@ contour_plot <- function(data, site_name) {
   p <- ggplot(grid_df, aes(x = temp_anomaly, y = abund)) +
     facet_wrap(.~year) +
     geom_tile(aes(fill = spp_contrib)) + # Add tiles to represent the surface
-    geom_contour(aes(z = spp_contrib), color = "gray50") + # Specified contour lines
+    #geom_contour(aes(z = spp_contrib), color = "gray50") + # Specified contour lines
     geom_segment(data = arrow_data, aes(x = x_start, y = y_start, xend = x_end, yend = y_end),
                  color = "black", size = 0.5) +
-    geom_point(data = site_data, aes(x = avg_temp_niche, y = avg_abun, color = temp_treatment, alpha = top_contributors, shape = top_contributors)) + #########
+    geom_point(data = site_data, aes(x = avg_temp_niche, y = avg_abun, color = temp_treatment, alpha = top_contributors, shape = top_contributors, size=top_contributors)) + #########
     scale_alpha_manual(name = "Top species\ncontributors",
-                       values = c("top_1" = 1, "top_2" = 1, "top_3" = 1, "none" = 0.4),
-                       labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
+                     values = c("top_1" = 1, "top_2" = 1, "top_3" = 1, "none" = 0.4),
+                     labels = c(species_mapping, "none" = "N/A")) +
     scale_shape_manual(name = "Top species\ncontributors",
-                       values = c("top_1" = 8, "top_2" = 18, "top_3" = 17, "none" = 20),
-                       labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
+                       values = c("top_1" = 17, "top_2" = 18, "top_3" = 8, "none" = 20),
+                       labels = c(species_mapping, "none" = "N/A")) +
+    scale_size_manual(name = "Top species\ncontributors",
+                      values = c("top_1" = 3, "top_2" = 3, "top_3" = 3, "none" = 1),
+                      labels = c(species_mapping, "none" = "N/A")) +
     scale_fill_gradient2(
       low = "blue", mid = "white", high = "red", midpoint = 0,
       name = "Species\ncontribution\nto CTI (°C)"
@@ -370,6 +367,7 @@ contour_plot <- function(data, site_name) {
     ggtitle(site_name) +
     labs(
       x = "Species temperature (°C)",
+      #y = paste(site_name,"Abundance", sep = "\n"),
       y = "Abundance",
     ) +
     #geom_label_repel(data = top_contributors,
@@ -386,8 +384,16 @@ contour_plot <- function(data, site_name) {
     theme_minimal() +
     theme(axis.text.x = element_text(size = 12),
           axis.text.y = element_text(size = 14),
-          axis.title = element_text(size = 14, face = "bold")) +
-    coord_cartesian(expand = FALSE) # Ensure no expansion on axes
+          axis.title = element_text(size = 15, face = "bold"),
+          strip.text.x = element_text(size = 12),
+          plot.title = element_text(size=15, face="bold"),
+          #axis.title.x = element_blank(),
+          legend.text=element_text(size=13),
+          legend.title=element_text(size=13)) +
+    coord_cartesian(expand = FALSE) + # Ensure no expansion on axes
+    guides(shape = guide_legend(order = 1),
+           size = guide_legend(order = 1),
+           alpha = guide_legend(order = 1))
   
   # Print the plot
   print(p)
@@ -403,14 +409,18 @@ for (site_name in unique(cont_avg$site)) {
   # Store the plot in the list with the site name as the key
   plots_contours[[site_name]] <- plot
 }
-contour_shortterm_cfc <- plots_contours[[1]]
+contour_shortterm_cfc <- plots_contours[[1]] + theme(axis.title.x = element_blank())
 contour_shortterm_hwrc <- plots_contours[[2]]
-contour_shortterm_jrgce <- plots_contours[[3]]
-contour_shortterm_ok <- plots_contours[[4]]
-contour_shortterm_phace <- plots_contours[[5]]
-contour_shortterm_tera <- plots_contours[[6]]
+contour_shortterm_jrgce <- plots_contours[[3]] + theme(axis.title.x = element_blank()) + scale_x_continuous(breaks=seq(11, 17, 2))
+contour_shortterm_ok <- plots_contours[[4]]+ theme(axis.title.x = element_blank())
+contour_shortterm_phace <- plots_contours[[5]]+ theme(axis.title.x = element_blank())
+contour_shortterm_tera <- plots_contours[[6]]+ theme(axis.title.x = element_blank())
 
-
+png("contours_4.png", units="in", width=18, height=18, res=300)
+wrap_plots(contour_shortterm_jrgce, contour_shortterm_phace, contour_shortterm_tera,
+           contour_shortterm_ok, contour_shortterm_hwrc, contour_shortterm_cfc,
+           ncol=2,axis_titles = "collect")
+dev.off()
 
 
 ### Export Rdata for plots

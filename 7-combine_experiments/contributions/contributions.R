@@ -17,9 +17,6 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 setwd(path_data)
 # Load in data
 niche_est_phace <- read.csv(" phace_niche.csv")
-niche_est_phace <- niche_est_phace %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 phace <- read.csv(" phace_clean.csv")
 
 ### Set path to turbo to get data
@@ -27,35 +24,22 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 setwd(path_data)
 # Load in data
 niche_est_tera <- read.csv(" teracon_niche.csv")
-niche_est_tera <- niche_est_tera %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 tera <- read.csv(" teracon_clean.csv")
 
 ### Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/B4Warmed/"
 setwd(path_data)
 # Load in data
-niche_est_b4 <- read.csv(" b4warmed_niche.csv")
-niche_est_b4 <- niche_est_b4 %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
+niche_est_cfc <- read.csv(" b4warmed_cfc_niche.csv")
+niche_est_hwrc <- read.csv(" b4warmed_hwrc_niche.csv")
 b4_cfc <- read.csv(" b4warmed_cfc_clean.csv")
 b4_hwrc <- read.csv(" b4warmed_hwrc_clean.csv")
-# Separate dataframes for CFC and HWRC
-niche_est_cfc<- niche_est_b4 %>%
-  filter(site == "CFC")
-niche_est_hwrc <- niche_est_b4 %>%
-  filter(site == "HWRC")
 
 ### Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/OK/"
 setwd(path_data)
 # Load in data
 niche_est_ok <- read.csv(" ok_niche.csv")
-niche_est_ok <- niche_est_ok %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 ok <- read.csv(" ok_clean.csv")
 
 ### Set path to turbo to get data
@@ -63,9 +47,6 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 setwd(path_data)
 # Load in data
 niche_est_jrgce <- read.csv(" jrgce_niche.csv")
-niche_est_jrgce <- niche_est_jrgce %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 jrgce <- read.csv(" jrgce_clean.csv")
 
 
@@ -663,11 +644,14 @@ contour_plot <- function(data, site_name) {
   used_labels <- labels[names(labels) %in% unique_treatments]
   
   # Top species for name labels per year
+  #top_contributors <- site_data %>% 
+  #  filter(temp_treatment == "warmed" | temp_treatment == "3.4") %>%
+  #  mutate(abs_contribution_center = abs(contribution)) %>%
+  #  arrange(desc(abs_contribution_center)) %>%
+  #  slice(1:3)
   top_contributors <- site_data %>% 
-    group_by(temp_treatment) %>%
-    mutate(abs_contribution_center = abs(contribution)) %>%
-    arrange(desc(abs_contribution_center)) %>%
-    slice(1)
+    filter(top_contributors == "top_1" | top_contributors == "top_2" | top_contributors == "top_3") %>%
+    filter(temp_treatment == "warmed" | temp_treatment == "3.4")
   
   # Determine arrows from ambient to warm
   arrow_data <- site_data %>%
@@ -709,7 +693,7 @@ contour_plot <- function(data, site_name) {
       y = expression(bold(Delta~Abundance)),
     ) +
     #geom_label_repel(data = top_contributors,
-    #                 aes(x = avg_temp_niche, y = avg_abun, label = species),
+    #                 aes(x = temp_niche, y = slope, label = species),
     #                 size = 3,
     #                 box.padding = 0.5,          # Increase the padding around the box
     #                 point.padding = 0.3,   
@@ -739,12 +723,54 @@ for (site_name in unique(data_for_plot$site)) {
   # Store the plot in the list with the site name as the key
   plots_contours[[site_name]] <- plot
 }
+# Get shared legend information
 point_contours_cfc <- plots_contours[[1]]
 point_contours_hwrc <- plots_contours[[2]]
 point_contours_jrgce <- plots_contours[[3]]
 point_contours_ok <- plots_contours[[4]]
 point_contours_phace <- plots_contours[[5]]
 point_contours_tera <- plots_contours[[6]]
+
+# Function to remove color, shape, and alpha guides
+legend_rem <- function(plt){
+  plt <- plt +
+    guides(shape = "none", color = "none", alpha = "none")
+  return(plt)   
+}
+
+# Getting the color, shape-alpha guide separately
+clr_shp_lgnd <- point_contours_cfc +
+  guides(fill = "none") +
+  theme(axis.text.y = element_blank(),
+        plot.title = element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks = element_blank(),
+        legend.position = c(0.5, 0.5),
+        legend.title = element_blank(),
+        panel.grid = element_blank(),
+        panel.border = element_rect(colour = "white", fill='white', size=1)) 
+
+# Patchwork design
+design <- "
+  aaaaaabbbbbbcccccc##
+  aaaaaabbbbbbccccccgg
+  aaaaaabbbbbbccccccgg
+  ddddddeeeeeeffffffgg
+  ddddddeeeeeeffffffgg
+  ddddddeeeeeeffffff##
+"
+# Combine plots
+#png("cti_panel.png", units="in", width=15, height=7, res=300)
+legend_rem(point_contours_cfc) + 
+  legend_rem(point_contours_hwrc) +
+  legend_rem(point_contours_jrgce) +
+  legend_rem(point_contours_ok) +
+  legend_rem(point_contours_phace) +
+  legend_rem(point_contours_tera) +
+  clr_shp_lgnd +
+  plot_layout(design = design, axis_titles = "collect")
+#dev.off()
+
 
 
 
