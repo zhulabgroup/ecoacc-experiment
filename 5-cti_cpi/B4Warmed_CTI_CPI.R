@@ -74,7 +74,11 @@ full_abun_data_hwrc$MAT <- ifelse(
 )
 
 
-
+# Removing 2021; trees young in this year
+full_abun_data_cfc <- full_abun_data_cfc %>%
+  filter(year != 2021)
+full_abun_data_hwrc <- full_abun_data_hwrc %>%
+  filter(year != 2021)
 
 # Calculating CTI
 CTI_cfc <- full_abun_data_cfc %>%
@@ -107,7 +111,11 @@ CTI_sens_cfc <- CTI_cfc %>%
     sensitivity_high_temp = `mean_cti_3.4` - `mean_cti_amb`,
     SE_diff_high_temp = sqrt((`sd_cti_3.4`^2 / `n_3.4`) + (`sd_cti_amb`^2 / `n_amb`)),
     sensitivity_med_temp = `mean_cti_1.7` - `mean_cti_amb`,
-    SE_diff_med_temp = sqrt((`sd_cti_1.7`^2 / `n_1.7`) + (`sd_cti_amb`^2 / `n_amb`))
+    SE_diff_med_temp = sqrt((`sd_cti_1.7`^2 / `n_1.7`) + (`sd_cti_amb`^2 / `n_amb`)),
+    sens_high_temp_scaled = sensitivity_high_temp / 2.27,
+    sens_med_temp_scaled = sensitivity_med_temp / 1.13,
+    SE_diff_high_temp_scaled = SE_diff_high_temp / 2.27,
+    SE_diff_med_temp_scaled = SE_diff_med_temp / 1.13
   )
 CTI_sens_hwrc <- CTI_hwrc %>%
   dplyr::select(year,plot,temp_treatment,CTI) %>%
@@ -118,7 +126,11 @@ CTI_sens_hwrc <- CTI_hwrc %>%
     sensitivity_high_temp = `mean_cti_3.4` - `mean_cti_amb`,
     SE_diff_high_temp = sqrt((`sd_cti_3.4`^2 / `n_3.4`) + (`sd_cti_amb`^2 / `n_amb`)),
     sensitivity_med_temp = `mean_cti_1.7` - `mean_cti_amb`,
-    SE_diff_med_temp = sqrt((`sd_cti_1.7`^2 / `n_1.7`) + (`sd_cti_amb`^2 / `n_amb`))
+    SE_diff_med_temp = sqrt((`sd_cti_1.7`^2 / `n_1.7`) + (`sd_cti_amb`^2 / `n_amb`)),
+    sens_high_temp_scaled = sensitivity_high_temp / 2.27,
+    sens_med_temp_scaled = sensitivity_med_temp / 1.13,
+    SE_diff_high_temp_scaled = SE_diff_high_temp / 2.27,
+    SE_diff_med_temp_scaled = SE_diff_med_temp / 1.13
   )
 
 # CTI and CPI combined
@@ -145,3 +157,5 @@ write.csv(CTI_CPI_cfc,paste(path_out,'CTI_CPI_b4warmed_cfc.csv'))
 write.csv(CTI_hwrc,paste(path_out,'CTI_b4warmed_hwrc.csv'))
 write.csv(CTI_sens_hwrc,paste(path_out,'CTI_sens_b4warmed_hwrc.csv'))
 write.csv(CTI_CPI_hwrc,paste(path_out,'CTI_CPI_b4warmed_hwrc.csv'))
+
+write.csv(CTI_sens_cfc2,paste(path_out,'b4warmed_cfc_cohort_test.csv'))
