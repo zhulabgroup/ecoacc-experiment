@@ -56,13 +56,15 @@ CTI <- full_abun_data %>%
 
 # Calculating CTI sensitivity (warmed - ambient)
 CTI_sens <- CTI %>%
-  dplyr::select(year, plot, temp_treatment, CTI) %>%
+  dplyr::select(year, plot, temp_treatment, CTI,MAT) %>%
   group_by(year, temp_treatment) %>%
   summarize(mean_cti = mean(CTI), sd_cti = sd(CTI), n = n()) %>%  # Calculate mean, SD, and sample size
   pivot_wider(names_from = temp_treatment, values_from = c(mean_cti, sd_cti, n)) %>%
   mutate(
     sensitivity = `mean_cti_warmed` - `mean_cti_ambient`,  # Sensitivity as the difference in means
-    SE_diff = sqrt((`sd_cti_warmed`^2 / `n_warmed`) + (`sd_cti_ambient`^2 / `n_ambient`))  # Standard error of the difference
+    SE_diff = sqrt((`sd_cti_warmed`^2 / `n_warmed`) + (`sd_cti_ambient`^2 / `n_ambient`)), # Standard error of the difference
+    sens_scaled = sensitivity/1.35, # Scaling sensitivity by amount warmed
+    SE_diff_scaled = SE_diff / 1.35
   )
 
 # Calculating CPI

@@ -73,6 +73,39 @@ CTI_sens <- CTI %>% # Calculating SE of diff bwtn means
     sensitivity = `mean_cti_warmed` - `mean_cti_ambient`,  # Sensitivity as the difference in means
     SE_diff = sqrt((`sd_cti_warmed`^2 / `n_warmed`) + (`sd_cti_ambient`^2 / `n_ambient`))  # Standard error of the difference
   )
+CTI_sens$sens_scaled <- NA
+CTI_sens$SE_diff_scaled <- NA
+CTI_sens$sens_scaled <- ifelse(
+  CTI_sens$year >= 1999 & CTI_sens$year <= 2002,
+  CTI_sens$sensitivity/1,
+  CTI_sens$sens_scaled
+)
+CTI_sens$sens_scaled <- ifelse(
+  CTI_sens$year >= 2003 & CTI_sens$year <= 2009,
+  CTI_sens$sensitivity/1.5,
+  CTI_sens$sens_scaled
+)
+CTI_sens$sens_scaled <- ifelse(
+  CTI_sens$year >= 2010 & CTI_sens$year <= 2014,
+  CTI_sens$sensitivity/2,
+  CTI_sens$sens_scaled
+)
+CTI_sens$SE_diff_scaled <- ifelse(
+  CTI_sens$year >= 1999 & CTI_sens$year <= 2002,
+  CTI_sens$SE_diff/1,
+  CTI_sens$SE_diff_scaled
+)
+CTI_sens$SE_diff_scaled <- ifelse(
+  CTI_sens$year >= 2003 & CTI_sens$year <= 2009,
+  CTI_sens$SE_diff/1.5,
+  CTI_sens$SE_diff_scaled
+)
+CTI_sens$SE_diff_scaled <- ifelse(
+  CTI_sens$year >= 2010 & CTI_sens$year <= 2014,
+  CTI_sens$SE_diff/2,
+  CTI_sens$SE_diff_scaled
+)
+
 
 # Calculating CPI
 CPI <- full_abun_data %>%
