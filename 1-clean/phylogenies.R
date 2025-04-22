@@ -141,5 +141,6 @@ saveRDS(phylo_tera,paste(path_out,'tera_phylo_tree.rds'))
 saveRDS(phylo_ok,paste(path_out,'ok_phylo_tree.rds'))
 saveRDS(phylo_b4,paste(path_out,'b4_phylo_tree.rds'))
 saveRDS(total_phylo,paste(path_out,'all_species_phylo.rds'))
+write.csv(families2,paste(path_out,'species_families.csv'),row.names=F)
 
 
