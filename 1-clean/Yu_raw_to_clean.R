@@ -18,13 +18,14 @@ load("all_data.RData")
 
 
 
-### Cleaning data
+### Cleaning cover data
 # Wide to long
 yu_abun_long <- spe_cover_US %>%
   pivot_longer(cols = -c(site,year,block,subplot,species,country),
                names_to = "treatment", values_to = "percent_cover")
 
 ### Calculating relative abundance
+# Is there a meta data file for SBK and SBL
 yu_abun <- yu_abun_long %>%
   group_by(site,year,block,subplot,treatment) %>%
   mutate(total_cover = sum(percent_cover)) %>%
@@ -267,6 +268,30 @@ chy <- filtered_df %>%
 
 
 
+### Cleaning biomass data
+biomass <- com_biomass %>%
+  filter(site == "KNZ" | site == "HYS" | site == "SGS" | site == "CHY") %>%
+  dplyr::select(-country) %>%
+  rename(treatment = trt)
+biomass$year[biomass$year == "1st"] <- 2014
+biomass$year[biomass$year == "2nd"] <- 2015
+biomass$year[biomass$year == "3rd"] <- 2016
+biomass$year[biomass$year == "4th"] <- 2017
+biomass$year <- as.numeric(biomass$year)
+
+
+### Separate dataframes for each site
+knz_bio <- biomass %>%
+  filter(site == "KNZ")
+hys_bio <- biomass %>%
+  filter(site == "HYS")
+sgs_bio <- biomass %>%
+  filter(site == "SGS")
+chy_bio <- biomass %>%
+  filter(site == "CHY")
+
+
+
 # Upload data
 path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
 write.csv(filtered_df,paste(path_out,'yu_clean.csv'),row.names=F)
@@ -274,6 +299,10 @@ write.csv(knz,paste(path_out,'knz_clean.csv'),row.names=F)
 write.csv(hys,paste(path_out,'hys_clean.csv'),row.names=F)
 write.csv(sgs,paste(path_out,'sgs_clean.csv'),row.names=F)
 write.csv(chy,paste(path_out,'chy_clean.csv'),row.names=F)
+write.csv(knz_bio,paste(path_out,'knz_biomass.csv'),row.names=F)
+write.csv(hys_bio,paste(path_out,'hys_biomass.csv'),row.names=F)
+write.csv(sgs_bio,paste(path_out,'sgs_biomass.csv'),row.names=F)
+write.csv(chy_bio,paste(path_out,'chy_biomass.csv'),row.names=F)
 
 
 
