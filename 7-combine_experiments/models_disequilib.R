@@ -304,10 +304,10 @@ shapiro.test(resid(diseq_model.jrgce2))
 # Plot model predictions
 # Extract unique combinations of disequilib and MAT in the original data
 new_data_jrgce2 <- NPP_MAT_dis_jrgce %>%
-  select(disequilib, MAT) %>%
+  dplyr::select(disequilib, MAT) %>%
   distinct()
 # Generate predictions and confidence intervals
-new_data_jrgce2_fitted <- predict(diseq_model.ok, newdata = new_data_jrgce2, interval = "confidence")
+new_data_jrgce2_fitted <- predict(diseq_model.jrgce2, newdata = new_data_jrgce2, interval = "confidence")
 # Combine predictions with the new data
 predictions_jrgce2 <- cbind(new_data_jrgce2, new_data_jrgce2_fitted)
 
