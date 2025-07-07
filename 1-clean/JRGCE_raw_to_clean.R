@@ -10,7 +10,7 @@
 library(tidyverse)
 
 # Set path to turbo to get data
-path_abun_data = "/Volumes/seas-zhukai/proj-grassland2/cfp/"
+path_abun_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 setwd(path_abun_data)
 # Read in data
 load("dat_community.rda")
