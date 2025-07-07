@@ -142,8 +142,8 @@ jrgce <- jrgce %>%
 # Merging niche lists into one
 niche_est_phace$site <- "PHACE"
 niche_est_tera$site <- "TeRaCON"
-niche_est_cfc$site <- "B4Warmed CFC"
-niche_est_hwrc$site <- "B4Warmed HWRC"
+niche_est_cfc$site <- "B4WarmED CFC"
+niche_est_hwrc$site <- "B4WarmED HWRC"
 niche_est_ok$site <- "Oklahoma"
 niche_est_jrgce$site <- "JRGCE"
 dat_niche <- rbind(niche_est_phace, niche_est_tera, niche_est_cfc, niche_est_hwrc, niche_est_ok, niche_est_jrgce)
@@ -151,8 +151,8 @@ dat_niche <- rbind(niche_est_phace, niche_est_tera, niche_est_cfc, niche_est_hwr
 # Combining phace abundance data with niche estimate data
 phace$site <- "PHACE"
 tera$site <- "TeRaCON"
-b4_cfc$site <- "B4Warmed CFC"
-b4_hwrc$site <- "B4Warmed HWRC"
+b4_cfc$site <- "B4WarmED CFC"
+b4_hwrc$site <- "B4WarmED HWRC"
 ok$site <- "Oklahoma"
 jrgce$site <- "JRGCE"
 full_abun_data_phace <- left_join(phace, dat_niche, by = c("site","species"))
@@ -164,7 +164,7 @@ full_abun_data_jrgce <- left_join(jrgce, dat_niche, by = c("site","species"))
 
 # Put data into a list
 dataframes_list <- list(full_abun_data_phace, full_abun_data_tera, full_abun_data_cfc, full_abun_data_hwrc, full_abun_data_ok, full_abun_data_jrgce)
-names(dataframes_list) <- c("PHACE","TeRaCON","B4Warmed CFC","B4Warmed HWRC","Oklahoma","JRGCE")
+names(dataframes_list) <- c("PHACE","TeRaCON","B4WarmED CFC","B4WarmED HWRC","Oklahoma","JRGCE")
 
 
 
@@ -219,7 +219,7 @@ final_list <- lapply(merged_list, function(df) {
 calculate_CTI_center <- function(data) {
   data %>%
     group_by(year, plot, temp_treatment) %>%
-    reframe(CTI = sum(rel_abund * temp_niche) / sum(rel_abund)) %>%
+    reframe(CTI = sum(rel_abund * temp_niche_center) / sum(rel_abund)) %>%
     distinct()
 }
 cti_results_center <- lapply(final_list, calculate_CTI_center)
@@ -241,7 +241,7 @@ for (i in seq_along(final_list)) {
   # Perform operations on the dataframe
   res <- abun %>%
     group_by(species, year, plot, temp_treatment) %>%
-    mutate(contribution_center = rel_abund * temp_niche)
+    mutate(contribution_center = rel_abund * temp_niche_center)
   
   # Store the resulting dataframe in result_list
   result_list[[i]] <- res
@@ -263,7 +263,7 @@ cont_avg <- res_df %>%
   group_by(site,species,year,temp_treatment) %>%
   summarize(avg_cont = mean(contribution_center),
             avg_abun = mean(rel_abund),
-            avg_temp_niche = mean(temp_niche)) %>%
+            avg_temp_niche = mean(temp_niche_center)) %>%
   mutate(test = avg_abun * avg_temp_niche)
 
 
@@ -274,6 +274,8 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/data_for_plots/"
 setwd(path_data)
 # Load in data
 top_contributors <- read.csv(" top_contributors.csv")
+top_contributors$site[top_contributors$site == "B4Warmed CFC"] <- "B4WarmED CFC"
+top_contributors$site[top_contributors$site == "B4Warmed HWRC"] <- "B4WarmED HWRC"
 # Merge with data
 cont_avg <- left_join(cont_avg, top_contributors, by = c("site","species"))
 
@@ -281,6 +283,12 @@ cont_avg <- left_join(cont_avg, top_contributors, by = c("site","species"))
 
 
 ### Contour plot
+# Removing 1.7
+cont_avg <- cont_avg %>%
+  filter(temp_treatment != "1.7") %>%
+  filter(!(site == "B4WarmED CFC" & year == 2021)) %>%
+  filter(!(site == "B4WarmED HWRC" & year == 2021)) %>%
+  mutate(temp_treatment = recode(temp_treatment, "ambient" = "ambient", "warmed" = "warmed", "3.4" = "warmed", "amb" = "ambient"))
 contour_plot <- function(data, site_name) {
   # Filter the data for the specified site
   site_data <- data %>% filter(site == site_name)
@@ -350,23 +358,27 @@ contour_plot <- function(data, site_name) {
     geom_point(data = site_data, aes(x = avg_temp_niche, y = avg_abun, color = temp_treatment, alpha = top_contributors, shape = top_contributors, size=top_contributors)) + #########
     scale_alpha_manual(name = "Top species\ncontributors",
                      values = c("top_1" = 1, "top_2" = 1, "top_3" = 1, "none" = 0.4),
-                     labels = c(species_mapping, "none" = "N/A")) +
+                     #labels = c(species_mapping, "none" = "N/A")) +
+                     labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
     scale_shape_manual(name = "Top species\ncontributors",
                        values = c("top_1" = 17, "top_2" = 18, "top_3" = 8, "none" = 20),
-                       labels = c(species_mapping, "none" = "N/A")) +
+                       #labels = c(species_mapping, "none" = "N/A")) +
+                       labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
     scale_size_manual(name = "Top species\ncontributors",
                       values = c("top_1" = 3, "top_2" = 3, "top_3" = 3, "none" = 1),
-                      labels = c(species_mapping, "none" = "N/A")) +
+                      #labels = c(species_mapping, "none" = "N/A")) +
+                      labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
     scale_fill_gradient2(
       low = "blue", mid = "white", high = "red", midpoint = 0,
       name = "Species\ncontribution\nto CTI (°C)"
     ) +
     scale_color_manual(name = "Treatment",
                        values = used_colors,labels = used_labels) + # Use the dynamic color mapping
-    geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
+    geom_hline(yintercept = 0, color = "black", linetype = "dashed",alpha=0.5) +
+    geom_vline(xintercept = 0, color = "black", linetype = "dashed",alpha=0.5) +
     ggtitle(site_name) +
     labs(
-      x = "Species temperature (°C)",
+      x = "Species temperature anomaly (°C)",
       #y = paste(site_name,"Abundance", sep = "\n"),
       y = "Abundance",
     ) +
@@ -409,12 +421,12 @@ for (site_name in unique(cont_avg$site)) {
   # Store the plot in the list with the site name as the key
   plots_contours[[site_name]] <- plot
 }
-contour_shortterm_cfc <- plots_contours[[1]] + theme(axis.title.x = element_blank())
+contour_shortterm_cfc <- plots_contours[[1]]
 contour_shortterm_hwrc <- plots_contours[[2]]
-contour_shortterm_jrgce <- plots_contours[[3]] + theme(axis.title.x = element_blank()) + scale_x_continuous(breaks=seq(11, 17, 2))
-contour_shortterm_ok <- plots_contours[[4]]+ theme(axis.title.x = element_blank())
-contour_shortterm_phace <- plots_contours[[5]]+ theme(axis.title.x = element_blank())
-contour_shortterm_tera <- plots_contours[[6]]+ theme(axis.title.x = element_blank())
+contour_shortterm_jrgce <- plots_contours[[3]]
+contour_shortterm_ok <- plots_contours[[4]]
+contour_shortterm_phace <- plots_contours[[5]]
+contour_shortterm_tera <- plots_contours[[6]]
 
 png("contours_4.png", units="in", width=18, height=18, res=300)
 wrap_plots(contour_shortterm_jrgce, contour_shortterm_phace, contour_shortterm_tera,

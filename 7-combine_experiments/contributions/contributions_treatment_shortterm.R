@@ -15,6 +15,7 @@ library(ggpubr)
 library(ggtree)
 library(ggrepel)
 library(data.table)
+library(emmeans)
 
 ### Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
@@ -156,8 +157,8 @@ jrgce <- complete_jrgce %>%
 ### Merging niche lists into one
 niche_est_phace$site <- "PHACE"
 niche_est_tera$site <- "TeRaCON"
-niche_est_cfc$site <- "B4Warmed CFC"
-niche_est_hwrc$site <- "B4Warmed HWRC"
+niche_est_cfc$site <- "B4WarmED CFC"
+niche_est_hwrc$site <- "B4WarmED HWRC"
 niche_est_ok$site <- "Oklahoma"
 niche_est_jrgce$site <- "JRGCE"
 dat_niche <- rbind(niche_est_phace, niche_est_tera, niche_est_cfc, niche_est_hwrc, niche_est_ok, niche_est_jrgce)
@@ -165,8 +166,8 @@ dat_niche <- rbind(niche_est_phace, niche_est_tera, niche_est_cfc, niche_est_hwr
 # Combining abundance data with niche estimate data
 phace$site <- "PHACE"
 tera$site <- "TeRaCON"
-b4_cfc$site <- "B4Warmed CFC"
-b4_hwrc$site <- "B4Warmed HWRC"
+b4_cfc$site <- "B4WarmED CFC"
+b4_hwrc$site <- "B4WarmED HWRC"
 ok$site <- "Oklahoma"
 jrgce$site <- "JRGCE"
 full_abun_data_phace <- left_join(phace, dat_niche, by = c("site","species"))
@@ -177,16 +178,16 @@ full_abun_data_ok <- left_join(ok, dat_niche, by = c("site","species"))
 full_abun_data_jrgce <- left_join(jrgce, dat_niche, by = c("site","species"))
 
 # Specifying warmed vs ambient treatment for b4warmed
-#full_abun_data_cfc <- full_abun_data_cfc %>%
-#  filter(!(temp_treatment == 1.7)) %>%
-#  mutate(temp_treatment = if_else(str_detect(temp_treatment, "3.4"), "warmed", "ambient"))
-#full_abun_data_hwrc <- full_abun_data_hwrc %>%
-#  filter(!(temp_treatment == 1.7)) %>%
-#  mutate(temp_treatment = if_else(str_detect(temp_treatment, "3.4"), "warmed", "ambient"))
+full_abun_data_cfc <- full_abun_data_cfc %>%
+  filter(!(temp_treatment == 1.7)) %>%
+  mutate(temp_treatment = if_else(str_detect(temp_treatment, "3.4"), "warmed", "ambient"))
+full_abun_data_hwrc <- full_abun_data_hwrc %>%
+  filter(!(temp_treatment == 1.7)) %>%
+  mutate(temp_treatment = if_else(str_detect(temp_treatment, "3.4"), "warmed", "ambient"))
 
 # Put data into a list
 dataframes_list <- list(full_abun_data_phace, full_abun_data_tera, full_abun_data_cfc, full_abun_data_hwrc, full_abun_data_ok, full_abun_data_jrgce)
-names(dataframes_list) <- c("PHACE","TeRaCON","B4Warmed CFC","B4Warmed HWRC","Oklahoma","JRGCE")
+names(dataframes_list) <- c("PHACE","TeRaCON","B4WarmED CFC","B4WarmED HWRC","Oklahoma","JRGCE")
 
 
 
@@ -238,7 +239,7 @@ centered_list <- lapply(merged_list, function(df) {
 
 
 ### Calculating CTI
-# Using mean-centered niche values
+## For contribution; treatment effect - Using mean-centered niche values
 calculate_CTI_center <- function(data) {
   # Calculate the mean CTI for each treatment and year
   cti_summary <- data %>%
@@ -270,7 +271,8 @@ calculate_CTI_center <- function(data) {
 # Apply the function to your list of data frames
 cti_results_center <- lapply(centered_list, calculate_CTI_center)
 
-### Matching abundance data w/ CTI data
+
+## Matching abundance data w/ CTI data
 abun_calc <- function(data) {
   # Calculate average relative abundance for each group
   abun_summary <- data %>%
@@ -303,6 +305,7 @@ final_list <- lapply(centered_list, abun_calc)
 
 
 
+
 ### Calculate contributions
 # Initialize an empty list to store the results
 result_list <- list()
@@ -313,7 +316,6 @@ for (i in seq_along(final_list)) {
   # Access the current dataframe
   abun <- final_list[[i]]
   
-  # Check for the presence of specific columns and perform corresponding operations
   res <- abun %>%
     group_by(species, year)
   
@@ -336,9 +338,49 @@ for (i in seq_along(final_list)) {
 # Name each element in result_list after the corresponding element in final_list
 names(result_list) <- names(final_list)
 
-# Combine all data frames & b4warmed dataframes into separate dataframes
-res_df <- rbindlist(result_list[c(1:2,5:6)], idcol = "site1")
-res_df_b4 <- rbindlist(result_list[3:4], idcol = "site1")
+
+
+### Combine all data frames & b4warmed dataframes into separate dataframes
+res_df <- rbindlist(result_list, idcol = "site1")
+#res_df <- rbindlist(result_list[c(1:2,5:6)], idcol = "site1")
+#res_df_b4 <- rbindlist(result_list[3:4], idcol = "site1")
+
+
+
+### Determine top contributors per site (overall and each year)
+#res_df2 <- res_df %>%
+#  group_by(site,species) %>%
+#  summarize(mean_cont = mean(contribution_center)) %>%
+#  mutate(abs_contribution_center = abs(mean_cont)) %>%
+#  arrange(desc(abs_contribution_center)) %>%
+#  mutate(rank = row_number()) %>%
+#  mutate(top_contributors = case_when(
+#    rank == 1 ~ "top_1",
+#    rank == 2 ~ "top_2",
+#    rank == 3 ~ "top_3",
+#    TRUE ~ "none"
+#  )) %>%
+#  dplyr::select(-abs_contribution_center, -rank)
+#res_df3 <- res_df %>%
+#  group_by(year,site,species) %>%
+#  mutate(abs_contribution_center = abs(contribution_center)) %>%
+#  arrange(desc(abs_contribution_center)) %>%
+#  group_by(year,site) %>%
+#  mutate(rank = row_number()) %>%
+#  mutate(top_contributors_yearly = case_when(
+#    rank == 1 ~ "top_1",
+#    rank == 2 ~ "top_2",
+#    rank == 3 ~ "top_3",
+#    TRUE ~ "none"
+#  )) %>%
+#  dplyr::select(-abs_contribution_center, -rank,-site1,-temp_niche_center,-rel_abun_diff,-contribution_center)
+#
+# Merge with the original data frame
+#res_df <- res_df %>%
+#  left_join(res_df2, by = c("site", "species")) %>%
+#  dplyr::select(-site1)
+#res_df <- res_df %>%
+#  left_join(res_df3, by = c("year","site", "species"))
 
 
 
@@ -348,9 +390,11 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/data_for_plots/"
 setwd(path_data)
 # Load in data
 top_contributors <- read.csv(" top_contributors.csv")
+top_contributors$site[top_contributors$site == "B4Warmed CFC"] <- "B4WarmED CFC"
+top_contributors$site[top_contributors$site == "B4Warmed HWRC"] <- "B4WarmED HWRC"
 # Merge with data
 res_df <- left_join(res_df, top_contributors, by = c("site","species"))
-res_df_b4 <- left_join(res_df_b4, top_contributors, by = c("site","species"))
+#res_df_b4 <- left_join(res_df_b4, top_contributors, by = c("site","species"))
 
 
 
@@ -360,8 +404,17 @@ contour_plot <- function(data, site_name) {
   # Filter the data for the specified site
   site_data <- data %>% filter(site == site_name)
   
+  site_titles <- c(
+    "JRGCE" = "(a) JRGCE",
+    "PHACE" = "(a) PHACE",
+    "TeRaCON" = "(b) TeRaCON",
+    "Oklahoma" = "(c) Oklahoma",
+    "B4WarmED CFC" = "(d) B4WarmED CFC",
+    "B4WarmED HWRC" = "(e) B4WarmED HWRC"
+  )
+  
   # Pulling out ranges of temp niches and slopes
-  temp <- seq(min(site_data$temp_niche_center)-1, max(site_data$temp_niche_center)+1, length.out = 50)
+  temp <- seq(min(site_data$temp_niche_center)-1.5, max(site_data$temp_niche_center)+1.5, length.out = 50)
   abun <- seq(min(site_data$rel_abun_diff)-0.02, max(site_data$rel_abun_diff)+0.02, length.out = 50)
   
   # Merge data into dataframe
@@ -395,27 +448,31 @@ contour_plot <- function(data, site_name) {
     facet_wrap(.~year) +
     geom_tile(aes(fill = spp_contrib)) + # Add tiles to represent the surface
     #geom_contour(aes(z = spp_contrib), color = "gray50") + # Specified contour lines
-    stat_ellipse(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff), level = 0.90, color = "black",alpha=0.4) + # Add an ellipse
-    geom_point(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff, shape=top_contributors, alpha=top_contributors,size=top_contributors),color="red4") +
+    stat_ellipse(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff), level = 0.95, color = "black",alpha=0.4) + # Add an ellipse
+    #geom_point(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff, shape=top_contributors_yearly, alpha=top_contributors_yearly,size=top_contributors_yearly),color="red4") +
+    geom_point(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff, shape=top_contributors, alpha=top_contributors,size=top_contributors)) +
     scale_alpha_manual(name = "Top species\ncontributors",
-                       values = c("top_1" = 1, "top_2" = 1, "top_3" = 1, "none" = 0.4),
-                       labels = c(species_mapping, "none" = "N/A")) +
+                       values = c("top_1" = 0.8, "top_2" = 0.8, "top_3" = 0.8, "none" = 0.4),
+                       labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
+                       #labels = c(species_mapping, "none" = "N/A")) +
     scale_shape_manual(name = "Top species\ncontributors",
                        values = c("top_1" = 17, "top_2" = 18, "top_3" = 8, "none" = 20),
-                       labels = c(species_mapping, "none" = "N/A")) +
+                       labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
+                       #labels = c(species_mapping, "none" = "N/A")) +
     scale_size_manual(name = "Top species\ncontributors",
                        values = c("top_1" = 3, "top_2" = 3, "top_3" = 3, "none" = 1),
-                       labels = c(species_mapping, "none" = "N/A")) +
+                      labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
+                       #labels = c(species_mapping, "none" = "N/A")) +
     scale_fill_gradient2(
       low = "blue", mid = "white", high = "red", midpoint = 0,
-      name = "Species\ncontribution\nto CTI (°C)\n(Warmed -\nAmbient)"
+      name = "Species\ncontribution\nto ΔCTI"
     ) +
     geom_vline(xintercept = 0, color = "black", linetype = "dashed") +
     geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
-    #ggtitle(site_name) +
+    ggtitle(site_titles[site_name]) +
     labs(
       x = "Species temperature anomaly (°C)",
-      y = "Abundance (Warmed - Ambient)",
+      y = "Δ Abundance",
     ) +
     #geom_label_repel(data = top_contributors,
     #                 aes(x = temp_niche_center, y = rel_abun_diff, label = species),
@@ -445,6 +502,7 @@ contour_plot <- function(data, site_name) {
   # Print the plot
   print(p)
 }
+
 # Loop through each site and store the output plot
 # Initialize an empty list to store the plots
 plots_contours <- list()
@@ -458,11 +516,15 @@ for (site_name in unique(res_df$site)) {
 }
 contour_treat_shortterm_phace <- plots_contours[[1]]
 contour_treat_shortterm_tera <- plots_contours[[2]]
-contour_treat_shortterm_ok <- plots_contours[[3]]
-contour_treat_shortterm_jrgce <- plots_contours[[4]]
+contour_treat_shortterm_cfc <- plots_contours[[3]]
+contour_treat_shortterm_hwrc <- plots_contours[[4]]
+contour_treat_shortterm_ok <- plots_contours[[5]] + scale_y_continuous(n.breaks = 4)
+contour_treat_shortterm_jrgce <- plots_contours[[6]] + scale_y_continuous(n.breaks = 4)
 
 
 
+### Note: this is for intermediate and warmed spp contributions
+# If making this fig, rerun the above code w/o removing 1.7 in line 179
 ### Contour plot for b4warmed
 contour_plot_b4 <- function(data, site_name) {
   # Filter the data for the specified site
@@ -562,6 +624,51 @@ contour_treat_shortterm_cfc <- plots_contours_b4[[1]]#+ theme(axis.title.x = ele
                                                      #        legend.title=element_text(size=14)) 
 contour_treat_shortterm_hwrc <- plots_contours_b4[[2]]# + theme(legend.text=element_text(size=14),
                                                       #        legend.title=element_text(size=14))
+
+
+
+### Merging plots and combining legends
+# Function to remove color, shape, and alpha guides
+legend_rem <- function(plt){
+  plt <- plt +
+    guides(shape = "none", color = "none", alpha = "none",size="none")
+  return(plt)   
+}
+
+# Getting the color, shape-alpha guide separately
+clr_shp_lgnd_cfc <- get_legend(contour_treat_shortterm_cfc + guides(fill = "none"))
+clr_shp_lgnd_hwrc <- get_legend(contour_treat_shortterm_hwrc + guides(fill = "none"))
+clr_shp_lgnd_phace <- get_legend(contour_treat_shortterm_phace + guides(fill = "none"))
+clr_shp_lgnd_tera <- get_legend(contour_treat_shortterm_tera + guides(fill = "none"))
+clr_shp_lgnd_jrgce <- get_legend(contour_treat_shortterm_jrgce + guides(fill = "none"))
+clr_shp_lgnd_ok <- get_legend(contour_treat_shortterm_ok + guides(fill = "none"))
+
+# Patchwork design
+design <- "
+  aaaaa#
+  aaaaa#
+  bbbbbd
+  bbbbbd
+  ccccc#
+  ccccc#
+"
+# Combine plots
+png("contours_1.png", units="in", width=8, height=14, res=300)
+legend_rem(contour_treat_shortterm_jrgce) + 
+  legend_rem(contour_treat_shortterm_phace) +
+  legend_rem(contour_treat_shortterm_tera) +
+  as_ggplot(clr_shp_lgnd_cfc) +
+  plot_layout(design = design, axis_titles = "collect")
+dev.off()
+
+# All sites in one plot
+shortterm_contours <- wrap_plots(comb_contour_jrgce, comb_contour_phace, comb_contour_tera,
+                                 comb_contour_ok, comb_contour_cfc, comb_contour_hwrc,
+                                 ncol=1)
+png("contours_1.png", units="in", width=19, height=18, res=300)
+wrap_plots(comb_contour_jrgce, comb_contour_phace, comb_contour_tera,
+           ncol=1, heights=c(2,1.5,1.5))
+dev.off()
 
 
 

@@ -69,9 +69,9 @@ CTI_CPI_ok <- read.csv(" CTI_CPI_ok.csv")
 NPP_overall_ok <- read.csv(" eco_response_overall_ok.csv")
 
 # Trait and contribution data
+# Add in species trait values
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/data_for_plots/"
 setwd(path_data)
-# Load in data
 trait_con <- readRDS(" trait_contribution_data.rds")
 
 
@@ -80,7 +80,7 @@ trait_con <- readRDS(" trait_contribution_data.rds")
 # Teracon
 outlier_indices_tera <- c(485, 437, 41,319, 533, 382, 55, 46)
 CTI_teracon_clean <- CTI_teracon[-outlier_indices_tera, ]
-mod.tera <- lmer(CTI ~ year * temp_treatment + (1|plot), data = CTI_teracon)
+mod.tera <- lm(CTI ~ year * temp_treatment + (1|plot), data = CTI_teracon)
 # Check for homogeneity of variances assumption (true if p>0.05)
 # If the result is not significant, the assumption of equal variances (homoscedasticity) is met (no significant difference between the group variances).
 leveneTest(residuals(mod.tera) ~ CTI_teracon$temp_treatment) # pretty close
@@ -352,7 +352,7 @@ predictions_df <- predictions_df %>%
 ordered_traits <- c("Seed dry mass","Seed length","Seed number per plant",
                     "Seed germination rate","Seed longevity","SLA","LDMC",
                     "Leaf thickness","Stem diameter","Plant height vegetative","Specific root length",
-                    "Specific fine root length","Fine root length ***")
+                    "Specific fine root length","Fine root length")
 
 trait_con_plot <- trait_con_plot %>%
   mutate(TraitLabel = factor(TraitLabel, levels = ordered_traits))
@@ -361,12 +361,15 @@ levels(trait_con_plot$TraitLabel)
 # Fill color
 trait_con_plot$fill_color <- ifelse(trait_con_plot$temp_niche_center > 0, "Warm", "Cold")
 
+# Denote if significant or not
+predictions_df$significant <- ifelse(predictions_df$TraitName %in% significance_df$TraitName[significance_df$significant], TRUE, FALSE)
+
 png("traits_contributions.png", units="in", width=9, height=8, res=300)
 #traits_con <- 
   ggplot(trait_con_plot, aes(x = log_mean_trait_val, y = contribution_center)) +
   geom_point(alpha=0.3,color="steelblue4") +  # Raw data points
   geom_ribbon(data = predictions_df, aes(y = predicted, ymin = lower, ymax = upper), alpha = 0.6, fill = "grey60") +  # Confidence interval
-  geom_line(data = predictions_df, aes(y = predicted), size = 1,color="steelblue4") +  # Predicted line
+  geom_line(data = predictions_df, aes(y = predicted,linetype=significant), size = 1,color="steelblue4") +  # Predicted line
   facet_wrap(~factor(TraitLabel), scales = "free") +  # Separate plots for each trait
   #scale_color_manual(
   #    values = c("Warm" = "red", "Cold" = "blue"),
@@ -382,7 +385,8 @@ png("traits_contributions.png", units="in", width=9, height=8, res=300)
   theme(panel.background = element_blank(),
         #panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
-        axis.title = element_text(face = "bold"))
+        axis.title = element_text(face = "bold"),
+        legend.position = "none")
 dev.off()
 
 
