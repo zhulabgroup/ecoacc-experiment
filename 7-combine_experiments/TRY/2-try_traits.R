@@ -12,7 +12,7 @@ library(rtry)
 library(readr)
 
 # Set path to data
-path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TRY_data/raw/"
+path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc-experiment/TRY_data/raw/"
 setwd(path_data)
 # Load in data
 try <- read_tsv("species_try_traits.txt",col_names = TRUE)
@@ -48,13 +48,13 @@ try_conus <- try_merge %>%
 
 # Take the average trait value for each species and trait
 trait_avg <- try_merge %>%
-  mutate(OrigValueNum = as.numeric(OrigValueStr)) %>%
-  filter(!is.na(OrigValueNum)) %>%
+  mutate(StdValueNum = as.numeric(StdValue)) %>%
+  filter(!is.na(StdValueNum)) %>%
   group_by(AccSpeciesName, TraitID, TraitName) %>%
-  summarize(mean_trait_val = mean(OrigValueNum, na.rm = TRUE), .groups = 'drop') 
+  summarize(mean_trait_val = mean(StdValueNum, na.rm = TRUE), .groups = 'drop') 
 
 
 # Upload data
-path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TRY_data/"
+path_out = "/nfs/turbo/seas-zhukai/proj-ecoacc-experiment/TRY_data/"
 write.csv(try_filt,paste(path_out,'exp_species_traits_all.csv'), row.names=F)
 write.csv(trait_avg,paste(path_out,'exp_species_traits.csv'), row.names=F)
