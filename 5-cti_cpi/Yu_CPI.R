@@ -13,12 +13,12 @@ library(tidyverse)
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
 setwd(path_data)
 # Load in data
-niche_est <- read.csv(" knz_niche.csv")
-data <- read.csv(" knz_clean.csv")
+niche_est <- read.csv(" chy_niche.csv")
+data <- read.csv(" chy_clean.csv")
 
 # Combining phace abundance data with niche estimate data
 full_abun_data <- left_join(data, niche_est, by = "species")
-full_abun_data$site <- "KNZ"
+full_abun_data$site <- "CHY"
 
 
 
@@ -29,10 +29,14 @@ setwd(path_data)
 map <- read.csv(" MAP.csv")
 # Merging with data
 full_abun_data <- left_join(full_abun_data, map, by = c("site","year"))
+# Manually setting the niche values for this spp to match Psoralea tenuiflora; they are spp synonyms
+#full_abun_data$temp_niche[full_abun_data$species == "Psoralidium tenuiflorum"] <- 9.75
+#full_abun_data$precip_niche[full_abun_data$species == "Psoralidium tenuiflorum"] <- 433.1
 
 
 
-#### Coding MAP in drought to equal the amount shown in Yu 2025 Nature
+
+#### Coding MAP in drought to equal the amount shown in Yu 2025 Nature Supp table 1
 # KNZ
 full_abun_data$MAP <- ifelse(
   full_abun_data$treatment == "Drought" & full_abun_data$year == 2014,
@@ -52,6 +56,69 @@ full_abun_data$MAP <- ifelse(
 full_abun_data$MAP <- ifelse(
   full_abun_data$treatment == "Drought" & full_abun_data$year == 2017,
   374,
+  full_abun_data$MAP
+)
+# HYS
+full_abun_data$MAP <- ifelse(
+  full_abun_data$treatment == "Drought" & full_abun_data$year == 2014,
+  248,
+  full_abun_data$MAP
+)
+full_abun_data$MAP <- ifelse(
+  full_abun_data$treatment == "Drought" & full_abun_data$year == 2015,
+  339,
+  full_abun_data$MAP
+)
+full_abun_data$MAP <- ifelse(
+  full_abun_data$treatment == "Drought" & full_abun_data$year == 2016,
+  477,
+  full_abun_data$MAP
+)
+full_abun_data$MAP <- ifelse(
+  full_abun_data$treatment == "Drought" & full_abun_data$year == 2017,
+  208,
+  full_abun_data$MAP
+)
+# SGS
+full_abun_data$MAP <- ifelse(
+  full_abun_data$treatment == "Drought" & full_abun_data$year == 2014,
+  156,
+  full_abun_data$MAP
+)
+full_abun_data$MAP <- ifelse(
+  full_abun_data$treatment == "Drought" & full_abun_data$year == 2015,
+  181,
+  full_abun_data$MAP
+)
+full_abun_data$MAP <- ifelse(
+  full_abun_data$treatment == "Drought" & full_abun_data$year == 2016,
+  104,
+  full_abun_data$MAP
+)
+full_abun_data$MAP <- ifelse(
+  full_abun_data$treatment == "Drought" & full_abun_data$year == 2017,
+  140,
+  full_abun_data$MAP
+)
+# CHY
+full_abun_data$MAP <- ifelse(
+  full_abun_data$treatment == "Drought" & full_abun_data$year == 2014,
+  184,
+  full_abun_data$MAP
+)
+full_abun_data$MAP <- ifelse(
+  full_abun_data$treatment == "Drought" & full_abun_data$year == 2015,
+  183,
+  full_abun_data$MAP
+)
+full_abun_data$MAP <- ifelse(
+  full_abun_data$treatment == "Drought" & full_abun_data$year == 2016,
+  123,
+  full_abun_data$MAP
+)
+full_abun_data$MAP <- ifelse(
+  full_abun_data$treatment == "Drought" & full_abun_data$year == 2017,
+  130,
   full_abun_data$MAP
 )
 
@@ -92,5 +159,5 @@ CPI_sens <- CPI %>% # Calculating SE of diff bwtn means
 
 # Upload data
 path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
-write.csv(CPI,paste(path_out,'CPI_knz.csv'),row.names=F)
-write.csv(CPI_sens,paste(path_out,'CPI_sens_knz.csv'),row.names=F)
+write.csv(CPI,paste(path_out,'CPI_chy.csv'),row.names=F)
+write.csv(CPI_sens,paste(path_out,'CPI_sens_chy.csv'),row.names=F)

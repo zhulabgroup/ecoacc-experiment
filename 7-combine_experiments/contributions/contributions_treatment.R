@@ -20,9 +20,6 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 setwd(path_data)
 # Load in data
 niche_est_phace <- read.csv(" phace_niche.csv")
-niche_est_phace <- niche_est_phace %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 phace <- read.csv(" phace_clean.csv")
 
 ### Set path to turbo to get data
@@ -30,35 +27,22 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 setwd(path_data)
 # Load in data
 niche_est_tera <- read.csv(" teracon_niche.csv")
-niche_est_tera <- niche_est_tera %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 tera <- read.csv(" teracon_clean.csv")
 
 ### Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/B4Warmed/"
 setwd(path_data)
 # Load in data
-niche_est_b4 <- read.csv(" b4warmed_niche.csv")
-niche_est_b4 <- niche_est_b4 %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
+niche_est_cfc <- read.csv(" b4warmed_cfc_niche.csv")
+niche_est_hwrc <- read.csv(" b4warmed_hwrc_niche.csv")
 b4_cfc <- read.csv(" b4warmed_cfc_clean.csv")
 b4_hwrc <- read.csv(" b4warmed_hwrc_clean.csv")
-# Separate dataframes for CFC and HWRC
-niche_est_cfc<- niche_est_b4 %>%
-  filter(site == "CFC")
-niche_est_hwrc <- niche_est_b4 %>%
-  filter(site == "HWRC")
 
 ### Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/OK/"
 setwd(path_data)
 # Load in data
 niche_est_ok <- read.csv(" ok_niche.csv")
-niche_est_ok <- niche_est_ok %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 ok <- read.csv(" ok_clean.csv")
 
 ### Set path to turbo to get data
@@ -66,9 +50,6 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 setwd(path_data)
 # Load in data
 niche_est_jrgce <- read.csv(" jrgce_niche.csv")
-niche_est_jrgce <- niche_est_jrgce %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 jrgce <- read.csv(" jrgce_clean.csv")
 
 
@@ -196,9 +177,11 @@ full_abun_data_jrgce <- left_join(jrgce, dat_niche, by = c("site","species"))
 
 # Specifying warmed vs ambient treatment for b4warmed
 full_abun_data_cfc <- full_abun_data_cfc %>%
+  filter(!(year == 2021)) %>%
   filter(!(temp_treatment == 1.7)) %>%
   mutate(temp_treatment = if_else(str_detect(temp_treatment, "3.4"), "warmed", "ambient"))
 full_abun_data_hwrc <- full_abun_data_hwrc %>%
+  filter(!(year == 2021)) %>%
   filter(!(temp_treatment == 1.7)) %>%
   mutate(temp_treatment = if_else(str_detect(temp_treatment, "3.4"), "warmed", "ambient"))
 
@@ -639,6 +622,7 @@ writeLines(unlist(output_strings))
 
 
 ### Print variance comparisons to ensure sum = calculated CTI
+# Working well for contribution centered, not as well for contribution?
 # Initialize a list to store output strings
 output_strings_var <- list()
 
@@ -749,10 +733,6 @@ slope_CTI_df <- data.frame(
 # Merge the slope_CTI values with data_for_plot by site
 data_for_plot <- left_join(data_for_plot, slope_CTI_df, by = "site")
 
-# Fix spp name
-data_for_plot$species <- recode(data_for_plot$species, "solidago drummondii" = "Solidago drummondii")
-data_for_plot$species <- recode(data_for_plot$species, "Andropogon gerardi" = "Andropogon gerardii")
-
 # Relative contribution to CTI across species
 data_for_plot <- data_for_plot %>%
   mutate(rel_cont = contribution_center / abs(slope_CTI))
@@ -761,6 +741,21 @@ data_for_phylo_plot <- data_for_plot %>%
   group_by(species) %>%
   summarize(rel_cont = mean(rel_cont),
             temp_niche = mean(temp_niche))
+data_for_phylo_plot_center <- data_for_plot %>%
+  group_by(species) %>%
+  summarize(contribution_center = mean(contribution_center))
+data_for_phylo_plot_abun <- data_for_plot %>%
+  group_by(species) %>%
+  summarize(slope = mean(slope),
+            temp_niche = mean(temp_niche))
+
+# Add in species trait values
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TRY_data/"
+setwd(path_data)
+species_traits <- read_csv(" exp_species_traits.csv")
+
+data_for_spp_plot <- data_for_plot %>%
+  left_join(species_traits, by = c("species" = "AccSpeciesName"))
 
 # Remove data whose absolute value for slope is < 0.0002
 #data_for_plot <- data_for_plot[abs(data_for_plot$contribution) > 0.002, ]
@@ -970,19 +965,20 @@ data_for_plot <- data_for_plot %>%
     rank == 3 ~ "top_3",
     TRUE ~ "none"
   )) %>%
-  select(-abs_contribution_center, -rank)
+  dplyr::select(-abs_contribution_center, -rank)
 # Saving top contributors to a dataframe
 #output <- data_for_plot %>%
-#  select(site,species,top_contributors)
+# dplyr::select(site,species,top_contributors)
 #path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/data_for_plots/"
 #write.csv(output, paste(path_out,"top_contributors.csv"), row.names = FALSE)
+
 contour_plot <- function(data, site_name) {
   # Filter the data for the specified site
   site_data <- data %>% filter(site == site_name)
   
   # Pulling out ranges of temp niches and slopes
-  temp <- seq(min (site_data$temp_niche_center), max (site_data$temp_niche_center), length.out = 50)
-  slope <- seq(min (site_data$slope), max (site_data$slope), length.out = 50)
+  temp <- seq(min (site_data$temp_niche_center-0.1), max (site_data$temp_niche_center+0.1), length.out = 50)
+  slope <- seq(min (site_data$slope-0.001), max (site_data$slope+0.001), length.out = 50)
   
   # Merge data into dataframe
   grid_df <- expand.grid(temp_anomaly = temp, abund_diff = slope)
@@ -997,41 +993,46 @@ contour_plot <- function(data, site_name) {
   # Plot
   p <- ggplot(grid_df, aes(x = temp_anomaly, y = abund_diff)) +
     geom_tile(aes(fill = spp_contrib)) + # Add tiles to represent the surface
-    geom_contour(aes(z = spp_contrib), color = "gray50") + # Specified contour lines
+    #geom_contour(aes(z = spp_contrib), color = "gray50") + # Specified contour lines
     #metR::geom_text_contour(aes(z = spp_contrib), color = "black") + # Add contour labels
     geom_point(data=site_data,aes(x=temp_niche_center,y=slope,shape=top_contributors,alpha=top_contributors),size=3) +
     scale_alpha_manual(name = "Top species\ncontributors",
                        values = c("top_1" = 1, "top_2" = 1, "top_3" = 1, "none" = 0.4),
                        labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
     scale_shape_manual(name = "Top species\ncontributors",
-                       values = c("top_1" = 8, "top_2" = 18, "top_3" = 17, "none" = 20),
+                       values = c("top_1" = 17, "top_2" = 18, "top_3" = 8, "none" = 20),
                        labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
     scale_fill_gradient2(
       low = "blue", mid = "white", high = "red", midpoint = 0,
-      name = expression("Species\ncontribution\nto CTI (°C)")
+      name = "Species\ncontribution\nto β CTI"
     ) +
     geom_vline(xintercept = 0, color = "black", linetype = "dashed") +
     geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
     ggtitle(site_name) +
     labs(
-      x = "Species temperature anomaly (°C)",
+      x = "Species temperature anomaly (°C)                                    ",
       #y = expression(bold(atop(Delta~Abundance,(Delta~Warmed - Delta~Ambient)))),
-      y = expression(bold(Delta~Abundance (Delta~Warmed - Delta~Ambient)))
+      y = "β Abundance (Warmed - Ambient)"
     ) +
     geom_label_repel(data = top_contributors,
                      aes(x = temp_niche_center, y = slope, label = species),
-                     size = 3,
+                     size = 3.5,
                      box.padding = 0.5,          # Increase the padding around the box
                      point.padding = 0.3,   
                      fill = "white",             # Background color of the label
                      color = "black",
                      nudge_x = 0.1,          # Slightly nudge labels in the x-direction if needed
                      nudge_y = 0.0001,          # Slightly nudge labels in the y-direction if needed
+                     min.segment.length = unit(0, 'lines'),
                      segment.color = 'grey50') +
     theme_minimal() +
-    theme(axis.text.x = element_text(size = 12),
+    theme(axis.text.x = element_text(size = 14),
           axis.text.y = element_text(size = 14),
-          axis.title = element_text(size=14,face="bold")) +
+          axis.title = element_text(size=14,face="bold"),
+          plot.title = element_text(size=14, face="bold"),
+          legend.text=element_text(size=14),
+          legend.title=element_text(size=14)) +
+    #coord_cartesian(clip = 'off') +
     coord_cartesian(expand = FALSE) # Ensure no expansion on axes
   
   
@@ -1051,10 +1052,53 @@ for (site_name in unique(data_for_plot$site)) {
 }
 point_contours_treat_ok <- plots_contours[[1]]
 point_contours_treat_phace <- plots_contours[[2]]
-point_contours_treat_jrgce <- plots_contours[[3]]
-point_contours_treat_tera <- plots_contours[[4]]
-point_contours_treat_cfc<- plots_contours[[5]]
-point_contours_treat_hwrc <- plots_contours[[6]]
+point_contours_treat_tera <- plots_contours[[3]]
+point_contours_treat_jrgce <- plots_contours[[4]]
+point_contours_treat_hwrc<- plots_contours[[5]]
+point_contours_treat_cfc <- plots_contours[[6]]
+
+# Arrange plots into multi-panel figure
+# Function to remove color, shape, and alpha guides
+legend_rem <- function(plt){
+  plt <- plt +
+    guides(shape = "none", alpha = "none")
+  return(plt)   
+}
+# Get shape legend
+shp_lgnd <- point_contours_treat_jrgce +
+  guides(fill = "none") +
+  theme(axis.text.y = element_blank(),
+        plot.title = element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks = element_blank(),
+        legend.position = c(0.5, 0.5),
+        #legend.title = element_blank(),
+        panel.grid = element_blank(),
+        panel.border = element_rect(colour = "white", fill='white', size=1)) 
+# Specify plot layout
+design <- "
+  aaaaaabbbbbb##
+  aaaaaabbbbbb##
+  aaaaaabbbbbb##
+  ccccccddddddgg
+  ccccccddddddgg
+  ccccccddddddgg
+  eeeeeeffffff##
+  eeeeeeffffff##
+  eeeeeeffffff##
+"
+# Plot
+png("contours_5.png", units="in", width=13, height=12, res=300)
+legend_rem(point_contours_treat_jrgce) + 
+  legend_rem(point_contours_treat_phace) + 
+  legend_rem(point_contours_treat_tera) + 
+  legend_rem(point_contours_treat_ok) + 
+  legend_rem(point_contours_treat_cfc) + 
+  legend_rem(point_contours_treat_hwrc) + 
+  shp_lgnd +
+  plot_layout(design = design, 
+              axis_titles = "collect")
+dev.off()
 
 
 
@@ -1120,7 +1164,7 @@ contour_plot_all <- function(data) {
   # Print the plot
   print(p)
 }
-all_spp_contour <- contour_plot_all(data_for_plot)
+all_spp_contour <- contour_plot_all(data_for_plot2)
 
 
 ### Merging all spp contour with individual site contours
@@ -1140,6 +1184,151 @@ ggarrange(a,b,
           nrow=2,heights=c(1.7,0.6))
 dev.off()
 
+
+
+### Spp traits and contour plot
+# If a species is present in >1 experiment, take the average
+data_for_spp_plot2 <- data_for_spp_plot %>%
+  dplyr::select(species,temp_niche_center,slope,TraitName,mean_trait_val) %>%
+  group_by(species) %>%
+  mutate(temp_niche_center = mean(temp_niche_center),
+         slope = mean(slope),
+         contribution_center = temp_niche_center*slope) %>%
+  distinct()
+# Fixing long trait names
+data_for_spp_plot$TraitName[data_for_spp_plot$TraitName == "Leaf dry mass per leaf fresh mass (leaf dry matter content, LDMC)"] <- "LDMC"
+data_for_spp_plot$TraitName[data_for_spp_plot$TraitName == "Fine root length per fine root dry mass (specific fine root length, SRL)"] <- "Specific fine root length"
+data_for_spp_plot$TraitName[data_for_spp_plot$TraitName == "Root length per root dry mass (specific root length, SRL)"] <- "Specific root length"
+data_for_spp_plot$TraitName[data_for_spp_plot$TraitName == "Plant biomass and allometry: Fine root length per plant"] <- "Fine root length"
+data_for_spp_plot$TraitName[data_for_spp_plot$TraitName == "Plant biomass and allometry: Seed number per plant"] <- "Seed number per plant"
+data_for_spp_plot$TraitName[data_for_spp_plot$TraitName == "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or excluded"] <- "SLA"
+data_for_spp_plot$TraitName[data_for_spp_plot$TraitName == "Coarse root length per coarse root dry mass (specific coarse root length, SRL)"] <- "Specific coarse root length"
+data_for_spp_plot$TraitName[data_for_spp_plot$TraitName == "Plant biomass and allometry: Coarse root length per plant"] <- "Coarse root length"
+data_for_spp_plot$TraitName[data_for_spp_plot$TraitName == "Plant morphological adaptations: seed or dispersal unit metamorphoses"] <- "Seed or dispersal unit metamorphoses"
+data_for_spp_plot$TraitName[data_for_spp_plot$TraitName == "Seed germination rate (germination efficiency)"] <- "Seed germination rate"
+data_for_spp_plot$TraitName[data_for_spp_plot$TraitName == "Seed (seedbank) longevity"] <- "Seed longevity"
+
+# Plotting all species onto the contour background
+traits_contour_plot_all <- function(data, trait) {
+  
+  # Select trait
+  data <- data %>%
+    filter(TraitName == trait)
+  
+  # Pulling out ranges of temp niches and slopes
+  temp <- seq(min (data$temp_niche_center), max (data$temp_niche_center), length.out = 50)
+  slope <- seq(min (data$slope), max (data$slope), length.out = 50)
+  
+  # Merge data into dataframe
+  grid_df <- expand.grid(temp_anomaly = temp, abund_diff = slope)
+  grid_df <- grid_df %>%
+    mutate(spp_contrib = temp_anomaly*abund_diff)
+  
+  #top_contributors <- data %>%
+  #  mutate(abs_contribution_center = abs(contribution_center)) %>%
+  #  arrange(desc(abs_contribution_center))
+  #top_contributors <- top_contributors[1:10,]
+  
+  # Plot
+  p <- ggplot(grid_df, aes(x = temp_anomaly, y = abund_diff)) +
+    geom_tile(aes(fill = spp_contrib)) + # Add tiles to represent the surface
+    geom_contour(aes(z = spp_contrib), color = "gray50") + # Specified contour lines
+    # metR::geom_text_contour(aes(z = spp_contrib), color = "black") + # Add contour labels
+    geom_point(data=data,aes(x=temp_niche_center,y=slope,size=mean_trait_val),
+               alpha=0.6) +
+    scale_fill_gradient2(
+      low = "blue", mid = "white", high = "red", midpoint = 0,
+      name = "Species\ncontribution\nto CTI (°C)"
+    ) +
+    ggtitle(trait) +
+    #geom_label_repel(data = top_contributors,
+    #                 aes(x = temp_niche_center, y = slope, label = species),
+    #                 size = 3,
+    #                 box.padding = 0.5,          # Increase the padding around the box
+    #                 point.padding = 0.3,   
+    #                 fill = "white",             # Background color of the label
+    #                 color = "black",
+    #                 nudge_x = 0.1,          # Slightly nudge labels in the x-direction if needed
+    #                 nudge_y = 0.0001,          # Slightly nudge labels in the y-direction if needed
+    #                 segment.color = 'grey50') +
+    geom_vline(xintercept = 0, color = "black", linetype = "dashed") +
+    geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
+    labs(x = "Species temperature anomaly (°C)",
+         y = expression(bold(Delta~Abundance)),
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 14),
+          axis.title = element_text(size=14,face="bold")) +
+    coord_cartesian(expand = FALSE) # Ensure no expansion on axes
+  
+  
+  # Print the plot
+  print(p)
+}
+traits_contour_plot_all(data_for_spp_plot,"Seed dry mass")
+traits_contour_plot_all(data_for_spp_plot,"Plant height vegetative")
+traits_contour_plot_all(data_for_spp_plot,"Seed germination rate (germination efficiency)")
+traits_contour_plot_all(data_for_spp_plot,"Plant biomass and allometry: Seed number per plant")
+traits_contour_plot_all(data_for_spp_plot,"Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or excluded")
+traits_contour_plot_all(data_for_spp_plot,"Seed (seedbank) longevity")
+traits_contour_plot_all(data_for_spp_plot,"Root length per root dry mass (specific root length, SRL)")
+
+
+
+### Regress trait values and contribution
+# Remove non-numeric traits or traits with low sample sizes
+data_for_spp_plot2 <- data_for_spp_plot %>%
+  filter(!(TraitName == "Coarse root length" |
+             TraitName == "Specific coarse root length" |
+             TraitName == "Dispersal syndrome" |
+             TraitName == "Seed or dispersal unit metamorphoses" |
+             TraitName == "Seedbank duration")) %>%
+  filter(!is.na(TraitName)) %>%
+  filter(!(TraitName == "Fine root length" & mean_trait_val > 3000)) %>%
+  filter(!(TraitName == "Seed length" & mean_trait_val > 1000)) %>%
+  filter(!(TraitName == "Plant height vegetative" & mean_trait_val > 500)) %>%
+  filter(!(TraitName == "Specific fine root length" & mean_trait_val > 400))
+# Make a function to select a given trait name and plot it against contribution
+trait_con_plot <- function(data,trait){
+  plot_data <- data %>%
+    filter(TraitID == trait)
+  
+  trait_name <- plot_data$TraitName[1]
+  
+  ggplot(plot_data, aes(x = log(mean_trait_val), y = contribution_center)) +
+    geom_point() +
+    geom_smooth(method="lm") +
+    labs(title = trait_name, x = "Trait value", y = "Species contribution") +
+    theme_minimal()
+}
+#trait_niche_plot(traits_niche_rem,3106)
+
+# Define the desired order of TraitName
+trait_order <- c(26,27,131,66,95,33,3117,47,46,21,3106,2026,614,1080)  # Modify as needed
+
+# Convert TraitName to a factor with specified levels
+data_for_spp_plot2$TraitID <- factor(data_for_spp_plot2$TraitID, levels = trait_order)
+
+# Iterate over the ordered TraitID values
+plots_list <- list()  # Initialize an empty list to store plots
+for (trait in levels(data_for_spp_plot2$TraitID)) {
+  trait_id <- as.numeric(trait)  # Convert factor level back to numeric
+  
+  # Filter and ensure valid data
+  plot_data <- data_for_spp_plot2 %>% filter(TraitID == trait_id)
+  
+  if (nrow(plot_data) > 0) {  # Ensure data exists for this TraitID
+    p <- trait_con_plot(data_for_spp_plot2, trait_id)
+    plots_list[[trait]] <- p  # Store with TraitID as key
+  } else {
+    message("Warning: No data for TraitID ", trait_id)
+  }
+}
+
+# Arrange all plots in a grid
+wrap_plots(grobs = plots_list) +
+  plot_layout(guides = "collect",axis_titles = "collect")
 
 
 
@@ -1365,7 +1554,9 @@ all_spp_phylo <- ggarrange(all_tree2, point_plot, ncol = 2, align = "h")
 
 ### All spp phylo tree circular
 # Fixing species names
-all_phylo$tip.label <- all_phylo$tip.label %>% gsub("_", " ", .)
+# Replace underscores in both to be safe
+all_phylo$tip.label <- gsub("_", " ", all_phylo$tip.label)
+data_for_plot$species <- gsub("_", " ", data_for_plot$species)
 
 all_tree_circ <- ggtree(all_phylo, layout = "circular") + theme_tree()  # Plot the tree
 
@@ -1375,20 +1566,65 @@ tip_order_circ <- all_tree_circ$data %>%
   arrange(y) %>% 
   pull(label)
 
-data_for_phylo_plot2 <- data_for_plot %>%
-  select(species, contribution_center)
+# Using relative contribution
+data_for_phylo_plot2 <- data_for_phylo_plot %>%
+  dplyr::select(species, contribution_center)
 data_for_phylo_plot2$species <- factor(data_for_phylo_plot2$species, levels = tip_order_circ)
+data_for_phylo_plot2 <- data_for_phylo_plot2 %>%
+  filter(!is.na(species)) %>%
+  group_by(species) %>%
+  summarize(
+    contribution_center = mean(contribution_center, na.rm = TRUE))
+# Using plain contribution center values
+data_for_phylo_plot_center2 <- data_for_phylo_plot_center %>%
+  dplyr::select(species, contribution_center)
+data_for_phylo_plot_center2$species <- factor(data_for_phylo_plot_center2$species, levels = tip_order_circ)
+data_for_phylo_plot_center2 <- data_for_phylo_plot_center2 %>%
+  filter(!is.na(species)) %>%
+  group_by(species) %>%
+  summarize(
+    contribution_center = mean(contribution_center, na.rm = TRUE))
+
+# Merging with family informaiton
+### Set path to turbo to get data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/phylogenies/"
+setwd(path_data)
+# Load in data
+families <- read.csv(" species_families.csv")
+families <- left_join(data_for_phylo_plot_center2, families, by = "species")
+
+# Abundance data
+data_for_phylo_plot_abun <- data_for_phylo_plot_abun %>%
+  dplyr::select(species, slope)
+data_for_phylo_plot_abun$species <- factor(data_for_phylo_plot_abun$species, levels = tip_order_circ)
 
 # Plot the tree
-circ_tree <- ggtree(all_phylo, layout = "circular") %<+% data_for_phylo_plot2 +  # The '%<+%' operator merges data into ggtree
+png("phylo.png", units="in", width=18, height=18, res=300)
+#circ_tree <- 
+  ggtree(all_phylo, layout = "circular") %<+% data_for_phylo_plot_center2 +  # The '%<+%' operator merges data into ggtree
   geom_tiplab(aes(color = contribution_center)) +  # Color by contribution_value
   scale_color_gradient2(
-    low = "blue", mid = "grey40", high = "red", midpoint = 0,
-    name = "Species\ncontribution\nto CTI (°C)"
+    low = "blue", mid = "grey60", high = "red", midpoint = 0,
+    name = "Species\ncontribution\nto β CTI (°C)"
   ) +
-  #geom_hilight(node=454, fill="gold") + 
+  #geom_hilight(node=452, fill="gold") + 
+  geom_hilight(node=449, fill="gold",alpha=0.4) + 
+  geom_hilight(node=287, fill="lightskyblue",alpha=0.4) + 
+ #geom_text(aes(label=node), hjust=-.3) +
+  theme_tree()
+dev.off()
+png("phylo_abun.png", units="in", width=18, height=18, res=300)
+ggtree(all_phylo, layout = "circular") %<+% data_for_phylo_plot_abun +  # The '%<+%' operator merges data into ggtree
+  geom_tiplab(aes(color = slope)) +  # Color by contribution_value
+  scale_color_gradient2(
+    low = "blue", mid = "grey60", high = "red", midpoint = 0,
+    name = "Species\nβ Abundance"
+  ) +
+  geom_hilight(node=449, fill="gold",alpha=0.4) + 
+  geom_hilight(node=287, fill="lightskyblue",alpha=0.4) + 
   #geom_text(aes(label=node), hjust=-.3) +
   theme_tree()
+dev.off()
 
 
 
@@ -1414,25 +1650,46 @@ dev.off()
 ### Top contributors %
 # Function to calculate top species contributing to 95% of absolute contributions per site
 calculate_top_species_per_site <- function(df, contributions_col = "contribution_center", target_percent = 95) {
-  df %>%
-    group_by(site) %>%  # Group by site
-    arrange(site, desc(abs(!!sym(contributions_col)))) %>%  # Sort contributions by absolute value in descending order
-    mutate(abs_contribution = abs(!!sym(contributions_col)),  # Calculate absolute contributions
-           cumulative_contribution = cumsum(abs_contribution),  # Calculate cumulative sum of absolute contributions
-           cumulative_percentage = cumulative_contribution / sum(abs_contribution) * 100) %>%
-    filter(cumulative_percentage <= target_percent) %>%  # Filter for top contributors
-    summarise(top_species_count = n(),  # Count the number of top-contributing species per site
-              top_species = list(species))  # Collect species names in a list
+  
+  total_species <- df %>%
+    group_by(site) %>%
+    summarise(total_spp = n(), .groups = "drop")
+  
+  top_species_details <- df %>%
+    group_by(site) %>%
+    arrange(site, desc(abs(!!sym(contributions_col)))) %>%
+    mutate(
+      abs_contribution = abs(!!sym(contributions_col)),
+      species_percent = abs_contribution / sum(abs_contribution) * 100,
+      cumulative_contribution = cumsum(abs_contribution),
+      cumulative_percentage = cumulative_contribution / sum(abs_contribution) * 100
+    ) %>%
+    filter(row_number() <= which.max(cumulative_percentage >= target_percent)) %>%
+    dplyr::select(site, species, species_percent, cumulative_percentage)
+  
+  top_species_summary <- top_species_details %>%
+    group_by(site) %>%
+    summarise(
+      top_species_count = n(),
+      captured_percentage = max(cumulative_percentage),
+      species_details = list(
+        tibble(species = species, percent = round(species_percent, 2))
+      ),
+      .groups = "drop"
+    )
+  
+  top_species_summary %>%
+    left_join(total_species, by = "site") %>%
+    mutate(percent_species_contributing = round((top_species_count / total_spp) * 100, 1))
 }
-
 # Calculate the top-contributing species per site
-top_species_per_site <- calculate_top_species_per_site(data_for_plot, contributions_col = "contribution_center", target_percent = 95)
+top_species_per_site <- calculate_top_species_per_site(data_for_plot, contributions_col = "contribution_center", target_percent = 94)
 
-# Total number of species in each experiment
-total_spp <- data_for_plot %>%
-  group_by(site) %>%
-  summarize(total_spp = n())
 
+
+### Contribution data for table
+table_data <- data_for_plot %>%
+  dplyr::select(site, species, contribution_center,temp_niche_center,slope, slope_CTI)
 
 
 ### Boxplots
@@ -1491,6 +1748,8 @@ saveRDS(point_contours_treat_ok, paste(path_out,'point_contours_treat_ok.rds'))
 saveRDS(point_contours_treat_phace, paste(path_out,'point_contours_treat_phace.rds'))
 saveRDS(point_contours_treat_tera, paste(path_out,'point_contours_treat_tera.rds'))
 
+saveRDS(contours_treat_final, paste(path_out,'point_contours_treat_final.rds'))
+
 saveRDS(all_spp_contour, paste(path_out,'point_contours_treat_all.rds'))
 saveRDS(all_spp_contour_vals, paste(path_out,'point_contours_treat_vals_all.rds'))
 saveRDS(all_sites_contour, paste(path_out,'all_sites_contour.rds'))
@@ -1504,6 +1763,10 @@ saveRDS(phylo_plot_hwrc, paste(path_out,'phylo_plot_hwrc.rds'))
 saveRDS(phylo_plot_tera, paste(path_out,'phylo_plot_tera.rds'))
 saveRDS(phylo_plot_ok, paste(path_out,'phylo_plot_ok.rds'))
 saveRDS(phylo_plot_jrgce, paste(path_out,'phylo_plot_jrgce.rds'))
+
+saveRDS(data_for_spp_plot2, paste(path_out,'trait_contribution_data.rds'))
+
+write.csv(table_data, "my_dataframe.csv", row.names = FALSE)
 
 
 

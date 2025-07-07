@@ -68,7 +68,9 @@ CTI_sens <- CTI %>% # Calculating SE of diff bwtn means
   pivot_wider(names_from = temp_treatment, values_from = c(mean_cti, sd_cti, n)) %>%
   mutate(
     sensitivity = `mean_cti_warmed` - `mean_cti_ambient`,  # Sensitivity as the difference in means
-    SE_diff = sqrt((`sd_cti_warmed`^2 / `n_warmed`) + (`sd_cti_ambient`^2 / `n_ambient`))  # Standard error of the difference
+    SE_diff = sqrt((`sd_cti_warmed`^2 / `n_warmed`) + (`sd_cti_ambient`^2 / `n_ambient`)),# Standard error of the difference
+    sens_scaled = sensitivity/2.25,
+    SE_diff_scaled = SE_diff/2.25
   )
 
 # CTI and CPI combined

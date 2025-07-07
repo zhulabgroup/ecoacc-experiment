@@ -12,6 +12,7 @@ library(tidyverse)
 library(lmerTest)
 library(car)
 library(patchwork)
+library(MuMIn)
 
 
 
@@ -72,6 +73,26 @@ CTI_sens_ok <- read.csv(" CTI_sens_ok.csv")
 CTI_ok <- read.csv(" CTI_ok.csv")
 CTI_CPI_ok <- read.csv(" CTI_CPI_ok.csv")
 NPP_overall_ok <- read.csv(" eco_response_overall_ok.csv")
+
+### Set path to Yu data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
+setwd(path_data)
+# Load in data
+CPI_sens_knz <- read.csv(" CPI_sens_knz.csv")
+CPI_knz <- read.csv(" CPI_knz.csv")
+NPP_overall_knz <- read.csv(" knz_biomass.csv")
+
+CPI_sens_hys <- read.csv(" CPI_sens_hys.csv")
+CPI_hys <- read.csv(" CPI_hys.csv")
+NPP_overall_hys <- read.csv(" hys_biomass.csv")
+
+CPI_sens_sgs <- read.csv(" CPI_sens_sgs.csv")
+CPI_sgs <- read.csv(" CPI_sgs.csv")
+NPP_overall_sgs <- read.csv(" sgs_biomass.csv")
+
+CPI_sens_chy <- read.csv(" CPI_sens_chy.csv")
+CPI_chy <- read.csv(" CPI_chy.csv")
+NPP_overall_chy <- read.csv(" chy_biomass.csv")
 
 
 
@@ -283,10 +304,10 @@ shapiro.test(resid(diseq_model.jrgce2))
 # Plot model predictions
 # Extract unique combinations of disequilib and MAT in the original data
 new_data_jrgce2 <- NPP_MAT_dis_jrgce %>%
-  select(disequilib, MAT) %>%
+  dplyr::select(disequilib, MAT) %>%
   distinct()
 # Generate predictions and confidence intervals
-new_data_jrgce2_fitted <- predict(diseq_model.ok, newdata = new_data_jrgce2, interval = "confidence")
+new_data_jrgce2_fitted <- predict(diseq_model.jrgce2, newdata = new_data_jrgce2, interval = "confidence")
 # Combine predictions with the new data
 predictions_jrgce2 <- cbind(new_data_jrgce2, new_data_jrgce2_fitted)
 
@@ -616,6 +637,397 @@ all.exp.merge <- wrap_plots(mod.dis.plot.jrgce, mod.dis.plot.phace, mod.dis.plot
 
 
 
+## knz
+# Mering disequilibrium data with biomass data
+MAP_dis_knz <- CPI_knz %>%
+  dplyr::select(year,block,treatment,MAP,disequilib,CPI) %>%
+  distinct()
+NPP_MAP_dis_knz <- left_join(NPP_overall_knz, MAP_dis_knz,by=c("year","block","treatment"))
+
+## Model comparisons
+diseq_model.knz1 <- lmer(biomass ~ disequilib + (1|block), data=NPP_MAP_dis_knz)
+diseq_model.knz2 <- lmer(biomass ~ treatment + (1|block), data=NPP_MAP_dis_knz)
+diseq_model.knz3 <- lmer(biomass ~ MAP + (1|block), data=NPP_MAP_dis_knz)
+diseq_model.knz4 <- lmer(biomass ~ CPI + (1|block), data=NPP_MAP_dis_knz)
+diseq_model.knz5 <- lmer(biomass ~ disequilib + treatment + (1|block), data=NPP_MAP_dis_knz)
+diseq_model.knz6 <- lmer(biomass ~ disequilib + CPI + (1|block), data=NPP_MAP_dis_knz)
+diseq_model.knz7 <- lmer(biomass ~ treatment + CPI + (1|block), data=NPP_MAP_dis_knz)
+diseq_model.knz8 <- lmer(biomass ~ treatment + MAP + (1|block), data=NPP_MAP_dis_knz)
+diseq_model.knz9 <- lmer(biomass ~ disequilib + treatment + CPI + (1|block), data=NPP_MAP_dis_knz)
+diseq_model.knz10 <- lmer(biomass ~ disequilib + treatment + MAP + (1|block), data=NPP_MAP_dis_knz)
+# AIC
+AIC(diseq_model.knz1, diseq_model.knz2, diseq_model.knz3, 
+     diseq_model.knz4, diseq_model.knz5, diseq_model.knz6,
+    diseq_model.knz7, diseq_model.knz8, diseq_model.knz9, diseq_model.knz10)
+r.squaredGLMM(diseq_model.knz1)
+r.squaredGLMM(diseq_model.knz2)
+r.squaredGLMM(diseq_model.knz3)
+r.squaredGLMM(diseq_model.knz4)
+r.squaredGLMM(diseq_model.knz5)
+r.squaredGLMM(diseq_model.knz6)
+r.squaredGLMM(diseq_model.knz7)
+r.squaredGLMM(diseq_model.knz8)
+r.squaredGLMM(diseq_model.knz9)
+r.squaredGLMM(diseq_model.knz10)
+# Summary of the model to see the effect of disequilibrium
+summary(diseq_model.knz8)
+# A VIF value of 1 means no correlation between this predictor and the other predictors (perfectly uncorrelated).
+# VIF values between 1 and 5 indicate a moderate correlation, which is typically acceptable in most models.
+# VIF values greater than 5 (especially above 10) suggest high multicollinearity, which may cause issues with the model's interpretation
+vif(diseq_model.knz8)
+
+# Plot residuals vs fitted values
+plot(diseq_model.knz8$fitted.values, resid(diseq_model.knz8), 
+     xlab = "Fitted Values", ylab = "Residuals", 
+     main = "Residuals vs Fitted Values")
+abline(h = 0, col = "red")  # Add a horizontal line at 0 for reference
+# Check normality
+qqnorm(resid(diseq_model.knz8))
+qqline(resid(diseq_model.knz8), col = "red")
+shapiro.test(resid(diseq_model.knz8))
+
+# Plot model predictions
+# Create new data for predictions
+new_data_knz <- NPP_MAP_dis_knz %>%
+  group_by(treatment) %>%
+  summarise(min_map = min(MAP, na.rm = TRUE),
+            max_map = max(MAP, na.rm = TRUE)) %>%
+  rowwise() %>%
+  do(data.frame(
+    MAP = seq(.$min_map, .$max_map, length.out = 100),
+    treatment = .$treatment
+  )) %>%
+  ungroup()
+
+# Predict function for bootMer (only fixed effects)
+predict_fun <- function(fit) {
+  predict(fit, newdata = new_data_knz, re.form = NA)
+}
+
+# Run the bootstrap (e.g., 1000 simulations)
+set.seed(123)  # for reproducibility
+boot_preds <- bootMer(diseq_model.knz8, predict_fun, nsim = 1000, use.u = FALSE, type = "parametric", re.form = NA)
+
+# Get confidence intervals: 2.5% and 97.5% quantiles for each row in prediction grid
+ci <- apply(boot_preds$t, 2, quantile, probs = c(0.025, 0.975))
+ci <- t(ci)
+colnames(ci) <- c("lwr", "upr")
+
+# Combine predictions with CIs
+new_data_knz$fit <- predict(diseq_model.knz8, newdata = new_data_knz, re.form = NA)
+new_data_knz$lwr <- ci[, "lwr"]
+new_data_knz$upr <- ci[, "upr"]
+
+mod.dis.plot.knz <- ggplot(NPP_MAP_dis_knz, aes(x = MAP, y = biomass, color = treatment)) +
+  geom_point(alpha = 0.6) +
+  geom_line(data = new_data_knz, aes(x = MAP, y = fit, color = treatment), size = 1) +
+  geom_ribbon(data = new_data_knz,
+              aes(x = MAP, y = fit, ymin = lwr, ymax = upr, fill = treatment),
+              alpha = 0.3, color = NA) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Drought"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Drought"),
+                    values = c("blue","red")) +
+  theme_minimal() +
+  labs(x = "Annual Precipitation (AP)", y = "Biomass", title = "KNZ")
+
+
+
+## hys
+# Mering disequilibrium data with biomass data
+MAP_dis_hys <- CPI_hys %>%
+  dplyr::select(year,block,treatment,MAP,disequilib,CPI) %>%
+  distinct()
+NPP_MAP_dis_hys <- left_join(NPP_overall_hys, MAP_dis_hys,by=c("year","block","treatment"))
+
+## Model comparisons
+diseq_model.hys1 <- lmer(biomass ~ disequilib + (1|block), data=NPP_MAP_dis_hys)
+diseq_model.hys2 <- lmer(biomass ~ treatment + (1|block), data=NPP_MAP_dis_hys)
+diseq_model.hys3 <- lmer(biomass ~ MAP + (1|block), data=NPP_MAP_dis_hys)
+diseq_model.hys4 <- lmer(biomass ~ CPI + (1|block), data=NPP_MAP_dis_hys)
+diseq_model.hys5 <- lmer(biomass ~ disequilib + treatment + (1|block), data=NPP_MAP_dis_hys)
+diseq_model.hys6 <- lmer(biomass ~ disequilib + CPI + (1|block), data=NPP_MAP_dis_hys)
+diseq_model.hys7 <- lmer(biomass ~ treatment + CPI + (1|block), data=NPP_MAP_dis_hys)
+diseq_model.hys8 <- lmer(biomass ~ treatment + MAP + (1|block), data=NPP_MAP_dis_hys)
+diseq_model.hys9 <- lmer(biomass ~ disequilib + treatment + CPI + (1|block), data=NPP_MAP_dis_hys)
+diseq_model.hys10 <- lmer(biomass ~ disequilib + treatment + MAP + (1|block), data=NPP_MAP_dis_hys)
+# AIC
+AIC(diseq_model.hys1, diseq_model.hys2, diseq_model.hys3, 
+    diseq_model.hys4, diseq_model.hys5, diseq_model.hys6,
+    diseq_model.hys7, diseq_model.hys8, diseq_model.hys9, diseq_model.hys10)
+r.squaredGLMM(diseq_model.hys1)
+r.squaredGLMM(diseq_model.hys2)
+r.squaredGLMM(diseq_model.hys3)
+r.squaredGLMM(diseq_model.hys4)
+r.squaredGLMM(diseq_model.hys5)
+r.squaredGLMM(diseq_model.hys6)
+r.squaredGLMM(diseq_model.hys7)
+r.squaredGLMM(diseq_model.hys8)
+r.squaredGLMM(diseq_model.hys9)
+r.squaredGLMM(diseq_model.hys10)
+# Summary of the model to see the effect of disequilibrium
+summary(diseq_model.hys8)
+# A VIF value of 1 means no correlation between this predictor and the other predictors (perfectly uncorrelated).
+# VIF values between 1 and 5 indicate a moderate correlation, which is typically acceptable in most models.
+# VIF values greater than 5 (especially above 10) suggest high multicollinearity, which may cause issues with the model's interpretation
+vif(diseq_model.hys8)
+
+# Plot residuals vs fitted values
+plot(diseq_model.hys8$fitted.values, resid(diseq_model.hys8), 
+     xlab = "Fitted Values", ylab = "Residuals", 
+     main = "Residuals vs Fitted Values")
+abline(h = 0, col = "red")  # Add a horizontal line at 0 for reference
+# Check normality
+qqnorm(resid(diseq_model.hys8))
+qqline(resid(diseq_model.hys8), col = "red")
+shapiro.test(resid(diseq_model.hys8))
+
+# Plot model predictions
+# Create new data for predictions
+new_data_hys <- NPP_MAP_dis_hys %>%
+  group_by(treatment) %>%
+  summarise(min_map = min(MAP, na.rm = TRUE),
+            max_map = max(MAP, na.rm = TRUE)) %>%
+  rowwise() %>%
+  do(data.frame(
+    MAP = seq(.$min_map, .$max_map, length.out = 100),
+    treatment = .$treatment
+  )) %>%
+  ungroup()
+
+# Predict function for bootMer (only fixed effects)
+predict_fun <- function(fit) {
+  predict(fit, newdata = new_data_hys, re.form = NA)
+}
+
+# Run the bootstrap (e.g., 1000 simulations)
+set.seed(123)  # for reproducibility
+boot_preds <- bootMer(diseq_model.hys8, predict_fun, nsim = 1000, use.u = FALSE, type = "parametric", re.form = NA)
+
+# Get confidence intervals: 2.5% and 97.5% quantiles for each row in prediction grid
+ci <- apply(boot_preds$t, 2, quantile, probs = c(0.025, 0.975))
+ci <- t(ci)
+colnames(ci) <- c("lwr", "upr")
+
+# Combine predictions with CIs
+new_data_hys$fit <- predict(diseq_model.hys8, newdata = new_data_hys, re.form = NA)
+new_data_hys$lwr <- ci[, "lwr"]
+new_data_hys$upr <- ci[, "upr"]
+
+mod.dis.plot.hys <- ggplot(NPP_MAP_dis_hys, aes(x = MAP, y = biomass, color = treatment)) +
+  geom_point(alpha = 0.6) +
+  geom_line(data = new_data_hys, aes(x = MAP, y = fit, color = treatment), size = 1) +
+  geom_ribbon(data = new_data_hys,
+              aes(x = MAP, y = fit, ymin = lwr, ymax = upr, fill = treatment),
+              alpha = 0.3, color = NA) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Drought"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Drought"),
+                    values = c("blue","red")) +
+  theme_minimal() +
+  labs(x = "Annual Precipitation (AP)", y = "Biomass", title = "HYS")
+
+
+## sgs
+# Mering disequilibrium data with biomass data
+MAP_dis_sgs <- CPI_sgs %>%
+  dplyr::select(year,block,treatment,MAP,disequilib,CPI) %>%
+  distinct()
+NPP_MAP_dis_sgs <- left_join(NPP_overall_sgs, MAP_dis_sgs,by=c("year","block","treatment"))
+
+## Model comparisons
+diseq_model.sgs1 <- lmer(biomass ~ disequilib + (1|block), data=NPP_MAP_dis_sgs)
+diseq_model.sgs2 <- lmer(biomass ~ treatment + (1|block), data=NPP_MAP_dis_sgs)
+diseq_model.sgs3 <- lmer(biomass ~ MAP + (1|block), data=NPP_MAP_dis_sgs)
+diseq_model.sgs4 <- lmer(biomass ~ CPI + (1|block), data=NPP_MAP_dis_sgs)
+diseq_model.sgs5 <- lmer(biomass ~ disequilib + treatment + (1|block), data=NPP_MAP_dis_sgs)
+diseq_model.sgs6 <- lmer(biomass ~ disequilib + CPI + (1|block), data=NPP_MAP_dis_sgs)
+diseq_model.sgs7 <- lmer(biomass ~ treatment + CPI + (1|block), data=NPP_MAP_dis_sgs)
+diseq_model.sgs8 <- lmer(biomass ~ treatment + MAP + (1|block), data=NPP_MAP_dis_sgs)
+diseq_model.sgs9 <- lmer(biomass ~ disequilib + treatment + CPI + (1|block), data=NPP_MAP_dis_sgs)
+diseq_model.sgs10 <- lmer(biomass ~ disequilib + treatment + MAP + (1|block), data=NPP_MAP_dis_sgs)
+# AIC
+AIC(diseq_model.sgs1, diseq_model.sgs2, diseq_model.sgs3, 
+    diseq_model.sgs4, diseq_model.sgs5, diseq_model.sgs6,
+    diseq_model.sgs7, diseq_model.sgs8, diseq_model.sgs9, diseq_model.sgs10)
+r.squaredGLMM(diseq_model.sgs1)
+r.squaredGLMM(diseq_model.sgs2)
+r.squaredGLMM(diseq_model.sgs3)
+r.squaredGLMM(diseq_model.sgs4)
+r.squaredGLMM(diseq_model.sgs5)
+r.squaredGLMM(diseq_model.sgs6)
+r.squaredGLMM(diseq_model.sgs7)
+r.squaredGLMM(diseq_model.sgs8)
+r.squaredGLMM(diseq_model.sgs9)
+r.squaredGLMM(diseq_model.sgs10)
+# Summary of the model to see the effect of disequilibrium
+summary(diseq_model.sgs8)
+# A VIF value of 1 means no correlation between this predictor and the other predictors (perfectly uncorrelated).
+# VIF values between 1 and 5 indicate a moderate correlation, which is typically acceptable in most models.
+# VIF values greater than 5 (especially above 10) suggest high multicollinearity, which may cause issues with the model's interpretation
+vif(diseq_model.sgs8)
+
+# Plot residuals vs fitted values
+plot(diseq_model.sgs8$fitted.values, resid(diseq_model.sgs8), 
+     xlab = "Fitted Values", ylab = "Residuals", 
+     main = "Residuals vs Fitted Values")
+abline(h = 0, col = "red")  # Add a horizontal line at 0 for reference
+# Check normality
+qqnorm(resid(diseq_model.sgs8))
+qqline(resid(diseq_model.sgs8), col = "red")
+shapiro.test(resid(diseq_model.sgs8))
+
+# Plot model predictions
+# Create new data for predictions
+new_data_sgs <- NPP_MAP_dis_sgs %>%
+  group_by(treatment) %>%
+  summarise(min_map = min(MAP, na.rm = TRUE),
+            max_map = max(MAP, na.rm = TRUE)) %>%
+  rowwise() %>%
+  do(data.frame(
+    MAP = seq(.$min_map, .$max_map, length.out = 100),
+    treatment = .$treatment
+  )) %>%
+  ungroup()
+
+# Predict function for bootMer (only fixed effects)
+predict_fun <- function(fit) {
+  predict(fit, newdata = new_data_sgs, re.form = NA)
+}
+
+# Run the bootstrap (e.g., 1000 simulations)
+set.seed(123)  # for reproducibility
+boot_preds <- bootMer(diseq_model.sgs8, predict_fun, nsim = 1000, use.u = FALSE, type = "parametric", re.form = NA)
+
+# Get confidence intervals: 2.5% and 97.5% quantiles for each row in prediction grid
+ci <- apply(boot_preds$t, 2, quantile, probs = c(0.025, 0.975))
+ci <- t(ci)
+colnames(ci) <- c("lwr", "upr")
+
+# Combine predictions with CIs
+new_data_sgs$fit <- predict(diseq_model.sgs8, newdata = new_data_sgs, re.form = NA)
+new_data_sgs$lwr <- ci[, "lwr"]
+new_data_sgs$upr <- ci[, "upr"]
+
+mod.dis.plot.sgs <- ggplot(NPP_MAP_dis_sgs, aes(x = MAP, y = biomass, color = treatment)) +
+  geom_point(alpha = 0.6) +
+  geom_line(data = new_data_sgs, aes(x = MAP, y = fit, color = treatment), size = 1) +
+  geom_ribbon(data = new_data_sgs,
+              aes(x = MAP, y = fit, ymin = lwr, ymax = upr, fill = treatment),
+              alpha = 0.3, color = NA) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Drought"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Drought"),
+                    values = c("blue","red")) +
+  theme_minimal() +
+  labs(x = "Annual Precipitation (AP)", y = "Biomass", title = "SGS")
+
+
+## chy
+# Mering disequilibrium data with biomass data
+MAP_dis_chy <- CPI_chy %>%
+  dplyr::select(year,block,treatment,MAP,disequilib,CPI) %>%
+  distinct()
+NPP_MAP_dis_chy <- left_join(NPP_overall_chy, MAP_dis_chy,by=c("year","block","treatment"))
+
+## Model comparisons
+diseq_model.chy1 <- lmer(biomass ~ disequilib + (1|block), data=NPP_MAP_dis_chy)
+diseq_model.chy2 <- lmer(biomass ~ treatment + (1|block), data=NPP_MAP_dis_chy)
+diseq_model.chy3 <- lmer(biomass ~ MAP + (1|block), data=NPP_MAP_dis_chy)
+diseq_model.chy4 <- lmer(biomass ~ CPI + (1|block), data=NPP_MAP_dis_chy)
+diseq_model.chy5 <- lmer(biomass ~ disequilib + treatment + (1|block), data=NPP_MAP_dis_chy)
+diseq_model.chy6 <- lmer(biomass ~ disequilib + CPI + (1|block), data=NPP_MAP_dis_chy)
+diseq_model.chy7 <- lmer(biomass ~ treatment + CPI + (1|block), data=NPP_MAP_dis_chy)
+diseq_model.chy8 <- lmer(biomass ~ treatment + MAP + (1|block), data=NPP_MAP_dis_chy)
+diseq_model.chy9 <- lmer(biomass ~ disequilib + treatment + CPI + (1|block), data=NPP_MAP_dis_chy)
+diseq_model.chy10 <- lmer(biomass ~ disequilib + treatment + MAP + (1|block), data=NPP_MAP_dis_chy)
+# AIC
+AIC(diseq_model.chy1, diseq_model.chy2, diseq_model.chy3, 
+    diseq_model.chy4, diseq_model.chy5, diseq_model.chy6,
+    diseq_model.chy7, diseq_model.chy8, diseq_model.chy9, diseq_model.chy10)
+r.squaredGLMM(diseq_model.chy1)
+r.squaredGLMM(diseq_model.chy2)
+r.squaredGLMM(diseq_model.chy3)
+r.squaredGLMM(diseq_model.chy4)
+r.squaredGLMM(diseq_model.chy5)
+r.squaredGLMM(diseq_model.chy6)
+r.squaredGLMM(diseq_model.chy7)
+r.squaredGLMM(diseq_model.chy8)
+r.squaredGLMM(diseq_model.chy9)
+r.squaredGLMM(diseq_model.chy10)
+# Summary of the model to see the effect of disequilibrium
+summary(diseq_model.chy8)
+# A VIF value of 1 means no correlation between this predictor and the other predictors (perfectly uncorrelated).
+# VIF values between 1 and 5 indicate a moderate correlation, which is typically acceptable in most models.
+# VIF values greater than 5 (especially above 10) suggest high multicollinearity, which may cause issues with the model's interpretation
+vif(diseq_model.chy8)
+
+# Plot residuals vs fitted values
+plot(diseq_model.chy8$fitted.values, resid(diseq_model.chy8), 
+     xlab = "Fitted Values", ylab = "Residuals", 
+     main = "Residuals vs Fitted Values")
+abline(h = 0, col = "red")  # Add a horizontal line at 0 for reference
+# Check normality
+qqnorm(resid(diseq_model.chy8))
+qqline(resid(diseq_model.chy8), col = "red")
+shapiro.test(resid(diseq_model.chy8))
+
+# Plot model predictions
+# Create new data for predictions
+new_data_chy <- NPP_MAP_dis_chy %>%
+  group_by(treatment) %>%
+  summarise(min_map = min(MAP, na.rm = TRUE),
+            max_map = max(MAP, na.rm = TRUE)) %>%
+  rowwise() %>%
+  do(data.frame(
+    MAP = seq(.$min_map, .$max_map, length.out = 100),
+    treatment = .$treatment
+  )) %>%
+  ungroup()
+
+# Predict function for bootMer (only fixed effects)
+predict_fun <- function(fit) {
+  predict(fit, newdata = new_data_chy, re.form = NA)
+}
+
+# Run the bootstrap (e.g., 1000 simulations)
+set.seed(123)  # for reproducibility
+boot_preds <- bootMer(diseq_model.chy8, predict_fun, nsim = 1000, use.u = FALSE, type = "parametric", re.form = NA)
+
+# Get confidence intervals: 2.5% and 97.5% quantiles for each row in prediction grid
+ci <- apply(boot_preds$t, 2, quantile, probs = c(0.025, 0.975))
+ci <- t(ci)
+colnames(ci) <- c("lwr", "upr")
+
+# Combine predictions with CIs
+new_data_chy$fit <- predict(diseq_model.chy8, newdata = new_data_chy, re.form = NA)
+new_data_chy$lwr <- ci[, "lwr"]
+new_data_chy$upr <- ci[, "upr"]
+
+mod.dis.plot.chy <- ggplot(NPP_MAP_dis_chy, aes(x = MAP, y = biomass, color = treatment)) +
+  geom_point(alpha = 0.6) +
+  geom_line(data = new_data_chy, aes(x = MAP, y = fit, color = treatment), size = 1) +
+  geom_ribbon(data = new_data_chy,
+              aes(x = MAP, y = fit, ymin = lwr, ymax = upr, fill = treatment),
+              alpha = 0.3, color = NA) +
+  scale_color_manual(name = "Treatment",
+                     labels = c("Ambient","Drought"),
+                     values = c("blue","red")) +
+  scale_fill_manual(name = "Treatment",
+                    labels = c("Ambient","Drought"),
+                    values = c("blue","red")) +
+  theme_minimal() +
+  labs(x = "Annual Precipitation (AP)", y = "Biomass", title = "CHY")
+
+
+
+
 ### All experiments together
 # Removing X column
 NPP_MAT_dis_teracon2 <- NPP_MAT_dis_teracon %>%
@@ -722,6 +1134,10 @@ mod.dis.plot <- ggplot(NPP_MAT_dis_all, aes(x = disequilib, y = residuals_biomas
 # Export Rdata for plot
 path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/data_for_plots/"
 saveRDS(mod.dis.plot, paste(path_out,'comb_diseq_model.rds'))
+saveRDS(mod.dis.plot.knz, paste(path_out,'diseq_model_knz.rds'))
+saveRDS(mod.dis.plot.hys, paste(path_out,'diseq_model_hys.rds'))
+saveRDS(mod.dis.plot.sgs, paste(path_out,'diseq_model_sgs.rds'))
+saveRDS(mod.dis.plot.chy, paste(path_out,'diseq_model_chy.rds'))
 saveRDS(all.exp.merge, paste(path_out,'diseq_model.rds'))
 
 

@@ -45,6 +45,8 @@ biomass_vs_cti_treatments <- readRDS(" biomass_vs_cti_treatments.rds")
 biomass_vs_dis <- readRDS(" biomass_vs_disequilib.rds")
 treatment_arrows <- readRDS(" treatment_arrows.rds")
 
+jrgce_sens <- readRDS(" jrgce_cti_sens.rds")
+
 point_center_cfc <- readRDS(" point_center_cfc.rds")
 point_center_hwrc <- readRDS(" point_center_hwrc.rds")
 point_center_tera <- readRDS(" point_center_tera.rds")
@@ -86,6 +88,7 @@ point_contours_treat_tera <- readRDS(" point_contours_treat_tera.rds")
 point_contours_treat_jrgce <- readRDS(" point_contours_treat_jrgce.rds")
 point_contours_treat_ok <- readRDS(" point_contours_treat_ok.rds")
 point_contours_treat_phace <- readRDS(" point_contours_treat_phace.rds")
+point_contours_treat_final <- readRDS(" point_contours_treat_final.rds")
 
 contours_shortterm_cfc <- readRDS(" contours_shortterm_cfc.rds")
 contours_shortterm_hwrc <- readRDS(" contours_shortterm_hwrc.rds")
@@ -101,9 +104,17 @@ contours_treat_shortterm_tera <- readRDS(" contours_treat_shortterm_tera.rds")
 contours_treat_shortterm_jrgce <- readRDS(" contours_treat_shortterm_jrgce.rds")
 contours_treat_shortterm_ok <- readRDS(" contours_treat_shortterm_ok.rds")
 
+contours_all_shortterm_cfc <- readRDS(" contours_all_shortterm_cfc.rds")
+contours_all_shortterm_hwrc <- readRDS(" contours_all_shortterm_hwrc.rds")
+contours_all_shortterm_tera <- readRDS(" contours_all_shortterm_tera.rds")
+contours_all_shortterm_phace <- readRDS(" contours_all_shortterm_phace.rds")
+contours_all_shortterm_jrgce <- readRDS(" contours_all_shortterm_jrgce.rds")
+contours_all_shortterm_ok <- readRDS(" contours_all_shortterm_ok.rds")
+
 point_contours_treat_all <- readRDS(" point_contours_treat_all.rds")
 point_contours_treat_vals_all <- readRDS(" point_contours_treat_vals_all.rds")
 point_contours_all_sites <- readRDS(" all_sites_contour.rds")
+contours_shortterm_all <- readRDS(" contours_shortterm_all.rds")
 
 point_plotly_cfc <- readRDS(" point_plotly_cfc.rds")
 point_plotly_hwrc <- readRDS(" point_plotly_hwrc.rds")
@@ -133,6 +144,10 @@ phylo_phace <- readRDS(" phylo_plot_phace.rds")
 phylo_all <- readRDS(" phylo_plot_all.rds")
 phylo_all_circ <- readRDS(" phylo_plot_all_circ.rds")
 phylo_all_comb_circ <- readRDS(" phylo_plot_all_comb_circ.rds")
+
+traits_con <- readRDS(" traits_contributions.rds")
+traits_abun <- readRDS(" traits_abundances.rds")
+traits_niche <- readRDS(" traits_niches.rds")
 ```
 
 Using community composition and ecosystem response data from various warming experiments, we can visualize changes in community structure (e.g., CTI) alongside changes in function (e.g., ANPP) due to warming.
@@ -155,29 +170,18 @@ cti_sens
 
 ## Species-level analyses
 
-### Species contributing to warming effect each year; treatment effect and per treatment
+### Species contributions to warming effect on CTI
 
-```{r,message=F,warning=F,fig.width = 15, fig.height = 15}
-#png("4_panel.png", units="in", width=15, height=14, res=300)
-ggarrange(contours_shortterm_phace,contours_treat_shortterm_phace,
-          point_contours_phace,point_contours_treat_phace,
-          ncol=2,nrow=2)
-#dev.off()
-ggarrange(contours_shortterm_jrgce,contours_treat_shortterm_jrgce,
-          point_contours_jrgce,point_contours_treat_jrgce,
-          ncol=2,nrow=2)
-ggarrange(contours_shortterm_tera,contours_treat_shortterm_tera,
-          point_contours_tera,point_contours_treat_tera,
-          ncol=2,nrow=2)
-ggarrange(contours_shortterm_ok,contours_treat_shortterm_ok,
-          point_contours_ok,point_contours_treat_ok,
-          ncol=2,nrow=2)
-ggarrange(contours_shortterm_hwrc,contours_treat_shortterm_hwrc,
-          point_contours_hwrc,point_contours_treat_hwrc,
-          ncol=2,nrow=2)
-ggarrange(contours_shortterm_cfc,contours_treat_shortterm_cfc,
-          point_contours_cfc,point_contours_treat_cfc,
-          ncol=2,nrow=2)
+```{r,message=F,warning=F,fig.width = 15, fig.height = 10}
+point_contours_treat_final
+```
+
+### Traits
+
+```{r,message=F,warning=F,fig.width = 8, fig.height = 8}
+traits_con
+traits_abun
+traits_niche
 ```
 
 ### Species contributing to warming effect
@@ -192,8 +196,4 @@ Red species have greater relative contributions to CTI than blue species. If a s
 
 ```{r,message=F,warning=F,fig.width = 20, fig.height = 20}
 phylo_all_circ
-```
-
-```{r,message=F,warning=F,fig.width = 25, fig.height = 25}
-phylo_all_comb_circ
 ```

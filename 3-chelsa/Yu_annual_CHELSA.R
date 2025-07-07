@@ -17,6 +17,7 @@ setwd(path_data_gbif)
 gbif_data <- read.csv(" GBIF_knz.csv")
 gbif_data <- read.csv(" GBIF_hys.csv")
 gbif_data <- read.csv(" GBIF_sgs.csv")
+gbif_data <- read.csv(" GBIF_chy.csv")
 # Set path to chelsa data
 path_data_chelsa = "/Volumes/seas-zhukai/datasets/climate/CHELSA/climatology/"
 setwd(path_data_chelsa)
@@ -57,4 +58,4 @@ chelsa_gbif <- cbind(gbif_spp_occ, chelsa_bio1_ex_trans, chelsa_bio12_ex_trans)
 
 # Upload data
 path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/Yu_2025_Nature/"
-write.csv(chelsa_gbif,paste(path_out,'CHELSA_knz.csv'),row.names=F)
+write.csv(chelsa_gbif,paste(path_out,'CHELSA_chy.csv'),row.names=F)

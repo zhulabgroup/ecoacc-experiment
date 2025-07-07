@@ -21,9 +21,6 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 setwd(path_data)
 # Load in data
 niche_est_phace <- read.csv(" phace_niche.csv")
-niche_est_phace <- niche_est_phace %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 phace <- read.csv(" phace_clean.csv")
 
 ### Set path to turbo to get data
@@ -31,35 +28,22 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 setwd(path_data)
 # Load in data
 niche_est_tera <- read.csv(" teracon_niche.csv")
-niche_est_tera <- niche_est_tera %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 tera <- read.csv(" teracon_clean.csv")
 
 ### Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/B4Warmed/"
 setwd(path_data)
 # Load in data
-niche_est_b4 <- read.csv(" b4warmed_niche.csv")
-niche_est_b4 <- niche_est_b4 %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
+niche_est_cfc <- read.csv(" b4warmed_cfc_niche.csv")
+niche_est_hwrc <- read.csv(" b4warmed_hwrc_niche.csv")
 b4_cfc <- read.csv(" b4warmed_cfc_clean.csv")
 b4_hwrc <- read.csv(" b4warmed_hwrc_clean.csv")
-# Separate dataframes for CFC and HWRC
-niche_est_cfc<- niche_est_b4 %>%
-  filter(site == "CFC")
-niche_est_hwrc <- niche_est_b4 %>%
-  filter(site == "HWRC")
 
 ### Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/OK/"
 setwd(path_data)
 # Load in data
 niche_est_ok <- read.csv(" ok_niche.csv")
-niche_est_ok <- niche_est_ok %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 ok <- read.csv(" ok_clean.csv")
 
 ### Set path to turbo to get data
@@ -67,9 +51,6 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 setwd(path_data)
 # Load in data
 niche_est_jrgce <- read.csv(" jrgce_niche.csv")
-niche_est_jrgce <- niche_est_jrgce %>%
-  dplyr::select(-c(latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
-  distinct()
 jrgce <- read.csv(" jrgce_clean.csv")
 
 
@@ -299,7 +280,7 @@ abun_calc <- function(data) {
   
   # Initialize a result data frame
   abun_diffs <- abun_summary %>%
-    select(site, year, species, temp_niche_center)
+    dplyr::select(site, year, species, temp_niche_center)
   
   # Calculate abundance differences based on available treatments
   if (all(c("warmed", "ambient") %in% names(abun_summary))) {
@@ -360,9 +341,6 @@ res_df <- rbindlist(result_list[c(1:2,5:6)], idcol = "site1")
 res_df_b4 <- rbindlist(result_list[3:4], idcol = "site1")
 
 
-## Fix spp name
-res_df$species <- recode(res_df$species, "solidago drummondii" = "Solidago drummondii")
-res_df$species <- recode(res_df$species, "Andropogon gerardi" = "Andropogon gerardii")
 
 ### Adding in top contributor designations (determined in contributions_treatment.R)
 ### Set path to turbo to get data
@@ -383,40 +361,58 @@ contour_plot <- function(data, site_name) {
   site_data <- data %>% filter(site == site_name)
   
   # Pulling out ranges of temp niches and slopes
-  temp <- seq(min(site_data$temp_niche_center), max(site_data$temp_niche_center), length.out = 50)
-  abun <- seq(min(site_data$rel_abun_diff), max(site_data$rel_abun_diff), length.out = 50)
+  temp <- seq(min(site_data$temp_niche_center)-1, max(site_data$temp_niche_center)+1, length.out = 50)
+  abun <- seq(min(site_data$rel_abun_diff)-0.02, max(site_data$rel_abun_diff)+0.02, length.out = 50)
   
   # Merge data into dataframe
   grid_df <- expand.grid(temp_anomaly = temp, abund = abun)
   grid_df <- grid_df %>%
     mutate(spp_contrib = temp_anomaly * abund)
   
-  # Top species for name labels per year
-  top_contributors <- site_data %>% 
-    group_by(year) %>%
-    mutate(abs_contribution_center = abs(contribution_center)) %>%
-    arrange(desc(abs_contribution_center)) %>%
-    slice(1)
+  # Determine top contributors and their species names per year
+  #top_contributors <- site_data %>%
+  #  group_by(year) %>%
+  #  mutate(abs_contribution_center = abs(contribution_center)) %>%
+  #  arrange(desc(abs_contribution_center)) %>%
+  #  mutate(rank = row_number()) %>%  # Use row_number to ensure unique ranks
+  #  slice(1:3) %>%
+  #  ungroup()
+  
+  # Create a mapping from top_contributors to species names with labels "Top X: Species"
+  species_mapping <- site_data %>%
+    filter(!(top_contributors == "none")) %>%
+    dplyr::select(species,top_contributors) %>%
+    arrange(top_contributors) %>%
+    distinct() %>%
+    mutate(rank = row_number()) %>%
+    mutate(label = paste0(rank, ": ", species)) %>%
+    dplyr::select(top_contributors, label) %>%
+    distinct() %>%
+    deframe()
   
   # Plot
   p <- ggplot(grid_df, aes(x = temp_anomaly, y = abund)) +
     facet_wrap(.~year) +
     geom_tile(aes(fill = spp_contrib)) + # Add tiles to represent the surface
-    geom_contour(aes(z = spp_contrib), color = "gray50") + # Specified contour lines
-    geom_point(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff, shape=top_contributors, alpha=top_contributors)) +
+    #geom_contour(aes(z = spp_contrib), color = "gray50") + # Specified contour lines
+    stat_ellipse(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff), level = 0.90, color = "black",alpha=0.4) + # Add an ellipse
+    geom_point(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff, shape=top_contributors, alpha=top_contributors,size=top_contributors),color="red4") +
     scale_alpha_manual(name = "Top species\ncontributors",
                        values = c("top_1" = 1, "top_2" = 1, "top_3" = 1, "none" = 0.4),
-                       labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
+                       labels = c(species_mapping, "none" = "N/A")) +
     scale_shape_manual(name = "Top species\ncontributors",
-                       values = c("top_1" = 8, "top_2" = 18, "top_3" = 17, "none" = 20),
-                       labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
+                       values = c("top_1" = 17, "top_2" = 18, "top_3" = 8, "none" = 20),
+                       labels = c(species_mapping, "none" = "N/A")) +
+    scale_size_manual(name = "Top species\ncontributors",
+                       values = c("top_1" = 3, "top_2" = 3, "top_3" = 3, "none" = 1),
+                       labels = c(species_mapping, "none" = "N/A")) +
     scale_fill_gradient2(
       low = "blue", mid = "white", high = "red", midpoint = 0,
-      name = "Species\ncontribution\nto CTI (°C)\n(Warmed - Ambient)"
+      name = "Species\ncontribution\nto CTI (°C)\n(Warmed -\nAmbient)"
     ) +
     geom_vline(xintercept = 0, color = "black", linetype = "dashed") +
     geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
-    ggtitle(site_name) +
+    #ggtitle(site_name) +
     labs(
       x = "Species temperature anomaly (°C)",
       y = "Abundance (Warmed - Ambient)",
@@ -435,7 +431,15 @@ contour_plot <- function(data, site_name) {
     theme_minimal() +
     theme(axis.text.x = element_text(size = 12),
           axis.text.y = element_text(size = 14),
-          axis.title = element_text(size = 14, face = "bold")) +
+          axis.title = element_text(size = 15, face = "bold"),
+          strip.text.x = element_text(size = 12),
+          plot.title = element_text(size=15, face="bold"),
+          #axis.title.x = element_blank(),
+          legend.text=element_text(size=13),
+          legend.title=element_text(size=13)) +
+    guides(shape = guide_legend(order = 1),
+           size = guide_legend(order = 1),
+           alpha = guide_legend(order = 1)) +
     coord_cartesian(expand = FALSE) # Ensure no expansion on axes
   
   # Print the plot
@@ -465,9 +469,8 @@ contour_plot_b4 <- function(data, site_name) {
   site_data <- data %>% filter(site == site_name)
   
   # Pulling out ranges of temp niches and slopes
-  temp <- seq(min(site_data$temp_niche_center), max(site_data$temp_niche_center), length.out = 50)
-  abun_3.4 <- seq(min(site_data$rel_abun_diff_3.4), max(site_data$rel_abun_diff_3.4), length.out = 50)
-  abun_1.7 <- seq(min(site_data$rel_abun_diff_1.7), max(site_data$rel_abun_diff_1.7), length.out = 50)
+  temp <- seq(min(site_data$temp_niche_center)-1.5, max(site_data$temp_niche_center)+1.5, length.out = 50)
+  abun_3.4 <- seq(min(site_data$rel_abun_diff_3.4)-0.01, max(site_data$rel_abun_diff_3.4)+0.01, length.out = 50)
   
   # Merge data into dataframe
   grid_df <- expand.grid(temp_anomaly = temp, abund_3.4 = abun_3.4)
@@ -486,57 +489,59 @@ contour_plot_b4 <- function(data, site_name) {
     arrange(desc(abs_contribution_center_1.7)) %>%
     slice(1)
   
+  # Create a mapping from top_contributors to species names with labels "Top X: Species"
+  species_mapping <- site_data %>%
+    filter(!(top_contributors == "none")) %>%
+    dplyr::select(species,top_contributors) %>%
+    arrange(top_contributors) %>%
+    distinct() %>%
+    mutate(rank = row_number()) %>%
+    mutate(label = paste0(rank, ": ", species)) %>%
+    dplyr::select(top_contributors, label) %>%
+    distinct() %>%
+    deframe()
+  
   # Plot
   p <- ggplot(grid_df, aes(x = temp_anomaly, y = abund_3.4)) +
     facet_wrap(.~year) +
     geom_tile(aes(fill = spp_contrib_3.4)) + # Add tiles to represent the surface
-    geom_contour(aes(z = spp_contrib_3.4), color = "gray50") + # Specified contour lines
-    geom_point(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff_3.4,alpha=top_contributors,shape=top_contributors),color="red") +
-    geom_point(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff_1.7,alpha=top_contributors,shape=top_contributors),color="orange") +
+    #geom_contour(aes(z = spp_contrib_3.4), color = "gray50") + # Specified contour lines
+    stat_ellipse(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff_3.4), level = 0.90, color = "black",alpha=0.4) +
+    geom_point(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff_3.4,alpha=top_contributors,shape=top_contributors,size=top_contributors),color="red4") +
+    #geom_point(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff_1.7,alpha=top_contributors,shape=top_contributors,size=top_contributors),color="orange3") +
     scale_alpha_manual(name = "Top species\ncontributors",
                        values = c("top_1" = 1, "top_2" = 1, "top_3" = 1, "none" = 0.4),
-                       labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
+                       labels = c(species_mapping, "none" = "N/A")) +
     scale_shape_manual(name = "Top species\ncontributors",
-                       values = c("top_1" = 8, "top_2" = 18, "top_3" = 17, "none" = 20),
-                       labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
+                       values = c("top_1" = 17, "top_2" = 18, "top_3" = 8, "none" = 20),
+                       labels = c(species_mapping, "none" = "N/A")) +
+    scale_size_manual(name = "Top species\ncontributors",
+                      values = c("top_1" = 3, "top_2" = 3, "top_3" = 3, "none" = 1),
+                      labels = c(species_mapping, "none" = "N/A")) +
     scale_fill_gradient2(
       low = "blue", mid = "white", high = "red", midpoint = 0,
       name = "Species\ncontribution\nto CTI (°C)\n(Warmed - Ambient)"
     ) +
     geom_vline(xintercept = 0, color = "black", linetype = "dashed") +
     geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
-    ggtitle(site_name) +
+    #ggtitle(site_name) +
     labs(
       x = "Species temperature anomaly (°C)",
       y = "Abundance (Warmed - Ambient)",
     ) +
-    #geom_label_repel(data = top_contributors,
-    #                 aes(x = temp_niche_center, y = rel_abun_diff_3.4, label = species),
-    #                 size = 3,
-    #                 box.padding = 0.5,          # Increase the padding around the box
-    #                 point.padding = 0.3,   
-    #                 fill = "white",             # Background color of the label
-    #                 color = "black",
-    #                 nudge_x = 0.1,          # Slightly nudge labels in the x-direction if needed
-    #                 nudge_y = 0.0001,  
-    #                 min.segment.length = unit(0, 'lines'),
-    #                 segment.color = 'grey50') +
-    #geom_label_repel(data = top_contributors2,
-    #                 aes(x = temp_niche_center, y = rel_abun_diff_1.7, label = species),
-    #                 size = 3,
-    #                 box.padding = 0.5,          # Increase the padding around the box
-    #                 point.padding = 0.3,   
-    #                 fill = "white",             # Background color of the label
-    #                 color = "black",
-    #                 nudge_x = 0.1,          # Slightly nudge labels in the x-direction if needed
-    #                 nudge_y = 0.0001,  
-    #                 min.segment.length = unit(0, 'lines'),
-    #                 segment.color = 'grey50') +
     theme_minimal() +
     theme(axis.text.x = element_text(size = 12),
           axis.text.y = element_text(size = 14),
-          axis.title = element_text(size = 14, face = "bold")) +
-    coord_cartesian(expand = FALSE) # Ensure no expansion on axes
+          axis.title = element_text(size = 15, face = "bold"),
+          strip.text.x = element_text(size = 12),
+          plot.title = element_text(size=15, face="bold"),
+          #axis.title.x = element_blank(),
+          legend.text=element_text(size=13),
+          legend.title=element_text(size=13)) +
+    coord_cartesian(expand = FALSE) + # Ensure no expansion on axes
+    guides(shape = guide_legend(order = 1),
+           size = guide_legend(order = 1),
+           alpha = guide_legend(order = 1))
   
   # Print the plot
   print(p)
@@ -552,8 +557,205 @@ for (site_name in unique(res_df_b4$site)) {
   # Store the plot in the list with the site name as the key
   plots_contours_b4[[site_name]] <- plot
 }
-contour_treat_shortterm_cfc <- plots_contours_b4[[1]]
-contour_treat_shortterm_hwrc <- plots_contours_b4[[2]]
+contour_treat_shortterm_cfc <- plots_contours_b4[[1]]#+ theme(axis.title.x = element_blank(),
+                                                     #        legend.text=element_text(size=14),
+                                                     #        legend.title=element_text(size=14)) 
+contour_treat_shortterm_hwrc <- plots_contours_b4[[2]]# + theme(legend.text=element_text(size=14),
+                                                      #        legend.title=element_text(size=14))
+
+
+
+### Merging plots with short-term contribution plots 
+# Set path to turbo to get plot data
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/data_for_plots/"
+setwd(path_data)
+contours_shortterm_cfc <- readRDS(" contours_shortterm_cfc.rds")
+contours_shortterm_cfc <- contours_shortterm_cfc + theme(legend.text=element_text(size=14),
+                               legend.title=element_text(size=14))
+contours_shortterm_hwrc <- readRDS(" contours_shortterm_hwrc.rds")
+contours_shortterm_hwrc <- contours_shortterm_hwrc + theme(legend.text=element_text(size=14),
+                               legend.title=element_text(size=14))
+contours_shortterm_phace <- readRDS(" contours_shortterm_phace.rds")
+contours_shortterm_phace <- contours_shortterm_phace + theme(legend.text=element_text(size=14),
+                               legend.title=element_text(size=14))
+contours_shortterm_tera <- readRDS(" contours_shortterm_tera.rds")
+contours_shortterm_tera <- contours_shortterm_tera + theme(legend.text=element_text(size=14),
+                               legend.title=element_text(size=14))
+contours_shortterm_jrgce <- readRDS(" contours_shortterm_jrgce.rds")
+contours_shortterm_jrgce <- contours_shortterm_jrgce + theme(legend.text=element_text(size=14),
+                               legend.title=element_text(size=14))
+contours_shortterm_ok <- readRDS(" contours_shortterm_ok.rds")
+contours_shortterm_ok <- contours_shortterm_ok + theme(legend.text=element_text(size=14),
+                               legend.title=element_text(size=14))
+# Function to remove color, shape, and alpha guides
+legend_rem <- function(plt){
+  plt <- plt +
+    guides(shape = "none", color = "none", alpha = "none",size="none")
+  return(plt)   
+}
+
+# Getting the color, shape-alpha guide separately
+clr_shp_lgnd_cfc <- get_legend(contours_shortterm_cfc + guides(fill = "none"))
+clr_shp_lgnd_hwrc <- get_legend(contours_shortterm_hwrc + guides(fill = "none"))
+clr_shp_lgnd_phace <- get_legend(contours_shortterm_phace + guides(fill = "none"))
+clr_shp_lgnd_tera <- get_legend(contours_shortterm_tera + guides(fill = "none"))
+clr_shp_lgnd_jrgce <- get_legend(contours_shortterm_jrgce + guides(fill = "none"))
+clr_shp_lgnd_ok <- get_legend(contours_shortterm_ok + guides(fill = "none"))
+
+# Patchwork design
+design <- "
+  aaaaaabbbbbb###
+  aaaaaabbbbbbcc#
+  aaaaaabbbbbbcc#
+  aaaaaabbbbbb###
+"
+# Combine plots
+comb_contour_cfc <- legend_rem(contours_shortterm_cfc) + 
+  legend_rem(contour_treat_shortterm_cfc) +
+  as_ggplot(clr_shp_lgnd_cfc) +
+  plot_layout(design = design, axis_titles = "collect")
+comb_contour_hwrc <- legend_rem(contours_shortterm_hwrc) + 
+  legend_rem(contour_treat_shortterm_hwrc) +
+  as_ggplot(clr_shp_lgnd_hwrc) +
+  plot_layout(design = design, axis_titles = "collect")
+comb_contour_phace <- legend_rem(contours_shortterm_phace) + 
+  legend_rem(contour_treat_shortterm_phace) +
+  as_ggplot(clr_shp_lgnd_phace) +
+  plot_layout(design = design, axis_titles = "collect")
+comb_contour_tera <- legend_rem(contours_shortterm_tera) + 
+  legend_rem(contour_treat_shortterm_tera) +
+  as_ggplot(clr_shp_lgnd_tera) +
+  plot_layout(design = design, axis_titles = "collect")
+comb_contour_jrgce <- legend_rem(contours_shortterm_jrgce) + 
+  legend_rem(contour_treat_shortterm_jrgce) +
+  as_ggplot(clr_shp_lgnd_jrgce) +
+  plot_layout(design = design, axis_titles = "collect")
+comb_contour_ok <- legend_rem(contours_shortterm_ok) + 
+  legend_rem(contour_treat_shortterm_ok) +
+  as_ggplot(clr_shp_lgnd_ok) +
+  plot_layout(design = design, axis_titles = "collect")
+
+# All sites in one plot
+shortterm_contours <- wrap_plots(comb_contour_jrgce, comb_contour_phace, comb_contour_tera,
+           comb_contour_ok, comb_contour_cfc, comb_contour_hwrc,
+           ncol=1)
+png("contours_1.png", units="in", width=19, height=18, res=300)
+wrap_plots(comb_contour_jrgce, comb_contour_phace, comb_contour_tera,
+           ncol=1, heights=c(2,1.5,1.5))
+dev.off()
+png("contours_2.png", units="in", width=19, height=18, res=300)
+wrap_plots(comb_contour_ok, comb_contour_cfc, comb_contour_hwrc,
+           ncol=1)
+dev.off()
+png("contours_3.png", units="in", width=18, height=18, res=300)
+wrap_plots(contour_treat_shortterm_jrgce, contour_treat_shortterm_phace, contour_treat_shortterm_tera,
+           contour_treat_shortterm_ok, contour_treat_shortterm_hwrc, contour_treat_shortterm_cfc,
+           ncol=2,axis_titles = "collect")
+dev.off()
+
+
+### Animated plots
+anim_contour_plot <- function(data, site_name) {
+  # Filter the data for the specified site
+  site_data <- data %>% filter(site == site_name)
+  
+  # Pulling out ranges of temp niches and slopes
+  temp <- seq(min(site_data$temp_niche_center)-1, max(site_data$temp_niche_center)+1, length.out = 50)
+  abun <- seq(min(site_data$rel_abun_diff)-0.02, max(site_data$rel_abun_diff)+0.02, length.out = 50)
+  
+  # Merge data into dataframe
+  grid_df <- expand.grid(temp_anomaly = temp, abund = abun)
+  grid_df <- grid_df %>%
+    mutate(spp_contrib = temp_anomaly * abund)
+  
+  # Create a mapping from top_contributors to species names with labels "Top X: Species"
+  species_mapping <- site_data %>%
+    filter(!(top_contributors == "none")) %>%
+    dplyr::select(species,top_contributors) %>%
+    arrange(top_contributors) %>%
+    distinct() %>%
+    mutate(rank = row_number()) %>%
+    mutate(label = paste0(rank, ": ", species)) %>%
+    dplyr::select(top_contributors, label) %>%
+    distinct() %>%
+    deframe()
+  
+  # Plot
+  p <- ggplot(grid_df, aes(x = temp_anomaly, y = abund)) +
+    geom_tile(aes(fill = spp_contrib)) + # Add tiles to represent the surface
+    #geom_contour(aes(z = spp_contrib), color = "gray50") + # Specified contour lines
+    stat_ellipse(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff), level = 0.90, color = "black",alpha=0.4) + # Add an ellipse
+    geom_point(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff, shape=top_contributors, alpha=top_contributors,size=top_contributors),color="red4") +
+    scale_alpha_manual(name = "Top species\ncontributors",
+                       values = c("top_1" = 1, "top_2" = 1, "top_3" = 1, "none" = 0.4),
+                       labels = c(species_mapping, "none" = "N/A")) +
+    scale_shape_manual(name = "Top species\ncontributors",
+                       values = c("top_1" = 8, "top_2" = 18, "top_3" = 17, "none" = 20),
+                       labels = c(species_mapping, "none" = "N/A")) +
+    scale_size_manual(name = "Top species\ncontributors",
+                      values = c("top_1" = 2, "top_2" = 2, "top_3" = 2, "none" = 1),
+                      labels = c(species_mapping, "none" = "N/A")) +
+    scale_fill_gradient2(
+      low = "blue", mid = "white", high = "red", midpoint = 0,
+      name = "Species\ncontribution\nto CTI (°C)\n(Warmed - Ambient)"
+    ) +
+    geom_vline(xintercept = 0, color = "black", linetype = "dashed") +
+    geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
+    ggtitle(paste(site_name, "Year: {closest_state}")) +
+    labs(
+      x = "Species temperature anomaly (°C)",
+      y = "Abundance (Warmed - Ambient)",
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 14),
+          axis.title = element_text(size = 14, face = "bold")) +
+    coord_cartesian(expand = FALSE) # Ensure no expansion on axes
+  
+  # Print the plot
+  print(p)
+}
+# Loop through each site and store the output plot
+# Initialize an empty list to store the plots
+plots_anim_contours <- list()
+
+for (site_name in unique(res_df$site)) {
+  # Generate the plot for the current site
+  plot <- anim_contour_plot(res_df, site_name)
+  
+  # Store the plot in the list with the site name as the key
+  plots_anim_contours[[site_name]] <- plot
+}
+contour_treat_shortterm_anim_phace <- plots_anim_contours[[1]]
+contour_treat_shortterm_anim_tera <- plots_anim_contours[[2]]
+contour_treat_shortterm_anim_ok <- plots_anim_contours[[3]]
+contour_treat_shortterm_anim_jrgce <- plots_anim_contours[[4]]
+
+contour_treat_shortterm_anim_phace + transition_states(year,
+                                                  transition_length = 1,
+                                                  state_length = 1) + 
+  enter_fade() + 
+  exit_fade() + 
+  ease_aes("linear") 
+contour_treat_shortterm_anim_tera + transition_states(year,
+                                                  transition_length = 1,
+                                                  state_length = 1) + 
+  enter_fade() + 
+  exit_fade() + 
+  ease_aes("linear") 
+contour_treat_shortterm_anim_jrgce + transition_states(year,
+                                                      transition_length = 1,
+                                                      state_length = 1) + 
+  enter_fade() + 
+  exit_fade() + 
+  ease_aes("linear") 
+contour_treat_shortterm_anim_ok + transition_states(year,
+                                                      transition_length = 1,
+                                                      state_length = 1) + 
+  enter_fade() + 
+  exit_fade() + 
+  ease_aes("linear") 
+#anim_save("phace.gif", p)
 
 
 
@@ -607,5 +809,14 @@ saveRDS(contour_treat_shortterm_cfc, paste(path_out,'contours_treat_shortterm_cf
 saveRDS(contour_treat_shortterm_hwrc, paste(path_out,'contours_treat_shortterm_hwrc.rds'))
 saveRDS(contour_treat_shortterm_ok, paste(path_out,'contours_treat_shortterm_ok.rds'))
 saveRDS(contour_treat_shortterm_jrgce, paste(path_out,'contours_treat_shortterm_jrgce.rds'))
+
+saveRDS(comb_contour_cfc, paste(path_out,'contours_all_shortterm_cfc.rds'))
+saveRDS(comb_contour_hwrc, paste(path_out,'contours_all_shortterm_hwrc.rds'))
+saveRDS(comb_contour_phace, paste(path_out,'contours_all_shortterm_phace.rds'))
+saveRDS(comb_contour_tera, paste(path_out,'contours_all_shortterm_tera.rds'))
+saveRDS(comb_contour_jrgce, paste(path_out,'contours_all_shortterm_jrgce.rds'))
+saveRDS(comb_contour_ok, paste(path_out,'contours_all_shortterm_ok.rds'))
+
+saveRDS(shortterm_contours, paste(path_out,'contours_shortterm_all.rds'))
 
 

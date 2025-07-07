@@ -20,6 +20,7 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TRY_data/"
 setwd(path_data)
 # Load in data
 traits <- read.csv(" exp_species_traits.csv")
+traits_all <- read.csv(" exp_species_traits_all.csv")
 
 ### Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
@@ -63,6 +64,29 @@ setwd(path_data)
 niche_est_jrgce <- read.csv(" jrgce_niche.csv")
 niche_est_jrgce$site <- "JRGCE"
 jrgce <- read.csv(" jrgce_clean.csv")
+
+
+
+### Calculating ITV value per species
+# Likely not a good metric to use, since not all species had measurements for all traits
+traits_clean <- traits_all %>%
+  mutate(ValueNumeric = parse_number(OrigValueStr)) %>%   # Extract numbers
+  filter(!is.na(ValueNumeric)) %>%
+  filter(!(DataID == 59 | DataID == 60))
+
+trait_itv <- traits_clean %>%
+  filter(!is.na(TraitName)) %>%
+  group_by(AccSpeciesName, TraitName) %>%
+  summarise(
+    mean = mean(ValueNumeric, na.rm = TRUE),
+    sd = sd(ValueNumeric, na.rm = TRUE),
+    cv = sd / mean,
+    .groups = "drop"
+  )
+
+trait_mean <- trait_itv %>%
+  group_by(AccSpeciesName) %>%
+  summarize(itv = mean(cv, na.rm=T))
 
 
 
