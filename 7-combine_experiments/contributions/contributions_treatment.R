@@ -1,9 +1,9 @@
 # TITLE:          Calculating contribution to CTI (warming effect)
 # AUTHORS:        Kara Dobson
-# COLLABORATORS:  Yiluan Song, Kai Zhu, Peter Reich
+# COLLABORATORS:  EcoAcc
 # DATA INPUT:     Clean experiment data and niche estimate data
 # DATA OUTPUT:    Species individual contributions to CTI
-# PROJECT:        EcoAcc
+# PROJECT:        EcoAcc - Experiments
 # DATE:           Feb 2025
 
 
@@ -591,9 +591,6 @@ species_traits <- read_csv(" exp_species_traits.csv")
 data_for_spp_plot <- data_for_plot %>%
   left_join(species_traits, by = c("species" = "AccSpeciesName"))
 
-# Remove data whose absolute value for slope is < 0.0002
-#data_for_plot <- data_for_plot[abs(data_for_plot$contribution) > 0.002, ]
-
 
 
 ### Contour plot
@@ -623,10 +620,10 @@ contour_plot <- function(data, site_name) {
   site_titles <- c(
     "JRGCE" = "(a) JRGCE",
     "PHACE" = "(b) PHACE",
-    "TeRaCON" = "(b) TeRaCON",
-    "Oklahoma" = "(c) Oklahoma",
-    "B4WarmED CFC" = "(d) B4WarmED CFC",
-    "B4WarmED HWRC" = "(e) B4WarmED HWRC"
+    "TeRaCON" = "(c) TeRaCON",
+    "Oklahoma" = "(d) Oklahoma",
+    "B4WarmED CFC" = "(e) B4WarmED CFC",
+    "B4WarmED HWRC" = "(f) B4WarmED HWRC"
   )
   
   # Pulling out ranges of temp niches and slopes
@@ -694,6 +691,7 @@ contour_plot <- function(data, site_name) {
   # Print the plot
   print(p)
 }
+
 # Loop through each site and store the output plot
 # Initialize an empty list to store the plots
 plots_contours <- list()
@@ -712,7 +710,7 @@ point_contours_treat_jrgce <- plots_contours[[4]]
 point_contours_treat_hwrc<- plots_contours[[5]]
 point_contours_treat_cfc <- plots_contours[[6]]
 
-### Arrange plots into multi-panel figure
+## Arrange plots into multi-panel figure
 # Function to remove color, shape, and alpha guides
 legend_rem <- function(plt){
   plt <- plt +
@@ -736,16 +734,17 @@ design <- "
   aaaaaabbbbbb##
   aaaaaabbbbbb##
   aaaaaabbbbbb##
-  ccccccddddddff
-  ccccccddddddff
-  ccccccddddddff
-  eeeeee########
-  eeeeee########
-  eeeeee########
+  ccccccddddddgg
+  ccccccddddddgg
+  ccccccddddddgg
+  eeeeeeffffff##
+  eeeeeeffffff##
+  eeeeeeffffff##
 "
 # Plot
-png("contours_5.png", units="in", width=13, height=12, res=300)
+#png("contours_5.png", units="in", width=13, height=12, res=300)
 legend_rem(point_contours_treat_jrgce) + 
+  legend_rem(point_contours_treat_phace) +
   legend_rem(point_contours_treat_tera) + 
   legend_rem(point_contours_treat_ok) + 
   legend_rem(point_contours_treat_cfc) + 
@@ -753,11 +752,9 @@ legend_rem(point_contours_treat_jrgce) +
   shp_lgnd +
   plot_layout(design = design, 
               axis_titles = "collect")
-dev.off()
+#dev.off()
 
-
-
-### Merging with shortterm plots
+## Merging with shortterm plots
 legend_rem <- function(plt){
   plt <- plt +
     guides(shape = "none", color = "none", alpha = "none",size="none")
@@ -766,17 +763,6 @@ legend_rem <- function(plt){
 # Get shape legend
 legend <- get_legend(shortterm_treat_jrgce + guides(fill = "none"))
 # Specify plot layout
-design <- "
-  aaaaaabbbbbb##
-  aaaaaabbbbbb##
-  aaaaaabbbbbb##
-  ccccccddddddg#
-  ccccccddddddg#
-  ccccccddddddg#
-  eeeeeeffffff##
-  eeeeeeffffff##
-  eeeeeeffffff##
-"
 design2 <- "
   aaaaaabbbbbb##
   aaaaaabbbbbbcc
@@ -794,36 +780,14 @@ design3 <- "
   eeeeee#######
 "
 # Plot
-png("contours_1.png", units="in", width=14, height=14, res=300)
-legend_rem(shortterm_treat_jrgce) + 
-  legend_rem(point_contours_treat_jrgce) + 
-  legend_rem(shortterm_treat_phace) + 
-  legend_rem(point_contours_treat_phace) + 
-  legend_rem(shortterm_treat_tera) + 
-  legend_rem(point_contours_treat_tera) + 
-  legend +
-  plot_layout(design = design, 
-              axis_titles = "collect")
-dev.off()
-png("contours_2.png", units="in", width=14, height=14, res=300)
-legend_rem(shortterm_treat_ok) + 
-  legend_rem(point_contours_treat_ok) + 
-  legend_rem(shortterm_treat_cfc) + 
-  legend_rem(point_contours_treat_cfc) + 
-  legend_rem(shortterm_treat_hwrc) + 
-  legend_rem(point_contours_treat_hwrc) + 
-  legend +
-  plot_layout(design = design, 
-              axis_titles = "collect")
-dev.off()
-png("contours_phace.png", units="in", width=12, height=5, res=300)
+#png("contours_phace.png", units="in", width=12, height=5, res=300)
 legend_rem(shortterm_treat_phace) + 
   legend_rem(point_contours_treat_phace) + 
   legend +
   plot_layout(design = design2, 
               axis_titles = "collect")
-dev.off()
-png("contours_shortterm.png", units="in", width=14, height=14, res=300)
+#dev.off()
+#png("contours_shortterm.png", units="in", width=14, height=14, res=300)
 legend_rem(shortterm_treat_jrgce) + 
   legend_rem(shortterm_treat_tera) + 
   legend_rem(shortterm_treat_ok) + 
@@ -832,8 +796,8 @@ legend_rem(shortterm_treat_jrgce) +
   legend +
   plot_layout(design = design3, 
               axis_titles = "collect")
-dev.off()
-png("contours_shortterm_b4.png", units="in", width=14, height=7, res=300)
+#dev.off()
+#png("contours_shortterm_b4.png", units="in", width=14, height=7, res=300)
 legend_rem(shortterm_treat_both_cfc + labs(title="(a) B4WarmED CFC",
                                            y = "Δ Abundance") +
              scale_fill_gradient2(
@@ -847,11 +811,11 @@ legend_rem(shortterm_treat_both_cfc + labs(title="(a) B4WarmED CFC",
   legend +
   plot_layout(design = design2, 
               axis_titles = "collect")
-dev.off()
+#dev.off()
 
 
 
-### Contour plot - all species
+### Contour plot - all species from all experiments
 # If a species is present in >1 experiment, take the average
 data_for_plot2 <- data_for_plot %>%
   dplyr::select(species,temp_niche_center,slope) %>%
@@ -914,25 +878,6 @@ contour_plot_all <- function(data) {
   print(p)
 }
 all_spp_contour <- contour_plot_all(data_for_plot2)
-
-
-
-### Merging all spp contour with individual site contours
-a <-ggarrange(
-  all_spp_contour,
-  ggarrange(point_contours_treat_cfc, point_contours_treat_hwrc, point_contours_treat_ok,nrow = 3), 
-  ncol=2, widths=c(1.5, 0.8)
-)
-b <- ggarrange(point_contours_treat_jrgce, point_contours_treat_phace, point_contours_treat_tera,ncol = 3,
-               widths=c(1.05,1.05,1.1)) +
-  theme(plot.margin = margin(0.1,0,0.1,0.2,"cm")) 
-all_sites_contour <- ggarrange(a,b,
-          nrow=2,heights=c(1.7,0.6))
-# Save to computer
-#png("spp_cont2.png", units="in", width=17, height=14, res=300)
-ggarrange(a,b,
-          nrow=2,heights=c(1.7,0.6))
-#dev.off()
 
 
 
@@ -1027,58 +972,6 @@ traits_contour_plot_all(data_for_spp_plot,"Fine root length")
 
 
 
-### Regress trait values and contribution
-# Remove non-numeric traits or traits with low sample sizes
-data_for_spp_plot2 <- data_for_spp_plot %>%
-  filter(!(TraitName == "Coarse root length" |
-             TraitName == "Specific coarse root length" |
-             TraitName == "Dispersal syndrome" |
-             TraitName == "Seed or dispersal unit metamorphoses" |
-             TraitName == "Seedbank duration")) %>%
-  filter(!is.na(TraitName))
-# Make a function to select a given trait name and plot it against contribution
-trait_con_plot <- function(data,trait){
-  plot_data <- data %>%
-    filter(TraitID == trait)
-  
-  trait_name <- plot_data$TraitName[1]
-  
-  ggplot(plot_data, aes(x = log(mean_trait_val), y = contribution_center)) +
-    geom_point() +
-    geom_smooth(method="lm") +
-    labs(title = trait_name, x = "Trait value", y = "Species contribution") +
-    theme_minimal()
-}
-#trait_niche_plot(traits_niche_rem,3106)
-
-# Define the desired order of TraitName
-trait_order <- c(26,27,131,66,95,33,3117,47,46,21,3106,2026,614,1080)  # Modify as needed
-
-# Convert TraitName to a factor with specified levels
-data_for_spp_plot2$TraitID <- factor(data_for_spp_plot2$TraitID, levels = trait_order)
-
-# Iterate over the ordered TraitID values
-plots_list <- list()  # Initialize an empty list to store plots
-for (trait in levels(data_for_spp_plot2$TraitID)) {
-  trait_id <- as.numeric(trait)  # Convert factor level back to numeric
-  
-  # Filter and ensure valid data
-  plot_data <- data_for_spp_plot2 %>% filter(TraitID == trait_id)
-  
-  if (nrow(plot_data) > 0) {  # Ensure data exists for this TraitID
-    p <- trait_con_plot(data_for_spp_plot2, trait_id)
-    plots_list[[trait]] <- p  # Store with TraitID as key
-  } else {
-    message("Warning: No data for TraitID ", trait_id)
-  }
-}
-
-# Arrange all plots in a grid
-wrap_plots(grobs = plots_list) +
-  plot_layout(guides = "collect",axis_titles = "collect")
-
-
-
 ### How many species per quadrant for contour plot?
 quad1 <- data_for_plot %>%
   filter(slope > 0, temp_niche_center > 0)
@@ -1140,115 +1033,6 @@ contour_plot_all_vals <- function(data) {
   print(p)
 }
 all_spp_contour_vals <- contour_plot_all_vals(data_for_plot)
-
-
-
-### Phylo tree
-# Fixing species names
-phylo_plot <- function(data, slope_data, phylo, site_name) {
-  # Filter the data for the specified site
-  site_data <- data %>% filter(site == site_name)
-  
-  # Extract the slope_CTI for the site
-  site_slope_CTI <- slope_data %>% filter(site == site_name) %>% pull(slope_CTI)
-  
-  # Fixing species names
-  phylo$tip.label <- phylo$tip.label %>% gsub("_", " ", .)
-
-  # Adding padding to species name to right-align names
-  phylo2 <- data.frame(label = phylo$tip.label, 
-                     newlabel = label_pad(phylo$tip.label))
-
-  tree <- ggtree(phylo) %<+% phylo2 + xlim(NA, 5)
-
-  tree2 <- tree + geom_tiplab(aes(label=newlabel), 
-                            align=TRUE, family='mono',
-                            linetype = "dotted", linesize = .7) +
-    ggplot2::xlim(0, 220)
-
-  # Extracting the species name order from the tree
-  tip_order <- tree2$data %>% 
-  filter(isTip) %>% 
-  arrange(y) %>% 
-  pull(label)
-
-  # Point plot w/ tree
-  site_data$species_tree <- site_data$species
-
-  site_data$species_tree <- factor(site_data$species_tree, levels = tip_order)
-  
-  point_plot <- ggplot(site_data, aes(x=contribution_center, y = species_tree, color=temp_niche_center)) +
-    geom_vline(xintercept = 0, linetype = "solid") +
-    geom_vline(xintercept = site_slope_CTI, linetype = "dashed") +
-    geom_errorbar(aes(xmin = contribution_center-var_center,
-                      xmax = contribution_center+var_center), 
-                      width =0, color = "black") +
-    geom_point(shape = 20, size = 5, position = position_dodge(width = 0.9)) +
-    scale_color_gradientn(colors = c("blue", "orangered"), 
-                          name = "Species temperature (°C)") +
-    ggtitle(site_name) +
-    xlab("Contribution to CTI") +
-    ylab(NULL) +
-    theme_classic() +
-    theme(axis.text.x = element_text(size = 12),
-        axis.text.y = element_blank(),
-        axis.title = element_text(size=14,face="bold"),
-        legend.text = element_text(size = 12),
-        legend.title = element_text(size = 12,face="bold"),
-        panel.grid.major.y = element_line())
-  
-  joined <- ggarrange(tree2, point_plot, ncol = 2, align = "h")
-  
-  print(joined)
-}
-
-# Combined point and tree plot
-phylo_plot(data_for_plot, slope_CTI_df, phylo_jrgce, "JRGCE")
-
-
-
-# below not working?
-### Phylo tree (per site circular)
-# Fixing species names
-phylo_circ_plot <- function(data, phylo, site_name) {
-  # Filter the data for the specified site
-  site_data <- data %>%
-    filter(site == site_name) %>%
-    select(species, contribution_center)
-  
-  phylo$tip.label <- phylo$tip.label %>% gsub("_", " ", .)
-  
-  tree_circ <- ggtree(phylo, layout = "circular") + theme_tree()  # Plot the tree
-  
-  # Extracting the species name order from the tree
-  order_circ <- tree_circ$data %>% 
-    filter(isTip) %>% 
-    arrange(y) %>% 
-    pull(label)
-  
-  site_data$species <- factor(site_data$species, levels = order_circ)
-  
-  # Plot the tree
-  circ_tree <- ggtree(phylo, layout = "circular") %<+% site_data +  # The '%<+%' operator merges data into ggtree
-    geom_tiplab(aes(color = contribution_center)) +  # Color by contribution_value
-    scale_color_gradient2(
-      low = "blue", mid = "grey40", high = "red", midpoint = 0,
-      name = "Species\ncontribution\nto CTI (°C)",
-      breaks=seq(min(site_data$contribution_center),max(site_data$contribution_center),
-                 (max(site_data$contribution_center)-min(site_data$contribution_center))/3)
-    ) +
-    theme_tree()
-  
-  print(circ_tree)
-}
-
-# Plot
-phylo_plot_phace <- phylo_circ_plot(data_for_plot, phylo_phace, "PHACE")
-phylo_plot_cfc <- phylo_circ_plot(data_for_plot, phylo_b4, "B4Warmed CFC")
-phylo_plot_hwrc <- phylo_circ_plot(data_for_plot, phylo_b4, "B4Warmed HWRC")
-phylo_plot_tera <- phylo_circ_plot(data_for_plot, phylo_tera, "TeRaCON")
-phylo_plot_ok <- phylo_circ_plot(data_for_plot, phylo_ok, "Oklahoma")
-phylo_plot_jrgce <- phylo_circ_plot(data_for_plot, phylo_jrgce, "JRGCE")
 
 
 
@@ -1317,11 +1101,6 @@ tip_order_circ <- all_tree_circ$data %>%
 data_for_phylo_plot2 <- data_for_phylo_plot %>%
   dplyr::select(species, rel_cont)
 data_for_phylo_plot2$species <- factor(data_for_phylo_plot2$species, levels = tip_order_circ)
-data_for_phylo_plot2 <- data_for_phylo_plot2 %>%
-  filter(!is.na(species)) %>%
-  group_by(species) %>%
-  summarize(
-    contribution_center = mean(contribution_center, na.rm = TRUE))
 # Using plain contribution center values
 data_for_phylo_plot_center2 <- data_for_phylo_plot_center %>%
   dplyr::select(species, contribution_center)
@@ -1347,41 +1126,11 @@ data_for_phylo_plot_abun <- data_for_phylo_plot_abun %>%
 data_for_phylo_plot_abun$species <- factor(data_for_phylo_plot_abun$species, levels = tip_order_circ)
 
 # Plot the tree
-png("phylo.png", units="in", width=18, height=18, res=300)
-#circ_tree <- 
-  ggtree(all_phylo, layout = "circular") %<+% data_for_phylo_plot_center2 +  # The '%<+%' operator merges data into ggtree
-  geom_tiplab(aes(color = contribution_center)) +  # Color by contribution_value
-  scale_color_gradient2(
-    low = "blue", mid = "grey60", high = "red", midpoint = 0,
-    name = "Species\ncontribution\nto β CTI (°C)"
-  ) +
-  #geom_hilight(node=452, fill="gold") + 
-  geom_hilight(node=449, fill="gold",alpha=0.4) + 
-  geom_hilight(node=287, fill="lightskyblue",alpha=0.4) + 
- #geom_text(aes(label=node), hjust=-.3) +
-  theme_tree()
-dev.off()
-png("phylo_abun.png", units="in", width=18, height=18, res=300)
-ggtree(all_phylo, layout = "circular") %<+% data_for_phylo_plot_abun +  # The '%<+%' operator merges data into ggtree
-  geom_tiplab(aes(color = slope)) +  # Color by contribution_value
-  scale_color_gradient2(
-    low = "blue", mid = "grey60", high = "red", midpoint = 0,
-    name = "Species\nβ Abundance"
-  ) +
-  geom_hilight(node=449, fill="gold",alpha=0.4) + 
-  geom_hilight(node=287, fill="lightskyblue",alpha=0.4) + 
-  #geom_text(aes(label=node), hjust=-.3) +
-  theme_tree()
-dev.off()
-
-
-
-### Bar plot ring around phylogeny
 p <- ggtree(all_phylo, layout = "circular") +
   geom_tiplab(offset = 95)
 
 # Add the bar ring using geom_fruit
-png("phylo.png", units="in", width=19, height=19, res=300)
+#png("phylo.png", units="in", width=19, height=19, res=300)
 p + geom_fruit(
     data = data_for_phylo_plot_center2,
     geom = geom_bar,
@@ -1411,9 +1160,9 @@ p + geom_fruit(
     axis.ticks = element_blank(),
     axis.title = element_blank()
   ) 
-dev.off()
+#dev.off()
 
-png("phylo_abun.png", units="in", width=19, height=19, res=300)
+#png("phylo_abun.png", units="in", width=19, height=19, res=300)
 p + geom_fruit(
   data = data_for_phylo_plot_abun,
   geom = geom_bar,
@@ -1443,7 +1192,7 @@ p + geom_fruit(
     axis.ticks = element_blank(),
     axis.title = element_blank()
   ) 
-dev.off()
+#dev.off()
 
 
 
@@ -1483,9 +1232,14 @@ comparison_df_clean <- comparison_df %>%
 comparison_df_clean_filt <-comparison_df_clean %>%
   filter(!(phylo_distance > 600))
 model <- lm(log(contrib_difference+ 1e-8) ~ phylo_distance, data = comparison_df_clean_filt)
+model2 <- lm(sqrt(contrib_difference) ~ phylo_distance, data = comparison_df_clean_filt)
 summary(model)
+summary(model2)
 residuals <- resid(model)
+residuals2 <- resid(model2)
 hist(residuals, breaks=50, probability=TRUE,
+     main="Phylo Distance", xlab="Values")
+hist(residuals2, breaks=50, probability=TRUE,
      main="Phylo Distance", xlab="Values")
 
 # Visualization
@@ -1497,44 +1251,6 @@ ggplot(comparison_df_clean_filt, aes(x = phylo_distance, y = log(contrib_differe
        y = "log(Contribution Difference + 1e-8)") +
   theme_minimal() +
   theme(axis.title = element_text(face="bold"))
-dev.off()
-
-# Other tests
-# Create a named vector of contributions
-contrib_named <- setNames(data_for_phylo_plot_center2$contribution_center,
-                          data_for_phylo_plot_center2$species)
-
-# Match species in tree and data
-species_to_keep <- intersect(all_phylo$tip.label, names(contrib_named))
-
-# Prune tree and vector to matching species
-tree_pruned <- keep.tip(all_phylo, species_to_keep)
-contrib_pruned <- contrib_named[species_to_keep]
-
-# Check lengths and names match now
-length(tree_pruned$tip.label) == length(contrib_pruned)        # should be TRUE
-all(tree_pruned$tip.label == names(contrib_pruned))            # should be TRUE
-
-lambda_result <- phylosig(tree_pruned, contrib_pruned, method = "lambda", test = TRUE)
-print(lambda_result)
-
-
-
-### Merging all spp tree with individual site trees
-a <- ggarrange(
-  circ_tree,
-  ggarrange(phylo_plot_cfc, phylo_plot_hwrc, phylo_plot_ok,nrow = 3), 
-  ncol=2, widths=c(1.5, 0.8)
-)
-b <- ggarrange(phylo_plot_jrgce, phylo_plot_phace, phylo_plot_tera,ncol = 3,
-               widths=c(1.05,1.05,1.1)) +
-  theme(plot.margin = margin(0.1,0,0.1,0.2,"cm")) 
-all_sites_phylos <- ggarrange(a,b,
-                               nrow=2,heights=c(1.7,0.6))
-# Save to computer
-png("spp_cont2.png", units="in", width=17, height=14, res=300)
-ggarrange(a,b,
-          nrow=2,heights=c(1.7,0.6))
 dev.off()
 
 
@@ -1653,76 +1369,33 @@ top_contributors_plot <- data_for_plot %>%
   mutate(abs_contribution_center = abs(contribution_center)) %>%
   arrange(desc(abs_contribution_center)) %>%
   slice(1:3)
-ggplot(data_for_plot, aes(x = initial_abun, y = contribution_center, color = site)) +
-  geom_point() +
+png("initialabun.png", units="in", width=7, height=5, res=300)
+ggplot(data_for_plot, aes(x = initial_abun, y = contribution_center)) +
+  geom_point(aes(color = site)) +
+  #geom_smooth(method="lm") +
   #geom_smooth(method = "lm", se = FALSE) +
-  geom_label_repel(data = top_contributors_plot,
-                   aes(x = initial_abun, y = contribution_center, label = species),
-                   size = 3.5,
-                   box.padding = 0.5,          # Increase the padding around the box
-                   point.padding = 0.3,   
-                   fill = "white",             # Background color of the label
-                   color = "black",
-                   nudge_x = 0.1,          # Slightly nudge labels in the x-direction if needed
-                   nudge_y = 0.0001,          # Slightly nudge labels in the y-direction if needed
-                   min.segment.length = unit(0, 'lines'),
-                   segment.color = 'grey50') +
-  labs(x = "Initial average rel. abundance in warmed treatment (t=1)",
+  #geom_label_repel(data = top_contributors_plot,
+  #                 aes(x = initial_abun, y = contribution_center, label = species),
+  #                 size = 3.5,
+  #                 box.padding = 0.5,          # Increase the padding around the box
+  #                 point.padding = 0.3,   
+  #                 fill = "white",             # Background color of the label
+  #                 color = "black",
+  #                 nudge_x = 0.1,          # Slightly nudge labels in the x-direction if needed
+  #                 nudge_y = 0.0001,          # Slightly nudge labels in the y-direction if needed
+  #                 min.segment.length = unit(0, 'lines'),
+  #                 segment.color = 'grey50') +
+  labs(x = "Initial average rel. abundance in warmed treatment",
        y = "Contribution to β CTI",
        color = "Experiment") +
   scale_color_viridis_d() +
   theme_minimal() +
   theme(axis.title = element_text(face="bold"))
-
-
-### Boxplots
-boxplot_data <- data_for_plot
-boxplot_data$temp_designation <- NA
-boxplot_data$temp_designation[boxplot_data$temp_niche_center > 0 &
-                                boxplot_data$slope > 0] <- "Warm increasing"
-boxplot_data$temp_designation[boxplot_data$temp_niche_center > 0 &
-                                boxplot_data$slope < 0] <- "Warm decreasing"
-boxplot_data$temp_designation[boxplot_data$temp_niche_center < 0 &
-                                boxplot_data$slope > 0] <- "Cold increasing"
-boxplot_data$temp_designation[boxplot_data$temp_niche_center < 0 &
-                                boxplot_data$slope < 0] <- "Cold decreasing"
-boxplot_data$temp_designation[boxplot_data$slope == 0] <- NA
-# Boxplot for contributions based on temp designation
-ggplot(boxplot_data, aes(x = temp_designation, y = rel_cont)) +
-  geom_boxplot() +
-  xlab("Temperature designation") +
-  ylab("Contribution to CTI") +
-  theme_classic() +
-  theme(axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 14),
-        axis.title = element_text(size=14,face="bold"),
-        legend.text = element_text(size = 12),
-        legend.title = element_text(size = 12,face="bold"))
-  
+dev.off()
 
 
 ### Export Rdata for plots
 path_out = "/Volumes/seas-zhukai/proj-ecoacc-experiment/data_for_plots/"
-saveRDS(point_center_cfc, paste(path_out,'point_center_treat_cfc.rds'))
-saveRDS(point_center_hwrc, paste(path_out,'point_center_treat_hwrc.rds'))
-saveRDS(point_center_jrgce, paste(path_out,'point_center_treat_jrgce.rds'))
-saveRDS(point_center_ok, paste(path_out,'point_center_treat_ok.rds'))
-saveRDS(point_center_phace, paste(path_out,'point_center_treat_phace.rds'))
-saveRDS(point_center_tera, paste(path_out,'point_center_treat_tera.rds'))
-
-saveRDS(TeRaCON_plot, paste(path_out,'scatter_treat_tera.rds'))
-saveRDS(PHACE_plot, paste(path_out,'scatter_treat_phace.rds'))
-saveRDS(`B4Warmed CFC_plot`, paste(path_out,'scatter_treat_cfc.rds'))
-saveRDS(`B4Warmed HWRC_plot`, paste(path_out,'scatter_treat_hwrc.rds'))
-saveRDS(Oklahoma_plot, paste(path_out,'scatter_treat_ok.rds'))
-saveRDS(JRGCE_plot, paste(path_out,'scatter_treat_jrgce.rds'))
-
-saveRDS(point_ellipse_treat_cfc, paste(path_out,'point_ellipse_treat_cfc.rds'))
-saveRDS(point_ellipse_treat_hwrc, paste(path_out,'point_ellipse_treat_hwrc.rds'))
-saveRDS(point_ellipse_treat_jrgce, paste(path_out,'point_ellipse_treat_jrgce.rds'))
-saveRDS(point_ellipse_treat_ok, paste(path_out,'point_ellipse_treat_ok.rds'))
-saveRDS(point_ellipse_treat_phace, paste(path_out,'point_ellipse_treat_phace.rds'))
-saveRDS(point_ellipse_treat_tera, paste(path_out,'point_ellipse_treat_tera.rds'))
 
 saveRDS(point_contours_treat_cfc, paste(path_out,'point_contours_treat_cfc.rds'))
 saveRDS(point_contours_treat_hwrc, paste(path_out,'point_contours_treat_hwrc.rds'))
