@@ -187,7 +187,9 @@ model_preds_ok <- predict(mod.ok)
 
 ### Models testing for CTI sensitivity over time
 # Teracon
-mod.tera_sens <- lm(sensitivity ~ year, data = CTI_sens_teracon)
+CTI_sens_teracon <- CTI_sens_teracon %>%
+  mutate(year_sc = year - min(year))
+mod.tera_sens <- lm(sensitivity ~ year_sc, data = CTI_sens_teracon)
 qqPlot(resid(mod.tera_sens))
 hist(residuals(mod.tera_sens))
 shapiro.test(resid(mod.tera_sens))
@@ -196,7 +198,9 @@ summary(mod.tera_sens)
 model_preds_tera_sens <- predict(mod.tera_sens)
 
 # JRGCE
-mod.jrgce_sens <- lm(sensitivity ~ year, data = CTI_sens_jrgce)
+CTI_sens_jrgce <- CTI_sens_jrgce %>%
+  mutate(year_sc = year - min(year))
+mod.jrgce_sens <- lm(sensitivity ~ year_sc, data = CTI_sens_jrgce)
 qqPlot(resid(mod.jrgce_sens))
 hist(residuals(mod.jrgce_sens))
 shapiro.test(resid(mod.jrgce_sens))
@@ -205,7 +209,9 @@ summary(mod.jrgce_sens)
 model_preds_jrgce_sens <- predict(mod.jrgce_sens)
 
 # PHACE
-mod.phace_sens <- lm(sensitivity ~ year, data = CTI_sens_phace)
+CTI_sens_phace <- CTI_sens_phace %>%
+  mutate(year_sc = year - min(year))
+mod.phace_sens <- lm(sensitivity ~ year_sc, data = CTI_sens_phace)
 qqPlot(resid(mod.phace_sens))
 hist(residuals(mod.phace_sens))
 shapiro.test(resid(mod.phace_sens))
@@ -214,7 +220,9 @@ summary(mod.phace_sens)
 model_preds_phace_sens <- predict(mod.phace_sens)
 
 # B4Warmed
-mod.b4_cfc_sens_high <- lm(sensitivity_high_temp ~ year, data = CTI_sens_b4_cfc)
+CTI_sens_b4_cfc <- CTI_sens_b4_cfc %>%
+  mutate(year_sc = year - min(year))
+mod.b4_cfc_sens_high <- lm(sensitivity_high_temp ~ year_sc, data = CTI_sens_b4_cfc)
 qqPlot(resid(mod.b4_cfc_sens_high))
 hist(residuals(mod.b4_cfc_sens_high))
 shapiro.test(resid(mod.b4_cfc_sens_high))
@@ -222,7 +230,7 @@ summary(mod.b4_cfc_sens_high)
 # Save predictions
 model_preds_cfc_3.4_sens <- predict(mod.b4_cfc_sens_high)
 
-mod.b4_cfc_sens_med <- lm(sensitivity_med_temp ~ year, data = CTI_sens_b4_cfc)
+mod.b4_cfc_sens_med <- lm(sensitivity_med_temp ~ year_sc, data = CTI_sens_b4_cfc)
 qqPlot(resid(mod.b4_cfc_sens_med))
 hist(residuals(mod.b4_cfc_sens_med))
 shapiro.test(resid(mod.b4_cfc_sens_med))
@@ -230,7 +238,9 @@ summary(mod.b4_cfc_sens_med)
 # Save predictions
 model_preds_cfc_1.7_sens <- predict(mod.b4_cfc_sens_med)
 
-mod.b4_hwrc_sens_high <- lm(sensitivity_high_temp ~ year, data = CTI_sens_b4_hwrc)
+CTI_sens_b4_hwrc <- CTI_sens_b4_hwrc %>%
+  mutate(year_sc = year - min(year))
+mod.b4_hwrc_sens_high <- lm(sensitivity_high_temp ~ year_sc, data = CTI_sens_b4_hwrc)
 qqPlot(resid(mod.b4_hwrc_sens_high))
 hist(residuals(mod.b4_hwrc_sens_high))
 shapiro.test(resid(mod.b4_hwrc_sens_high))
@@ -238,7 +248,7 @@ summary(mod.b4_hwrc_sens_high)
 # Save predictions
 model_preds_hwrc_3.4_sens <- predict(mod.b4_hwrc_sens_high)
 
-mod.b4_hwrc_sens_med <- lm(sensitivity_med_temp ~ year, data = CTI_sens_b4_hwrc)
+mod.b4_hwrc_sens_med <- lm(sensitivity_med_temp ~ year_sc, data = CTI_sens_b4_hwrc)
 qqPlot(resid(mod.b4_hwrc_sens_med))
 hist(residuals(mod.b4_hwrc_sens_med))
 shapiro.test(resid(mod.b4_hwrc_sens_med))
@@ -247,7 +257,9 @@ summary(mod.b4_hwrc_sens_med)
 model_preds_hwrc_1.7_sens <- predict(mod.b4_hwrc_sens_med)
 
 # OK
-mod.ok_sens <- lm(sensitivity ~ year, data = CTI_sens_ok)
+CTI_sens_ok <- CTI_sens_ok %>%
+  mutate(year_sc = year - min(year))
+mod.ok_sens <- lm(sensitivity ~ year_sc, data = CTI_sens_ok)
 qqPlot(resid(mod.ok_sens))
 hist(residuals(mod.ok_sens))
 shapiro.test(resid(mod.ok_sens))
@@ -486,7 +498,7 @@ predictions_df_abun <- predictions_df_abun %>%
 ordered_traits <- c("Seed dry mass","Seed length","Seed terminal velocity","Seed number per plant",
                     "Seed germination rate","Seed longevity","SLA","LDMC",
                     "Leaf thickness","Stem diameter","Plant height vegetative","Specific root length",
-                    "Specific fine root length","Fine root length ***")
+                    "Specific fine root length","Fine root length")
 
 trait_con_abun <- trait_con_abun %>%
   mutate(TraitLabel = factor(TraitLabel, levels = ordered_traits))
@@ -611,20 +623,23 @@ predictions_df_niche <- predictions_df_niche %>%
 # Specify order for facet wrap
 ordered_traits <- c("Seed dry mass","Seed length","Seed terminal velocity","Seed number per plant",
                     "Seed germination rate","Seed longevity","SLA","LDMC",
-                    "Leaf thickness","Stem diameter","Plant height vegetative ***","Specific root length",
+                    "Leaf thickness","Stem diameter","Plant height vegetative","Specific root length",
                     "Specific fine root length","Fine root length")
 
 trait_con_niche <- trait_con_niche %>%
-  mutate(TraitLabel = factor(TraitLabel, levels = ordered_traits))
-levels(trait_con_niche$TraitLabel)
+  mutate(TraitName = factor(TraitName, levels = ordered_traits))
+levels(trait_con_niche$TraitName)
+
+# Denote if significant or not
+predictions_df_niche$significant <- ifelse(predictions_df_niche$TraitName %in% significance_df_niche$TraitName[significance_df_niche$significant], TRUE, FALSE)
 
 png("traits_niche.png", units="in", width=9, height=8, res=300)
 #traits_niche <- 
   ggplot(trait_con_niche, aes(x = log_mean_trait_val, y = temp_niche_center)) +
   geom_point(alpha=0.3,color="steelblue4") +  # Raw data points
   geom_ribbon(data = predictions_df_niche, aes(y = predicted, ymin = lower, ymax = upper), alpha = 0.6, fill = "grey60") +  # Confidence interval
-  geom_line(data = predictions_df_niche, aes(y = predicted), color = "steelblue4", size = 1) +  # Predicted line
-  facet_wrap(~factor(TraitLabel), scales = "free") +  # Separate plots for each trait
+  geom_line(data = predictions_df_niche, aes(y = predicted,linetype=significant), color = "steelblue4", size = 1) +  # Predicted line
+  facet_wrap(~factor(TraitName), scales = "free") +  # Separate plots for each trait
   #geom_text(data = subset(trait_con_niche, TraitName %in% significance_df_niche$TraitName[significance_df_niche$significant]),
   #          aes(x = -Inf, y = Inf),
   #          label = "*",
@@ -635,7 +650,8 @@ png("traits_niche.png", units="in", width=9, height=8, res=300)
   theme(panel.background = element_blank(),
         #panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
-        axis.title = element_text(face = "bold"))
+        axis.title = element_text(face = "bold"),
+        legend.position = "none")
 dev.off()
 
 

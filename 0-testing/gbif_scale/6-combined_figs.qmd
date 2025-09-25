@@ -16,7 +16,7 @@ library(tidyverse)
 library(ggpubr)
 
 # Set path to turbo to get data
-path_data = "/nfs/turbo/seas-zhukai/proj-ecoacc/PHACE/data_for_testing/"
+path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/data_for_testing/"
 setwd(path_data)
 # Load in data
 CTI_phace_uscan <- read.csv(" CTI_phace_uscan.csv")

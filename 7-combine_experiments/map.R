@@ -14,6 +14,7 @@ library(viridis)
 library(raster)
 library(ggmap)
 library(sf)
+library(ggrepel)
 
 
 # Trying to get temp data mapped here; other map is below
@@ -43,7 +44,7 @@ us_map <- map_data("state")
 
 # List of locations for each experiment
 locations <- tibble(
-  Experiment = c("TeRaCON", "B4Warmed CFC", "B4Warmed HWRC", "Oklahoma", "PHACE", "JRGCE"),
+  Experiment = c("TeRaCON", "B4WarmED CFC", "B4WarmED HWRC", "Oklahoma", "PHACE", "JRGCE"),
   lat = c(45, 46.7, 47.9, 35, 41.2, 37.4),
   long = c(-93, -92.5, -91.8, -97.5, -104.9, -122.2)
 )
@@ -56,13 +57,24 @@ locations_dis <- tibble(
   long = c(-93, -92.5, -91.8, -97.5, -104.9, -122.2,-96.6, -99.3, -104.8, -104.9)
 )
 
-png("map.png", units="in", width=10, height=6, res=300)
-plot <- ggplot() +
+png("map.png", units="in", width=8, height=5, res=300)
+ggplot() +
   geom_polygon(data = us_map, aes(x = long, y = lat, group = group), fill = "lightgray", color = "black") +
-  geom_point(data = locations, aes(x = long, y = lat, color = Experiment), size = 4) +
+  geom_point(data = locations, aes(x = long, y = lat), size = 3,color="red",alpha=0.8) +
   coord_fixed(1.3) +
-  scale_color_viridis(discrete=T) +
+  geom_label_repel(data = locations,
+                   aes(x = long, y = lat, label = Experiment),
+                   min.segment.length = 0,
+                   size = 3,
+                   box.padding = 0.5,          # Increase the padding around the box
+                   point.padding = 0.3,   
+                   fill = "white",             # Background color of the label
+                   color = "black",
+                   nudge_x = 0.1,          # Slightly nudge labels in the x-direction if needed
+                   nudge_y = 0.0001,          # Slightly nudge labels in the y-direction if needed
+                   segment.color = 'grey50') +
   theme_minimal() +
+  labs(x = "Longitude", y = "Latitude") +
   theme(legend.text = element_text(size=14),
         legend.title = element_text(size=14),
         axis.text = element_text(size=14),

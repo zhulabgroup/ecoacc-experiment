@@ -654,7 +654,7 @@ contour_plot <- function(data, site_name) {
                        labels = c("top_1" = "Top 1", "top_2" = "Top 2", "top_3" = "Top 3", "none" = "N/A")) +
     scale_fill_gradient2(
       low = "blue", mid = "white", high = "red", midpoint = 0,
-      name = "Species\ncontribution\nto β CTI"
+      name = "Species\ncontribution\nto βCTI"
     ) +
     geom_vline(xintercept = 0, color = "black", linetype = "dashed") +
     geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
@@ -742,7 +742,7 @@ design <- "
   eeeeeeffffff##
 "
 # Plot
-#png("contours_5.png", units="in", width=13, height=12, res=300)
+png("contours_5.png", units="in", width=13, height=12, res=300)
 legend_rem(point_contours_treat_jrgce) + 
   legend_rem(point_contours_treat_phace) +
   legend_rem(point_contours_treat_tera) + 
@@ -752,7 +752,7 @@ legend_rem(point_contours_treat_jrgce) +
   shp_lgnd +
   plot_layout(design = design, 
               axis_titles = "collect")
-#dev.off()
+dev.off()
 
 ## Merging with shortterm plots
 legend_rem <- function(plt){
@@ -780,13 +780,13 @@ design3 <- "
   eeeeee#######
 "
 # Plot
-#png("contours_phace.png", units="in", width=12, height=5, res=300)
+png("contours_phace.png", units="in", width=12, height=5, res=300)
 legend_rem(shortterm_treat_phace) + 
   legend_rem(point_contours_treat_phace) + 
   legend +
   plot_layout(design = design2, 
               axis_titles = "collect")
-#dev.off()
+dev.off()
 #png("contours_shortterm.png", units="in", width=14, height=14, res=300)
 legend_rem(shortterm_treat_jrgce) + 
   legend_rem(shortterm_treat_tera) + 
