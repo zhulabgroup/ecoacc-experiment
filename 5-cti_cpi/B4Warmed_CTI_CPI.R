@@ -50,26 +50,26 @@ full_abun_data_hwrc <- left_join(full_abun_data_hwrc, mat, by = c("site","year")
 
 # Coding MAT from warmed plots to be hotter
 # 1.7 and 3.4 warming levels, warmed for 8 months of the year
-1.7/1.5 # Add 1.13 to MAT (12/8 = 1.5)
-3.4/1.5 # Add 2.27 to MAT (12/8 = 1.5)
+1.6/1.5 # Add 1.07 to MAT (12/8 = 1.5)
+3.1/1.5 # Add 2.07 to MAT (12/8 = 1.5)
 full_abun_data_cfc$MAT <- ifelse(
   full_abun_data_cfc$temp_treatment == "1.7",
-  full_abun_data_cfc$MAT + 1.13,
+  full_abun_data_cfc$MAT + 1.07,
   full_abun_data_cfc$MAT
 )
 full_abun_data_cfc$MAT <- ifelse(
   full_abun_data_cfc$temp_treatment == "3.4",
-  full_abun_data_cfc$MAT + 2.27,
+  full_abun_data_cfc$MAT + 2.07,
   full_abun_data_cfc$MAT
 )
 full_abun_data_hwrc$MAT <- ifelse(
   full_abun_data_hwrc$temp_treatment == "1.7",
-  full_abun_data_hwrc$MAT + 1.13,
+  full_abun_data_hwrc$MAT + 1.07,
   full_abun_data_hwrc$MAT
 )
 full_abun_data_hwrc$MAT <- ifelse(
   full_abun_data_hwrc$temp_treatment == "3.4",
-  full_abun_data_hwrc$MAT + 2.27,
+  full_abun_data_hwrc$MAT + 2.07,
   full_abun_data_hwrc$MAT
 )
 
@@ -112,10 +112,10 @@ CTI_sens_cfc <- CTI_cfc %>%
     SE_diff_high_temp = sqrt((`sd_cti_3.4`^2 / `n_3.4`) + (`sd_cti_amb`^2 / `n_amb`)),
     sensitivity_med_temp = `mean_cti_1.7` - `mean_cti_amb`,
     SE_diff_med_temp = sqrt((`sd_cti_1.7`^2 / `n_1.7`) + (`sd_cti_amb`^2 / `n_amb`)),
-    sens_high_temp_scaled = sensitivity_high_temp / 2.27,
-    sens_med_temp_scaled = sensitivity_med_temp / 1.13,
-    SE_diff_high_temp_scaled = SE_diff_high_temp / 2.27,
-    SE_diff_med_temp_scaled = SE_diff_med_temp / 1.13
+    sens_high_temp_scaled = sensitivity_high_temp / 2.07,
+    sens_med_temp_scaled = sensitivity_med_temp / 1.07,
+    SE_diff_high_temp_scaled = SE_diff_high_temp / 2.07,
+    SE_diff_med_temp_scaled = SE_diff_med_temp / 1.07
   )
 CTI_sens_hwrc <- CTI_hwrc %>%
   dplyr::select(year,plot,temp_treatment,CTI) %>%
@@ -127,10 +127,10 @@ CTI_sens_hwrc <- CTI_hwrc %>%
     SE_diff_high_temp = sqrt((`sd_cti_3.4`^2 / `n_3.4`) + (`sd_cti_amb`^2 / `n_amb`)),
     sensitivity_med_temp = `mean_cti_1.7` - `mean_cti_amb`,
     SE_diff_med_temp = sqrt((`sd_cti_1.7`^2 / `n_1.7`) + (`sd_cti_amb`^2 / `n_amb`)),
-    sens_high_temp_scaled = sensitivity_high_temp / 2.27,
-    sens_med_temp_scaled = sensitivity_med_temp / 1.13,
-    SE_diff_high_temp_scaled = SE_diff_high_temp / 2.27,
-    SE_diff_med_temp_scaled = SE_diff_med_temp / 1.13
+    sens_high_temp_scaled = sensitivity_high_temp / 2.07,
+    sens_med_temp_scaled = sensitivity_med_temp / 1.07,
+    SE_diff_high_temp_scaled = SE_diff_high_temp / 2.07,
+    SE_diff_med_temp_scaled = SE_diff_med_temp / 1.07
   )
 
 # CTI and CPI combined

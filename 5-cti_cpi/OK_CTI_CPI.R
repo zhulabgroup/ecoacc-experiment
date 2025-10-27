@@ -62,7 +62,7 @@ full_abun_data <- left_join(full_abun_data, mat, by = c("site","year"))
 # Coding MAT from warmed plots to be hotter
 full_abun_data$MAT <- ifelse(
   full_abun_data$temp_treatment == "warmed",
-  full_abun_data$MAT + 1.1,
+  full_abun_data$MAT + 1.3,
   full_abun_data$MAT
 )
 
@@ -93,8 +93,8 @@ CTI_sens <- CTI %>% # Calculating SE of diff bwtn means
   mutate(
     sensitivity = `mean_cti_warmed` - `mean_cti_ambient`,  # Sensitivity as the difference in means
     SE_diff = sqrt((`sd_cti_warmed`^2 / `n_warmed`) + (`sd_cti_ambient`^2 / `n_ambient`)), # Standard error of the difference
-    sens_scaled = sensitivity/1.1,
-    SE_diff_scaled = SE_diff/1.1
+    sens_scaled = sensitivity/1.3,
+    SE_diff_scaled = SE_diff/1.3
   )
 
 # Calculating CPI
