@@ -88,7 +88,7 @@ jrgce_bio_data <- left_join(jrgce_bio_data, jrgce_temp_filtered, by="year")
 # Fixing treatment names
 jrgce_abun_data <- jrgce_abun_data %>%
   mutate(temp_treatment = if_else(str_detect(treatment, "T"), "warmed", "ambient")) %>%
-  dplyr::select(year,plot,species,percent_cover,temp_treatment,mean_C_temp_summer) %>%
+  dplyr::select(year,plot,species,guild,percent_cover,temp_treatment,mean_C_temp_summer) %>%
   filter(!(year == 1998))
 jrgce_bio_data <- jrgce_bio_data %>%
   mutate(temp_treatment = if_else(str_detect(treatment, "H"), "warmed", "ambient")) %>%
@@ -101,12 +101,17 @@ rel_abun_calc <- function(df) {
   df %>%
     filter(!(species == "Avena DUMMY" | # remove dummy spp and spp with no temp niches
                species == "Festuca DUMMY")) %>%
+    mutate(origin = case_when(
+      startsWith(guild, "N") ~ "native",
+      startsWith(guild, "E") ~ "non-native",
+      TRUE ~ NA_character_)
+    ) %>%
     group_by(year, plot) %>%
     mutate(total_cover = sum(percent_cover,na.rm=T)) %>%
     mutate(rel_abun = percent_cover / total_cover) %>%
     filter(!is.na(rel_abun) & rel_abun != "NaN") %>%
     ungroup() %>%
-    dplyr::select(year,plot,species,temp_treatment,mean_C_temp_summer,rel_abun)
+    dplyr::select(year,plot,species,origin,temp_treatment,mean_C_temp_summer,rel_abun)
 }
 rel_abun_jrgce <- rel_abun_calc(jrgce_abun_data)
 
