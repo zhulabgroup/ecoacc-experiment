@@ -16,6 +16,7 @@ setwd(path_data)
 # Read in data
 phace_data <- read.csv("PHACE biomass by species for Kara.csv", fileEncoding = "Latin1")
 temp_data <- read.csv("dbo_tblHourlyThermocouple.csv")
+phace_origin <- read.csv("PHACE_origin.csv")
 
 
 ### Cleaning abundance/biomass data
@@ -69,6 +70,21 @@ temp_data$year_month <- format(temp_data$SampDate2,format="%Y-%m")
 temp_avg <- temp_data %>%
   group_by(TreatmentCode,year) %>%
   summarize(mean_temp = mean(TempC))
+
+# Merge with species origin data
+phace_origin <- phace_origin %>%
+  rename_all(~ str_to_lower(.)) %>%
+  rename(origin = native.introduced,
+         invasive = invasive..yes.no.) %>%
+  dplyr::select(c(species,origin,invasive))
+phace_origin$species[phace_origin$species == "Machaeranthera\xcapinnatifida"] <- "Machaeranthera pinnatifida" # Fix spp name
+phace_origin$species[phace_origin$species == "Astragalus Spp."] <- "Astragalus sp" # Fix spp name
+
+phace_rel_abun <- left_join(phace_rel_abun, phace_origin, by = "species")
+phace_rel_abun$origin[phace_rel_abun$origin == "Native"] <- "native"
+phace_rel_abun$origin[phace_rel_abun$origin == "Introduced"] <- "non-native"
+phace_rel_abun$invasive[phace_rel_abun$invasive == "N"] <- "not invasive"
+phace_rel_abun$invasive[phace_rel_abun$invasive == "Y"] <- "invasive"
 
 
 ### Upload data
