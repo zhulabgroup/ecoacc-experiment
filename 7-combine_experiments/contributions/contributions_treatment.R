@@ -25,14 +25,14 @@ path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/PHACE/"
 setwd(path_data)
 # Load in data
 niche_est_phace <- read.csv(" phace_niche.csv")
-phace <- read.csv(" phace_clean.csv")
+phace_raw <- read.csv(" phace_clean.csv")
 
 ### Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/TeRaCON/"
 setwd(path_data)
 # Load in data
 niche_est_tera <- read.csv(" teracon_niche.csv")
-tera <- read.csv(" teracon_clean.csv")
+tera_raw <- read.csv(" teracon_clean.csv")
 
 ### Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/B4Warmed/"
@@ -40,22 +40,22 @@ setwd(path_data)
 # Load in data
 niche_est_cfc <- read.csv(" b4warmed_cfc_niche.csv")
 niche_est_hwrc <- read.csv(" b4warmed_hwrc_niche.csv")
-b4_cfc <- read.csv(" b4warmed_cfc_clean.csv")
-b4_hwrc <- read.csv(" b4warmed_hwrc_clean.csv")
+b4_cfc_raw <- read.csv(" b4warmed_cfc_clean.csv")
+b4_hwrc_raw <- read.csv(" b4warmed_hwrc_clean.csv")
 
 ### Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/OK/"
 setwd(path_data)
 # Load in data
 niche_est_ok <- read.csv(" ok_niche.csv")
-ok <- read.csv(" ok_clean.csv")
+ok_raw <- read.csv(" ok_clean.csv")
 
 ### Set path to turbo to get data
 path_data = "/Volumes/seas-zhukai/proj-ecoacc-experiment/JRGCE/"
 setwd(path_data)
 # Load in data
 niche_est_jrgce <- read.csv(" jrgce_niche.csv")
-jrgce <- read.csv(" jrgce_clean.csv")
+jrgce_raw <- read.csv(" jrgce_clean.csv")
 
 
 ### Set path to turbo to get data
@@ -93,53 +93,53 @@ shortterm_treat_both_hwrc <- readRDS(" contours_treat_shortterm_bothlevels_hwrc.
 
 
 ### Selecting each plot's treatment designation for each experiment
-phace_treat <- phace %>%
+phace_treat <- phace_raw %>%
   dplyr::select(plot, temp_treatment) %>%
   distinct()
-tera_treat <- tera %>%
+tera_treat <- tera_raw %>%
   dplyr::select(plot, temp_treatment) %>%
   distinct()
-b4_cfc_treat <- b4_cfc %>%
+b4_cfc_treat <- b4_cfc_raw %>%
   dplyr::select(plot, temp_treatment) %>%
   distinct()
-b4_hwrc_treat <- b4_hwrc %>%
+b4_hwrc_treat <- b4_hwrc_raw %>%
   dplyr::select(plot, temp_treatment) %>%
   distinct()
-ok_treat <- ok %>%
+ok_treat <- ok_raw %>%
   dplyr::select(plot, temp_treatment) %>%
   distinct()
-jrgce_treat <- jrgce %>%
+jrgce_treat <- jrgce_raw %>%
   dplyr::select(year, plot, temp_treatment) %>% # some plots changed treatments over time; need to include year here
   distinct()
 
 
 ### Making sure all years are present for all species
-complete_phace <- phace %>%
+complete_phace <- phace_raw %>%
   complete(species, year = 2007:2013,
            plot = c(22, 25, 12, 8, 14, 20, 30, 13, 1, 4, 26, 27, 11, 7, 3, 19, 21, 18, 9, 2),
            fill = list(rel_abun = 0))
-complete_tera <- tera %>%
+complete_tera <- tera_raw %>%
   complete(species, year = 2012:2023,
            plot = c(7, 11, 17, 21, 26, 34, 48, 50, 66, 84, 87, 92, 97, 106, 117, 119, 128, 131,
                     133, 149, 165, 166, 171, 177, 185, 186, 224, 226, 230, 232, 233, 243, 245,
                     264, 274, 278, 280, 282, 293, 299, 308, 320, 324, 341, 356, 357, 360, 361),
            fill = list(rel_abun = 0))
-complete_b4_cfc <- b4_cfc %>%
+complete_b4_cfc <- b4_cfc_raw %>%
   complete(species, year = 2008:2021,
            plot = c("D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "F1", "F2", "F3","F4",
                     "F5", "F6", "F7", "F8"),
            fill = list(rel_abun = 0))
-complete_b4_hwrc <- b4_hwrc %>%
+complete_b4_hwrc <- b4_hwrc_raw %>%
   complete(species, year = 2008:2021,
            plot = c("J1", "J2", "J3", "J4", "J5", "J6", "J7", "J8", "K1", "K2", "K3", "K4", "K5", "K6", "K7", "K8", "L1", "L2", "L3", "L4",
                     "L5", "L6", "L7", "L8"),
            fill = list(rel_abun = 0))
-complete_ok <- ok %>%
+complete_ok <- ok_raw %>%
   complete(species, year = 2000:2013,
            plot = c("UC1", "UC2", "UC3", "UC4", "UC5", "UC6", "UW1", "UW2", "UW3", "UW4", "UW5", "UW6", "CC1", "CC2", "CC3", "CC4", "CC5",
                     "CC6", "CW1", "CW2", "CW3", "CW4", "CW5", "CW6"),
            fill = list(rel_abun = 0))
-complete_jrgce <- jrgce %>%
+complete_jrgce <- jrgce_raw %>%
   complete(species, year = 1999:2014,
            plot = c(1, 10, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 11, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 12, 120,
                     121, 122, 123, 124, 125, 126, 127, 128, 129, 13, 131, 134, 136, 137, 139, 14, 142, 144, 15, 16, 17, 18, 19, 2, 20, 21,
@@ -1130,8 +1130,9 @@ p <- ggtree(all_phylo, layout = "circular") +
   geom_tiplab(offset = 95)
 
 # Add the bar ring using geom_fruit
-#png("phylo.png", units="in", width=19, height=19, res=300)
-p + geom_fruit(
+png("phylo.png", units="in", width=19, height=19, res=300)
+p +
+  geom_fruit(
     data = data_for_phylo_plot_center2,
     geom = geom_bar,
     mapping = aes(y = species, x = contribution_center, fill = contribution_center),
@@ -1147,7 +1148,7 @@ p + geom_fruit(
       line = FALSE,
       ticks = FALSE,
       title = NULL
-    ),
+    )
   ) +
   scale_fill_gradient2(
     low = "blue", mid = "grey60", high = "red", midpoint = 0,
@@ -1158,11 +1159,16 @@ p + geom_fruit(
   theme(
     axis.text = element_blank(),
     axis.ticks = element_blank(),
-    axis.title = element_blank()
-  ) 
-#dev.off()
+    axis.title = element_blank(),
+    # legend scaling
+    legend.title = element_text(size = 16),
+    legend.text  = element_text(size = 14),
+    legend.key.height = unit(1.2, "cm"),
+    legend.key.width  = unit(0.8, "cm")
+  )
+dev.off()
 
-#png("phylo_abun.png", units="in", width=19, height=19, res=300)
+png("phylo_abun.png", units="in", width=19, height=19, res=300)
 p + geom_fruit(
   data = data_for_phylo_plot_abun,
   geom = geom_bar,
@@ -1190,9 +1196,14 @@ p + geom_fruit(
   theme(
     axis.text = element_blank(),
     axis.ticks = element_blank(),
-    axis.title = element_blank()
-  ) 
-#dev.off()
+    axis.title = element_blank(),
+    # legend scaling
+    legend.title = element_text(size = 16),
+    legend.text  = element_text(size = 14),
+    legend.key.height = unit(1.2, "cm"),
+    legend.key.width  = unit(0.8, "cm")
+  )
+dev.off()
 
 
 
@@ -1392,6 +1403,46 @@ ggplot(data_for_plot, aes(x = initial_abun, y = contribution_center)) +
   theme_minimal() +
   theme(axis.title = element_text(face="bold"))
 dev.off()
+
+
+
+### Native vs non-native
+origin_data <- data_for_plot %>%
+  filter(site == "JRGCE" | site == "PHACE")
+
+jrgce_origin <- jrgce_raw %>%
+  dplyr::select(species,origin) %>%
+  distinct()
+jrgce_origin$site <- "JRGCE"
+phace_origin <- phace_raw %>%
+  dplyr::select(species,origin) %>%
+  distinct()
+phace_origin$site <- "PHACE"
+
+origin <- rbind(jrgce_origin, phace_origin)
+
+origin_data_full <- left_join(origin_data, origin, by=c("site","species"))
+
+# Plot contributions by origin
+ggplot(origin_data_full, aes(x = site, y = contribution_center, fill=origin)) +
+  geom_boxplot() +
+  labs(x = "Site",
+       y = "Contribution to β CTI",
+       fill="Origin") +
+  theme_minimal() +
+  theme(axis.title = element_text(face="bold"))
+
+# Plot temperature anomalies by origin
+ggplot(origin_data_full, aes(x = site, y = temp_niche_center, fill=origin)) +
+  geom_boxplot() +
+  labs(x = "Site",
+       y = "Temperature anomaly (°C)",
+       fill="Origin") +
+  theme_minimal() +
+  theme(axis.title = element_text(face="bold"))
+
+
+
 
 
 ### Export Rdata for plots

@@ -178,12 +178,12 @@ full_abun_data_ok <- left_join(ok, dat_niche, by = c("site","species"))
 full_abun_data_jrgce <- left_join(jrgce, dat_niche, by = c("site","species"))
 
 # Specifying warmed vs ambient treatment for b4warmed
-full_abun_data_cfc <- full_abun_data_cfc %>%
-  filter(!(temp_treatment == 1.7)) %>%
-  mutate(temp_treatment = if_else(str_detect(temp_treatment, "3.4"), "warmed", "ambient"))
-full_abun_data_hwrc <- full_abun_data_hwrc %>%
-  filter(!(temp_treatment == 1.7)) %>%
-  mutate(temp_treatment = if_else(str_detect(temp_treatment, "3.4"), "warmed", "ambient"))
+#full_abun_data_cfc <- full_abun_data_cfc %>%
+#  filter(!(temp_treatment == 1.7)) %>%
+#  mutate(temp_treatment = if_else(str_detect(temp_treatment, "3.4"), "warmed", "ambient"))
+#full_abun_data_hwrc <- full_abun_data_hwrc %>%
+#  filter(!(temp_treatment == 1.7)) %>%
+#  mutate(temp_treatment = if_else(str_detect(temp_treatment, "3.4"), "warmed", "ambient"))
 
 # Put data into a list
 dataframes_list <- list(full_abun_data_phace, full_abun_data_tera, full_abun_data_cfc, full_abun_data_hwrc, full_abun_data_ok, full_abun_data_jrgce)
@@ -406,11 +406,11 @@ contour_plot <- function(data, site_name) {
   
   site_titles <- c(
     "JRGCE" = "(a) JRGCE",
-    "PHACE" = "(a) PHACE",
-    "TeRaCON" = "(b) TeRaCON",
-    "Oklahoma" = "(c) Oklahoma",
-    "B4WarmED CFC" = "(d) B4WarmED CFC",
-    "B4WarmED HWRC" = "(e) B4WarmED HWRC"
+    "PHACE" = "(b) PHACE",
+    "TeRaCON" = "(c) TeRaCON",
+    "Oklahoma" = "(d) Oklahoma",
+    "B4WarmED CFC" = "(e) B4WarmED CFC",
+    "B4WarmED HWRC" = "(f) B4WarmED HWRC"
   )
   
   # Pulling out ranges of temp niches and slopes
@@ -522,9 +522,61 @@ contour_treat_shortterm_ok <- plots_contours[[5]] + scale_y_continuous(n.breaks 
 contour_treat_shortterm_jrgce <- plots_contours[[6]] + scale_y_continuous(n.breaks = 4)
 
 
+### Merging plots and combining legends
+# Function to remove color, shape, and alpha guides
+legend_rem <- function(plt){
+  plt <- plt +
+    guides(shape = "none", color = "none", alpha = "none",size="none")
+  return(plt)   
+}
+
+# Getting the color, shape-alpha guide separately
+clr_shp_lgnd_cfc <- get_legend(contour_treat_shortterm_cfc + guides(fill = "none"))
+clr_shp_lgnd_hwrc <- get_legend(contour_treat_shortterm_hwrc + guides(fill = "none"))
+clr_shp_lgnd_phace <- get_legend(contour_treat_shortterm_phace + guides(fill = "none"))
+clr_shp_lgnd_tera <- get_legend(contour_treat_shortterm_tera + guides(fill = "none"))
+clr_shp_lgnd_jrgce <- get_legend(contour_treat_shortterm_jrgce + guides(fill = "none"))
+clr_shp_lgnd_ok <- get_legend(contour_treat_shortterm_ok + guides(fill = "none"))
+
+# Patchwork design
+design <- "
+  aaaaa#
+  aaaaa#
+  bbbbbd
+  bbbbbd
+  ccccc#
+  ccccc#
+"
+# Combine plots
+png("contours_1.png", units="in", width=8, height=14, res=300)
+legend_rem(contour_treat_shortterm_jrgce) + 
+  legend_rem(contour_treat_shortterm_phace) +
+  legend_rem(contour_treat_shortterm_tera) +
+  as_ggplot(clr_shp_lgnd_cfc) +
+  plot_layout(design = design, axis_titles = "collect")
+dev.off()
+
+png("contours_2.png", units="in", width=8, height=14, res=300)
+legend_rem(contour_treat_shortterm_ok) + 
+  legend_rem(contour_treat_shortterm_cfc) +
+  legend_rem(contour_treat_shortterm_hwrc) +
+  as_ggplot(clr_shp_lgnd_cfc) +
+  plot_layout(design = design, axis_titles = "collect")
+dev.off()
+
+# All sites in one plot
+shortterm_contours <- wrap_plots(comb_contour_jrgce, comb_contour_phace, comb_contour_tera,
+                                 comb_contour_ok, comb_contour_cfc, comb_contour_hwrc,
+                                 ncol=1)
+png("contours_1.png", units="in", width=19, height=18, res=300)
+wrap_plots(comb_contour_jrgce, comb_contour_phace, comb_contour_tera,
+           ncol=1, heights=c(2,1.5,1.5))
+dev.off()
+
+
 
 ### Note: this is for intermediate and warmed spp contributions
-# If making this fig, rerun the above code w/o removing 1.7 in line 179
+# If making this fig, rerun the above code w/o removing 1.7 in linea 179, 345-346, 397
 ### Contour plot for b4warmed
 contour_plot_b4 <- function(data, site_name) {
   # Filter the data for the specified site
@@ -570,7 +622,7 @@ contour_plot_b4 <- function(data, site_name) {
     #geom_contour(aes(z = spp_contrib_3.4), color = "gray50") + # Specified contour lines
     stat_ellipse(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff_3.4), level = 0.90, color = "black",alpha=0.4) +
     geom_point(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff_3.4,alpha=top_contributors,shape=top_contributors,size=top_contributors),color="red4") +
-    #geom_point(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff_1.7,alpha=top_contributors,shape=top_contributors,size=top_contributors),color="orange3") +
+    geom_point(data = site_data, aes(x = temp_niche_center, y = rel_abun_diff_1.7,alpha=top_contributors,shape=top_contributors,size=top_contributors),color="orange3") +
     scale_alpha_manual(name = "Top species\ncontributors",
                        values = c("top_1" = 1, "top_2" = 1, "top_3" = 1, "none" = 0.4),
                        labels = c(species_mapping, "none" = "N/A")) +
@@ -582,14 +634,14 @@ contour_plot_b4 <- function(data, site_name) {
                       labels = c(species_mapping, "none" = "N/A")) +
     scale_fill_gradient2(
       low = "blue", mid = "white", high = "red", midpoint = 0,
-      name = "Species\ncontribution\nto CTI (°C)\n(Warmed - Ambient)"
+      name = "Species\ncontribution\nto ΔCTI"
     ) +
     geom_vline(xintercept = 0, color = "black", linetype = "dashed") +
     geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
-    #ggtitle(site_name) +
+    ggtitle(site_name) +
     labs(
       x = "Species temperature anomaly (°C)",
-      y = "Abundance (Warmed - Ambient)",
+      y = "Δ Abundance",
     ) +
     theme_minimal() +
     theme(axis.text.x = element_text(size = 12),
@@ -626,7 +678,6 @@ contour_treat_shortterm_hwrc <- plots_contours_b4[[2]]# + theme(legend.text=elem
                                                       #        legend.title=element_text(size=14))
 
 
-
 ### Merging plots and combining legends
 # Function to remove color, shape, and alpha guides
 legend_rem <- function(plt){
@@ -638,37 +689,23 @@ legend_rem <- function(plt){
 # Getting the color, shape-alpha guide separately
 clr_shp_lgnd_cfc <- get_legend(contour_treat_shortterm_cfc + guides(fill = "none"))
 clr_shp_lgnd_hwrc <- get_legend(contour_treat_shortterm_hwrc + guides(fill = "none"))
-clr_shp_lgnd_phace <- get_legend(contour_treat_shortterm_phace + guides(fill = "none"))
-clr_shp_lgnd_tera <- get_legend(contour_treat_shortterm_tera + guides(fill = "none"))
-clr_shp_lgnd_jrgce <- get_legend(contour_treat_shortterm_jrgce + guides(fill = "none"))
-clr_shp_lgnd_ok <- get_legend(contour_treat_shortterm_ok + guides(fill = "none"))
 
 # Patchwork design
 design <- "
   aaaaa#
-  aaaaa#
-  bbbbbd
-  bbbbbd
-  ccccc#
-  ccccc#
+  aaaaac
+  bbbbbc
+  bbbbb#
 "
 # Combine plots
-png("contours_1.png", units="in", width=8, height=14, res=300)
-legend_rem(contour_treat_shortterm_jrgce) + 
-  legend_rem(contour_treat_shortterm_phace) +
-  legend_rem(contour_treat_shortterm_tera) +
-  as_ggplot(clr_shp_lgnd_cfc) +
+png("contours_3.png", units="in", width=8, height=12, res=300)
+legend_rem(contour_treat_shortterm_cfc) + 
+  legend_rem(contour_treat_shortterm_hwrc) +
+  as_ggplot(clr_shp_lgnd_ok) +
   plot_layout(design = design, axis_titles = "collect")
 dev.off()
 
-# All sites in one plot
-shortterm_contours <- wrap_plots(comb_contour_jrgce, comb_contour_phace, comb_contour_tera,
-                                 comb_contour_ok, comb_contour_cfc, comb_contour_hwrc,
-                                 ncol=1)
-png("contours_1.png", units="in", width=19, height=18, res=300)
-wrap_plots(comb_contour_jrgce, comb_contour_phace, comb_contour_tera,
-           ncol=1, heights=c(2,1.5,1.5))
-dev.off()
+
 
 
 
