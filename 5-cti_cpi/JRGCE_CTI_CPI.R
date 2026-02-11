@@ -56,6 +56,8 @@ full_abun_data$MAT <- ifelse(
 CTI <- full_abun_data %>%
   group_by(year,plot,temp_treatment,MAT) %>%
   reframe(CTI = sum(rel_abun * temp_niche) / sum(rel_abun),
+          CTI_max = sum(rel_abun * temp_q95) / sum(rel_abun),
+          CTI_min = sum(rel_abun * temp_q05) / sum(rel_abun),
           CTI_var = sum(rel_abun * (temp_niche - CTI)^2) / sum(rel_abun),
           CTI_sd = sqrt(CTI_var),
           CTI_skew = sum(rel_abun * (temp_niche - CTI)^3) / (sum(rel_abun) * CTI_sd^3),
@@ -64,15 +66,33 @@ CTI <- full_abun_data %>%
   distinct()
 
 # Calculating CTI sensitivity (warmed - ambient)
-CTI_sens <- CTI %>% # Calculating SE of diff bwtn means
-  dplyr::select(year, plot, temp_treatment, CTI) %>%
-  group_by(year, temp_treatment) %>%
-  summarize(mean_cti = mean(CTI), sd_cti = sd(CTI), n = n()) %>%  # Calculate mean, SD, and sample size
-  pivot_wider(names_from = temp_treatment, values_from = c(mean_cti, sd_cti, n)) %>%
-  mutate(
-    sensitivity = `mean_cti_warmed` - `mean_cti_ambient`,  # Sensitivity as the difference in means
-    SE_diff = sqrt((`sd_cti_warmed`^2 / `n_warmed`) + (`sd_cti_ambient`^2 / `n_ambient`))  # Standard error of the difference
+CTI_long <- CTI %>%
+  select(year, plot, temp_treatment, CTI, CTI_max, CTI_min) %>%
+  pivot_longer(
+    cols = c(CTI, CTI_max, CTI_min),
+    names_to = "metric",
+    values_to = "value"
   )
+CTI_sens <- CTI_long %>%
+  group_by(year, temp_treatment, metric) %>%
+  summarize(
+    mean_val = mean(value, na.rm = TRUE),
+    sd_val   = sd(value, na.rm = TRUE),
+    n        = n(),
+    .groups = "drop"
+  ) %>%
+  pivot_wider(
+    names_from = temp_treatment,
+    values_from = c(mean_val, sd_val, n)
+  ) %>%
+  mutate(
+    sensitivity = mean_val_warmed - mean_val_ambient,
+    SE_diff = sqrt(
+      (sd_val_warmed^2 / n_warmed) +
+        (sd_val_ambient^2 / n_ambient)
+    )
+  )
+
 CTI_sens$sens_scaled <- NA
 CTI_sens$SE_diff_scaled <- NA
 CTI_sens$sens_scaled <- ifelse(

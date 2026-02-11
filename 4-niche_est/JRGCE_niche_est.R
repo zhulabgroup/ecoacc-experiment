@@ -23,6 +23,8 @@ niche_est <- chelsa_data %>%
   group_by(species) %>%
   mutate(temp_niche = median(mean_annual_temp)) %>%
   mutate(precip_niche = median(mean_annual_precip)) %>%
+  mutate(temp_q05 = quantile(mean_annual_temp, probs = 0.05, na.rm = TRUE),
+         temp_q95    = quantile(mean_annual_temp, probs = 0.95, na.rm = TRUE)) %>%
   dplyr::select(-c(X,ID,ID.1,CHELSA_bio1_1981.2010_V.2.1,CHELSA_bio12_1981.2010_V.2.1,latitude,longitude,mean_annual_temp,mean_annual_precip)) %>%
   distinct()
 

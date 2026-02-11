@@ -76,6 +76,8 @@ full_abun_data <- full_abun_data %>%
 CTI <- full_abun_data %>%
   group_by(year,plot,temp_treatment,MAT,MAT_sensors) %>%
   reframe(CTI = sum(rel_abun * temp_niche) / sum(rel_abun),
+          CTI_max = sum(rel_abun * temp_q95) / sum(rel_abun),
+          CTI_min = sum(rel_abun * temp_q05) / sum(rel_abun),
           CTI_var = sum(rel_abun * (temp_niche - CTI)^2) / sum(rel_abun),
           CTI_sd = sqrt(CTI_var),
           CTI_skew = sum(rel_abun * (temp_niche - CTI)^3) / (sum(rel_abun) * CTI_sd^3),
@@ -85,16 +87,38 @@ CTI <- full_abun_data %>%
   distinct()
 
 # Calculating CTI sensitivity (warmed - ambient)
-CTI_sens <- CTI %>% # Calculating SE of diff bwtn means
-  dplyr::select(year, plot, temp_treatment, CTI) %>%
-  group_by(year, temp_treatment) %>%
-  summarize(mean_cti = mean(CTI), sd_cti = sd(CTI), n = n()) %>%  # Calculate mean, SD, and sample size
-  pivot_wider(names_from = temp_treatment, values_from = c(mean_cti, sd_cti, n)) %>%
+CTI_long <- CTI %>%
+  select(year, plot, temp_treatment, CTI, CTI_max, CTI_min) %>%
+  pivot_longer(
+    cols = c(CTI, CTI_max, CTI_min),
+    names_to = "metric",
+    values_to = "cti_value"
+  )
+CTI_sens <- CTI_long %>%
+  group_by(year, temp_treatment, metric) %>%
+  summarize(
+    mean_cti = mean(cti_value, na.rm = TRUE),
+    sd_cti   = sd(cti_value, na.rm = TRUE),
+    n        = n(),
+    .groups = "drop"
+  ) %>%
+  pivot_wider(
+    names_from = temp_treatment,
+    values_from = c(mean_cti, sd_cti, n)
+  ) %>%
   mutate(
-    sensitivity = `mean_cti_warmed` - `mean_cti_ambient`,  # Sensitivity as the difference in means
-    SE_diff = sqrt((`sd_cti_warmed`^2 / `n_warmed`) + (`sd_cti_ambient`^2 / `n_ambient`)), # Standard error of the difference
-    sens_scaled = sensitivity/1.3,
-    SE_diff_scaled = SE_diff/1.3
+    # Sensitivity (warmed – ambient)
+    sensitivity = mean_cti_warmed - mean_cti_ambient,
+    
+    # SE of difference
+    SE_diff = sqrt(
+      (sd_cti_warmed^2 / n_warmed) +
+        (sd_cti_ambient^2 / n_ambient)
+    ),
+    
+    # Scaled sensitivity
+    sens_scaled = sensitivity / 1.3,
+    SE_diff_scaled = SE_diff / 1.3
   )
 
 # Calculating CPI

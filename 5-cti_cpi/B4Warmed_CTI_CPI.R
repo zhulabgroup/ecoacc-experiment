@@ -84,6 +84,8 @@ full_abun_data_hwrc <- full_abun_data_hwrc %>%
 CTI_cfc <- full_abun_data_cfc %>%
   group_by(year,plot,temp_treatment,MAT) %>%
   reframe(CTI = sum(rel_abun * temp_niche) / sum(rel_abun),
+          CTI_max = sum(rel_abun * temp_q95) / sum(rel_abun),
+          CTI_min = sum(rel_abun * temp_q05) / sum(rel_abun),
           CTI_var = sum(rel_abun * (temp_niche - CTI)^2) / sum(rel_abun),
           CTI_sd = sqrt(CTI_var),
           CTI_skew = sum(rel_abun * (temp_niche - CTI)^3) / (sum(rel_abun) * CTI_sd^3),
@@ -93,6 +95,8 @@ CTI_cfc <- full_abun_data_cfc %>%
 CTI_hwrc <- full_abun_data_hwrc %>%
   group_by(year,plot,temp_treatment,MAT) %>%
   reframe(CTI = sum(rel_abun * temp_niche) / sum(rel_abun),
+          CTI_max = sum(rel_abun * temp_q95) / sum(rel_abun),
+          CTI_min = sum(rel_abun * temp_q05) / sum(rel_abun),
           CTI_var = sum(rel_abun * (temp_niche - CTI)^2) / sum(rel_abun),
           CTI_sd = sqrt(CTI_var),
           CTI_skew = sum(rel_abun * (temp_niche - CTI)^3) / (sum(rel_abun) * CTI_sd^3),
@@ -102,35 +106,81 @@ CTI_hwrc <- full_abun_data_hwrc %>%
 
 
 # Calculating CTI sensitivity (warmed - ambient)
-CTI_sens_cfc <- CTI_cfc %>%
-  dplyr::select(year,plot,temp_treatment,CTI) %>%
-  group_by(year,temp_treatment) %>%
-  summarize(mean_cti = mean(CTI), sd_cti = sd(CTI), n = n()) %>%
-  pivot_wider(names_from = temp_treatment, values_from = c(mean_cti, sd_cti, n)) %>%
-  mutate(
-    sensitivity_high_temp = `mean_cti_3.4` - `mean_cti_amb`,
-    SE_diff_high_temp = sqrt((`sd_cti_3.4`^2 / `n_3.4`) + (`sd_cti_amb`^2 / `n_amb`)),
-    sensitivity_med_temp = `mean_cti_1.7` - `mean_cti_amb`,
-    SE_diff_med_temp = sqrt((`sd_cti_1.7`^2 / `n_1.7`) + (`sd_cti_amb`^2 / `n_amb`)),
-    sens_high_temp_scaled = sensitivity_high_temp / 2.07,
-    sens_med_temp_scaled = sensitivity_med_temp / 1.07,
-    SE_diff_high_temp_scaled = SE_diff_high_temp / 2.07,
-    SE_diff_med_temp_scaled = SE_diff_med_temp / 1.07
+CTI_cfc_long <- CTI_cfc %>%
+  select(year, plot, temp_treatment, CTI, CTI_max, CTI_min) %>%
+  pivot_longer(
+    cols = c(CTI, CTI_max, CTI_min),
+    names_to = "metric",
+    values_to = "cti_value"
   )
-CTI_sens_hwrc <- CTI_hwrc %>%
-  dplyr::select(year,plot,temp_treatment,CTI) %>%
-  group_by(year,temp_treatment) %>%
-  summarize(mean_cti = mean(CTI), sd_cti = sd(CTI), n = n()) %>%
-  pivot_wider(names_from = temp_treatment, values_from = c(mean_cti, sd_cti, n)) %>%
+CTI_hwrc_long <- CTI_hwrc %>%
+  select(year, plot, temp_treatment, CTI, CTI_max, CTI_min) %>%
+  pivot_longer(
+    cols = c(CTI, CTI_max, CTI_min),
+    names_to = "metric",
+    values_to = "cti_value"
+  )
+
+CTI_sens_cfc <- CTI_cfc_long %>%
+  group_by(year, temp_treatment, metric) %>%
+  summarize(
+    mean_cti = mean(cti_value, na.rm = TRUE),
+    sd_cti   = sd(cti_value, na.rm = TRUE),
+    n        = n(),
+    .groups = "drop"
+  ) %>%
+  pivot_wider(
+    names_from = temp_treatment,
+    values_from = c(mean_cti, sd_cti, n)
+  ) %>%
   mutate(
-    sensitivity_high_temp = `mean_cti_3.4` - `mean_cti_amb`,
-    SE_diff_high_temp = sqrt((`sd_cti_3.4`^2 / `n_3.4`) + (`sd_cti_amb`^2 / `n_amb`)),
-    sensitivity_med_temp = `mean_cti_1.7` - `mean_cti_amb`,
-    SE_diff_med_temp = sqrt((`sd_cti_1.7`^2 / `n_1.7`) + (`sd_cti_amb`^2 / `n_amb`)),
+    # High warming (3.4 vs ambient)
+    sensitivity_high_temp = mean_cti_3.4 - mean_cti_amb,
+    SE_diff_high_temp = sqrt(
+      (sd_cti_3.4^2 / n_3.4) +
+        (sd_cti_amb^2 / n_amb)
+    ),
+    
+    # Medium warming (1.7 vs ambient)
+    sensitivity_med_temp = mean_cti_1.7 - mean_cti_amb,
+    SE_diff_med_temp = sqrt(
+      (sd_cti_1.7^2 / n_1.7) +
+        (sd_cti_amb^2 / n_amb)
+    ),
+    
+    # Scaled sensitivities
     sens_high_temp_scaled = sensitivity_high_temp / 2.07,
-    sens_med_temp_scaled = sensitivity_med_temp / 1.07,
+    sens_med_temp_scaled  = sensitivity_med_temp  / 1.07,
     SE_diff_high_temp_scaled = SE_diff_high_temp / 2.07,
-    SE_diff_med_temp_scaled = SE_diff_med_temp / 1.07
+    SE_diff_med_temp_scaled  = SE_diff_med_temp  / 1.07
+  )
+CTI_sens_hwrc <- CTI_hwrc_long %>%
+  group_by(year, temp_treatment, metric) %>%
+  summarize(
+    mean_cti = mean(cti_value, na.rm = TRUE),
+    sd_cti   = sd(cti_value, na.rm = TRUE),
+    n        = n(),
+    .groups = "drop"
+  ) %>%
+  pivot_wider(
+    names_from = temp_treatment,
+    values_from = c(mean_cti, sd_cti, n)
+  ) %>%
+  mutate(
+    sensitivity_high_temp = mean_cti_3.4 - mean_cti_amb,
+    SE_diff_high_temp = sqrt(
+      (sd_cti_3.4^2 / n_3.4) +
+        (sd_cti_amb^2 / n_amb)
+    ),
+    sensitivity_med_temp = mean_cti_1.7 - mean_cti_amb,
+    SE_diff_med_temp = sqrt(
+      (sd_cti_1.7^2 / n_1.7) +
+        (sd_cti_amb^2 / n_amb)
+    ),
+    sens_high_temp_scaled = sensitivity_high_temp / 2.07,
+    sens_med_temp_scaled  = sensitivity_med_temp  / 1.07,
+    SE_diff_high_temp_scaled = SE_diff_high_temp / 2.07,
+    SE_diff_med_temp_scaled  = SE_diff_med_temp  / 1.07
   )
 
 # CTI and CPI combined
