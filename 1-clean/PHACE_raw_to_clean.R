@@ -71,20 +71,35 @@ temp_avg <- temp_data %>%
   group_by(TreatmentCode,year) %>%
   summarize(mean_temp = mean(TempC))
 
-# Merge with species origin data
+
+
+### Merge with species origin data
 phace_origin <- phace_origin %>%
   rename_all(~ str_to_lower(.)) %>%
   rename(origin = native.introduced,
-         invasive = invasive..yes.no.) %>%
-  dplyr::select(c(species,origin,invasive))
+         invasive = invasive..yes.no.,
+         life_history = annual..biennial.perennial..a.b.p.,
+         pft = gramminoid.forb.sub.shrub..g.f.s.) %>%
+  dplyr::select(c(species,origin,invasive,life_history,pft))
 phace_origin$species[phace_origin$species == "Machaeranthera\xcapinnatifida"] <- "Machaeranthera pinnatifida" # Fix spp name
 phace_origin$species[phace_origin$species == "Astragalus Spp."] <- "Astragalus sp" # Fix spp name
 
 phace_rel_abun <- left_join(phace_rel_abun, phace_origin, by = "species")
+
 phace_rel_abun$origin[phace_rel_abun$origin == "Native"] <- "native"
 phace_rel_abun$origin[phace_rel_abun$origin == "Introduced"] <- "non-native"
+
 phace_rel_abun$invasive[phace_rel_abun$invasive == "N"] <- "not invasive"
 phace_rel_abun$invasive[phace_rel_abun$invasive == "Y"] <- "invasive"
+
+phace_rel_abun$life_history[phace_rel_abun$life_history == "a"] <- "Annual"
+phace_rel_abun$life_history[phace_rel_abun$life_history == "p"] <- "Perennial"
+phace_rel_abun$life_history[phace_rel_abun$life_history == "b"] <- "Biennial"
+
+phace_rel_abun$pft[phace_rel_abun$pft == "g"] <- "Graminoid"
+phace_rel_abun$pft[phace_rel_abun$pft == "f"] <- "Forb"
+phace_rel_abun$pft[phace_rel_abun$pft == "s"] <- "Shrub"
+phace_rel_abun$pft[phace_rel_abun$pft == "cactus"] <- "Cactus"
 
 
 ### Upload data

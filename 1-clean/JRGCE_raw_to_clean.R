@@ -106,14 +106,94 @@ rel_abun_calc <- function(df) {
       startsWith(guild, "E") ~ "non-native",
       TRUE ~ NA_character_)
     ) %>%
+    mutate(
+      middle_letter = str_sub(guild, start = ceiling(str_length(guild)/2), end = ceiling(str_length(guild)/2)),
+      life_history = case_when(
+        middle_letter == "A" ~ "Annual",
+        middle_letter == "P" ~ "Perennial",
+        TRUE ~ NA_character_
+      )
+    ) %>%
+    mutate(
+      last_letter = substr(guild, nchar(guild), nchar(guild)),
+      pft = case_when(
+        last_letter == "F" ~ "Forb",
+        last_letter == "G" ~ "Graminoid",
+        last_letter == "T" ~ "Tree",
+        last_letter == "S" ~ "Shrub",
+        last_letter == "R" ~ "Graminoid",
+        TRUE ~ NA_character_
+      )
+    ) %>%
     group_by(year, plot) %>%
     mutate(total_cover = sum(percent_cover,na.rm=T)) %>%
     mutate(rel_abun = percent_cover / total_cover) %>%
     filter(!is.na(rel_abun) & rel_abun != "NaN") %>%
     ungroup() %>%
-    dplyr::select(year,plot,species,origin,temp_treatment,mean_C_temp_summer,rel_abun)
+    dplyr::select(year,plot,species,origin,life_history,pft,temp_treatment,mean_C_temp_summer,rel_abun)
 }
 rel_abun_jrgce <- rel_abun_calc(jrgce_abun_data)
+
+
+
+### Adding invasive status
+rel_abun_jrgce$invasive <- NA
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Avena barbata"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Avena fatua"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Bromus hordeaceus"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Festuca perennis"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Geranium dissectum"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Crepis vesicaria"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Bromus diandrus"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Erodium botrys"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Vicia sativa"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Danthonia californica"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Briza minor"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Convolvulus arvensis"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Dipsacus sativus"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Aira caryophyllea"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Sisyrinchium bellum"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Hypochaeris glabra"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Rumex acetosella"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Stipa pulchra"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Lysimachia arvensis"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Centaurea solstitialis"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Rumex crispus"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Taraxia ovata"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Elymus glaucus"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Phalaris aquatica"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Torilis arvensis"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Epilobium brachycarpum"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Lactuca serriola"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Festuca bromoides"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Sonchus asper"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Acmispon americanus"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Hemizonia congesta"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Vicia tetrasperma"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Gastridium phleoides"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Lythrum hyssopifolia"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Trifolium hirtum"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Pistacia atlantica"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Toxicodendron diversilobum"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Medicago polymorpha"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Baccharis pilularis"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Erigeron canadensis"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Kickxia spuria"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Trifolium dubium"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Brachypodium distachyon"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Logfia gallica"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Quercus lobata"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Carduus pycnocephalus"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Juncus bufonius"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Briza maxima"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Helminthotheca echioides"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Madia gracilis"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Quercus agrifolia"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Genista monspessulana"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Urospermum picroides"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Zeltnera davyi"] <- "not invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Erodium cicutarium"] <- "invasive"
+rel_abun_jrgce$invasive[rel_abun_jrgce$species == "Pseudognaphalium californicum"] <- "not invasive"
 
 
 

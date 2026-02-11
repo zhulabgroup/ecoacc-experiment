@@ -15,6 +15,7 @@ setwd(path_data)
 
 # Read in data
 ok_meta <- read.csv("OK_metadata.csv")
+ok_origin <- read.csv("OK_species_origin.csv")
 ok_2000 <- read.csv("OK_rel_abun_2000.csv")
 ok_2001 <- read.csv("OK_rel_abun_2001.csv")
 ok_2002 <- read.csv("OK_rel_abun_2002.csv")
@@ -83,14 +84,44 @@ ok_rel_spp$Lartin.name[ok_rel_spp$Lartin.name == "Cyperus spp"] <- "Cyperus sp"
 
 # Selecting columns
 ok_rel_spp <- ok_rel_spp %>%
-  select(Year, Plot, rel_abun, Lartin.name)
+  select(Year, Plot, rel_abun, Lartin.name, Life.history)
 
 # Renaming columns
-colnames(ok_rel_spp) <- c("year", "plot", "rel_abun", "species")
+colnames(ok_rel_spp) <- c("year", "plot", "rel_abun", "species","life_history")
 
 # Assigning treatments to plots
 ok_rel_spp <- ok_rel_spp %>%
   mutate(temp_treatment = if_else(str_detect(plot, "W"), "warmed", "ambient"))
+
+# Merging with origin information
+ok_rel_spp <- left_join(ok_rel_spp, ok_origin, by = c("species" = "Scientific.Name"))
+ok_rel_spp$origin[ok_rel_spp$origin == "N"] <- "native"
+ok_rel_spp$origin[ok_rel_spp$origin == "NN"] <- "non-native"
+ok_rel_spp$origin[ok_rel_spp$origin == ""] <- NA
+
+ok_rel_spp$life_history[ok_rel_spp$life_history == "A"] <- "Annual forb"
+ok_rel_spp$life_history[ok_rel_spp$life_history == "P"] <- "Perennial forb"
+ok_rel_spp$life_history[ok_rel_spp$life_history == "W"] <- "Woody"
+
+ok_rel_spp$pft <- NA
+ok_rel_spp$pft[ok_rel_spp$life_history == "Annual forb"] <- "Forb"
+ok_rel_spp$pft[ok_rel_spp$life_history == "Perennial forb"] <- "Forb"
+ok_rel_spp$pft[ok_rel_spp$life_history == "C4"] <- "Graminoid"
+ok_rel_spp$pft[ok_rel_spp$life_history == "C3"] <- "Graminoid"
+ok_rel_spp$pft[ok_rel_spp$life_history == "Woody"] <- "Woody"
+ok_rel_spp$pft[ok_rel_spp$life_history == "Leg"] <- "Legume"
+
+ok_rel_spp$C3.C4 <- ifelse(
+  ok_rel_spp$life_history == "C3",
+  "C3",
+  ok_rel_spp$C3.C4
+)
+ok_rel_spp$C3.C4 <- ifelse(
+  ok_rel_spp$life_history == "C4",
+  "C4",
+  ok_rel_spp$C3.C4
+)
+
 
 
 # ANPP data
