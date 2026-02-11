@@ -213,7 +213,7 @@ distb_occ <- function(data,spp){
           axis.text.x = element_text(size=14),
           axis.text.y = element_text(size=14))
 }
-distb_occ(GBIF_species,"Allium textile")
+distb_occ(d,"Astragalus purshii")
 
 
 

@@ -12,7 +12,7 @@ library(tidyverse)
 library(raster)
 
 # Set path to chelsa data
-path_data = "/Volumes/seas-zhukai/datasets/climate/TerraClimate/annual_2024_update/metric/"
+path_data = "/nfs/turbo/seas-zhukai/datasets/climate/TerraClimate/annual_2024_update/metric/"
 setwd(path_data)
 
 
@@ -96,6 +96,20 @@ MAT_exp <- MAT_exp %>%
 
 # Fixing values in year column
 MAT_exp$year <- sub(".*_(\\d{4})$", "\\1", MAT_exp$year)
+
+# Calculate variability
+temp_variability <- MAT_exp %>%
+  mutate(year = as.numeric(year)) %>%   # ensure year is numeric
+  group_by(site) %>%
+  summarise(
+    n_years = n(),
+    mean_MAT = mean(MAT, na.rm = TRUE),
+    sd_MAT = sd(MAT, na.rm = TRUE),
+    var_MAT = var(MAT, na.rm = TRUE),
+    cv_MAT = sd_MAT / mean_MAT
+  ) %>%
+  arrange(desc(sd_MAT)) %>%
+  filter(!(site == "HYS" | site == "SGS" | site == "CHY" | site == "KNZ"))
 
 
 
